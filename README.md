@@ -1,6 +1,12 @@
 # UNDER CONSTRUCTION
 Supporting libraries are added periodically.
 
+# Last update notes, early 2019-11:
+WDS-Cpp was added and includes a basic framework for which additional computational tools will be added.  In particular, a starting Matrix
+class, which is usually like the classic Stroustrup, but here extends armadillo.  A basic XLL wrapper starts with simple row-normalizer but
+will be extended with parameterized matrix model methods Wypasek Data Science uses.  WDS-Lua was added and WDS-Python was updated.
+
+
 # WDS-ModelSpec
 Documentation, Schemas, Data Wrangling, and Estimation/Implementation Utilities for the ModelSpec of WDataSci
 
