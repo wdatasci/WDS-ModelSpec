@@ -37,7 +37,7 @@ in almost any language or PMML.
                             <li>Key terms and organization</li>
                             <li>Meta-Modeling objectives</li>
                             <li>Implementation objectives</li>
-                        <ul>
+                        </ul>
                     <li>An extended documentation with discussion of historical development directions and commentary</li>
                     <li>Core examples</li>
                 </ul>
@@ -53,20 +53,15 @@ across languages.  Each language specific library and source location, WDS-[AAA]
     <li>WDS-[AAA]: the root associated with language [AAA], generally on the language specific search path, containing:</li>
         <ul>
             <li>Project/solution configuration and/or build parameter files</li>
-
             <li>WDS or src: the module root or main src location with sub-libraries</li>
                 <ul>
                     <li>ModelSpec: directly related to WDS-ModelSpec</li>
                     <li>Util: general independent utilities</li>
                     <li>Wranglers: data wrangling and data layer utilities</li>
-                    <li>zzzExamples: Small examples or non-compiling snippets, not critical to the library, but which serve as local language references and test
-                    examples.</li>
+                    <li>zzzExamples: Small non-critical examples which serve as local language reference/test</li>
                 </ul>
-
             <li>scripts: scripts or batch files associated with using or building the [AAA] library</li>
-
             <li>test: any test data or examples as necessary</li>
-
         </ul>
 </ul>
 
