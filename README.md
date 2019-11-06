@@ -55,6 +55,7 @@ across languages.  Each language specific library and source location, WDS-[AAA]
             <li>Project/solution configuration and/or build parameter files</li>
             <li>WDS or src: the module root or main src location with sub-libraries</li>
                 <ul>
+                    <li>Comp: computational routines, such as matrix and artificial libraries</li>
                     <li>ModelSpec: directly related to WDS-ModelSpec</li>
                     <li>Util: general independent utilities</li>
                     <li>Wranglers: data wrangling and data layer utilities</li>
