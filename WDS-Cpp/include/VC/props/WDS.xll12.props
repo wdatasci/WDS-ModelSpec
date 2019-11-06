@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <xll12_ROOT>$(CppLocalExternalPackages)\xll12-master\xll</xll12_ROOT>
+    <Excel2013XLLSDK_ROOT>C:\VisualStudio\external\Excel2013XLLSDK</Excel2013XLLSDK_ROOT>
+    <xll12_LIBDIR>$(CppLocalExternalPackages)\external\xll12-master\xll</xll12_LIBDIR>
+    <Excel2013XLLSDK_LIBDIR>$(Excel2013XLLSDK_ROOT)\LIB\x64</Excel2013XLLSDK_LIBDIR>
+    <xll12_INCLUDE>$(xll12_ROOT)</xll12_INCLUDE>
+    <Excel2013XLLSDK_INCLUDE>$(Excel2013XLLSDK_ROOT)\INCLUDE</Excel2013XLLSDK_INCLUDE>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetExt>.xll</TargetExt>
+    <IncludePath>.\src-xll12;$(xll12_INCLUDE);.\src-ExcelSDK;$(Excel2013XLLSDK_INCLUDE);$(IncludePath)</IncludePath>
+    <LibraryPath>$(xll12_LIBDIR);$(Excel2013XLLSDK_LIBDIR);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <!--
+      <AdditionalDependencies>xll12.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\external\xll12-master\x64\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      -->
+    </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/J %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>_WINDLL;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>xlcall32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="xll12_ROOT">
+      <Value>$(xll12_ROOT)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="Excel2013XLLSDK_ROOT">
+      <Value>$(Excel2013XLLSDK_ROOT)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="xll12_LIBDIR">
+      <Value>$(xll12_LIBDIR)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="Excel2013XLLSDK_LIBDIR">
+      <Value>$(Excel2013XLLSDK_LIBDIR)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="xll12_INCLUDE">
+      <Value>$(xll12_INCLUDE)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="Excel2013XLLSDK_INCLUDE">
+      <Value>$(Excel2013XLLSDK_INCLUDE)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

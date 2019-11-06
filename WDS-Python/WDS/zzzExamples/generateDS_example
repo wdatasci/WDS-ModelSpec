@@ -1,0 +1,35 @@
+#!/usr/bin/tcsh
+
+set GENERATEDS=`which generateDS`
+
+
+echo "using generateDS.py at $GENERATEDS"
+echo "arguments $*"
+
+if ( $# == 0 ) then
+
+    ${GENERATEDS} -h | less 
+
+    exit 0
+
+endif
+
+if ( $1 == example ) then
+
+    set location=${0:h}
+    echo "running from $location"
+    ${GENERATEDS} -f -o ./zzzExamples/output/generateDS_example_pmml_4_3.py ${location}/data/pmml-4-3.xsd 
+    #${GENERATEDS} -f -o ./zzzExamples/output/generateDS_example_pmml_4_0.py ${location}/data/pmml-4-0.xsd 
+    exit 0
+
+endif
+
+${GENERATEDS} $*
+
+
+
+
+
+
+
+
