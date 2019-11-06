@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <WDataSci>$(WDataSci_ROOT)</WDataSci>
+    <WDSProject>WDS-ModelSpec</WDSProject>
+    <WDSProjectBranch>master</WDSProjectBranch>
+    <WDSCppLib>$(WDataSci)\$(WDSProject)\$(WDSProjectBranch)\WDS-Cpp</WDSCppLib>
+    <IntelSWTools>$(IntelSWTools_ROOT)\compilers_and_libraries_2019.1.144\windows</IntelSWTools>
+    <TBBIncludeDir>$(IntelSWTools)\tbb\include</TBBIncludeDir>
+    <TBBLibDir>$(IntelSWTools)\tbb\lib\intel64_win\vc_mt</TBBLibDir>
+    <MKLMajorVersion>2019</MKLMajorVersion>
+    <MKLMinorVersion>0</MKLMinorVersion>
+    <MKLProductDir>$(IntelSWTools)</MKLProductDir>
+    <IPPMajorVersion>2019</IPPMajorVersion>
+    <IPPMinorVersion>0</IPPMinorVersion>
+    <IPPIncludeDir>$(IntelSWTools)\ipp\include</IPPIncludeDir>
+    <DAALMajorVersion>2019</DAALMajorVersion>
+    <DAALMinorVersion>0</DAALMinorVersion>
+    <DAALProductDir>$(IntelSWTools)</DAALProductDir>
+    <DAALIncludeDir>$(DAALProductDir)\include</DAALIncludeDir>
+    <DAALLibDir>$(DAALProductDir)</DAALLibDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IncludePath>$(WDSCppLib)\include;$(TBBIncludeDir);$(xll12_ROOT);$(IncludePath)</IncludePath>
+    <SourcePath>.\src;$(WDSCppLib)\WDS\src</SourcePath>
+    <LibraryPath>$(WDSCppLib)\lib;$(TBBLibDir)\vc_mt;$(LibraryPath)</LibraryPath>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <UseMpiLibrary>INTELMPI</UseMpiLibrary>
+    <UseIntelTBB>false</UseIntelTBB>
+    <UseIntelMKL>Sequential</UseIntelMKL>
+    <UseIntelDAAL>Parallel_Static</UseIntelDAAL>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <AdditionalOptions>/J %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>.\src;$(WDSCppLib)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>
+      </UseLibraryDependencyInputs>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+    <Link />
+    <Lib>
+      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
+    </Lib>
+    <Link>
+      <AdditionalLibraryDirectories>$(IPPLibDir);$(MKLLibDir);$(TBBLibDir);$(DAALibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="WDSCppLib">
+      <Value>$(WDSCppLib)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="IntelSWTools">
+      <Value>$(IntelSWTools)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="TBBIncludeDir">
+      <Value>$(TBBIncludeDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="TBBLibDir">
+      <Value>$(TBBLibDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="MKLMajorVersion">
+      <Value>$(MKLMajorVersion)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="MKLMinorVersion">
+      <Value>$(MKLMinorVersion)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="MKLProductDir">
+      <Value>$(MKLProductDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="IPPMajorVersion">
+      <Value>$(IPPMajorVersion)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="IPPMinorVersion">
+      <Value>$(IPPMinorVersion)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="IPPIncludeDir">
+      <Value>$(IPPIncludeDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="DAALMajorVersion">
+      <Value>$(DAALMajorVersion)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="DAALMinorVersion">
+      <Value>$(DAALMinorVersion)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="DAALProductDir">
+      <Value>$(DAALProductDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="DAALIncludeDir">
+      <Value>$(DAALIncludeDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="DAALLibDir">
+      <Value>$(DAALLibDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

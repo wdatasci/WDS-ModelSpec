@@ -117,8 +117,7 @@ if __name__=="__main__":
         _parser=argparse.ArgumentParser()
         #positional
         #default positional
-        #RefDoc - CJW - hint from https://stackoverflow.com/questions/4480075/argparse-optional-positional-arguments
-        fn='/WDS/dev/lib/WDSCommon/examples/data/Book1.xlsm'
+        fn='./zzzExamples/data/Book1.xlsm'
         _parser.add_argument("Excel_to_load"
                             , help="first argument, xml to load"
                             , nargs='?'

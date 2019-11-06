@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="src-xll12">
+      <UniqueIdentifier>{99ee2c32-e7cc-4774-8374-3ea3ff28d0c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src-ExcelSDK">
+      <UniqueIdentifier>{2c949d56-51f5-4f3d-bb34-978d85d40270}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src-ExcelSDK\FRAMEWRK.C">
+      <Filter>src-ExcelSDK</Filter>
+    </ClCompile>
+    <ClCompile Include="src-ExcelSDK\MemoryManager.cpp">
+      <Filter>src-ExcelSDK</Filter>
+    </ClCompile>
+    <ClCompile Include="src-ExcelSDK\MemoryPool.cpp">
+      <Filter>src-ExcelSDK</Filter>
+    </ClCompile>
+    <ClCompile Include="src-xll12\AddIn-xll12.cpp">
+      <Filter>src-xll12</Filter>
+    </ClCompile>
+    <ClCompile Include="src-xll12\debug-xll12.cpp">
+      <Filter>src-xll12</Filter>
+    </ClCompile>
+    <ClCompile Include="src-xll12\error.cpp">
+      <Filter>src-xll12</Filter>
+    </ClCompile>
+    <ClCompile Include="src-xll12\oper.cpp">
+      <Filter>src-xll12</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelUtil.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\XLM.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TestFunctions.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src-ExcelSDK\targetver.h">
+      <Filter>src-ExcelSDK</Filter>
+    </ClInclude>
+    <ClInclude Include="src-ExcelSDK\FRAMEWRK.H">
+      <Filter>src-ExcelSDK</Filter>
+    </ClInclude>
+    <ClInclude Include="src-xll12\AddIn-xll12.h">
+      <Filter>src-xll12</Filter>
+    </ClInclude>
+    <ClInclude Include="src-ExcelSDK\MemoryManager.h">
+      <Filter>src-ExcelSDK</Filter>
+    </ClInclude>
+    <ClInclude Include="src-ExcelSDK\MemoryPool.h">
+      <Filter>src-ExcelSDK</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ModelUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\XLM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src-ExcelSDK\README.md">
+      <Filter>src-ExcelSDK</Filter>
+    </None>
+    <None Include="src-xll12\README.md">
+      <Filter>src-xll12</Filter>
+    </None>
+  </ItemGroup>
+</Project>
