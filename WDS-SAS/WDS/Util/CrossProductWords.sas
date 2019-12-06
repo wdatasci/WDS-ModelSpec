@@ -29,7 +29,7 @@ SOFTWARE.
 %global CrossProductWords_Loaded;
 %let CrossProductWords_Loaded=1;
 
-%macro CrossProductWords(first, second, third, joinchar=%str(), dlm=%str( ));
+%macro CrossProductWords(first, second, third, JoinChar=, dlm=%str( ));
     /*Note: watch the semicolons, if placed after the Inits, it will be output in the macro expansion*/
     %local CrossProductWords_N;
     %let CrossProductWords_N=0;
@@ -39,12 +39,13 @@ SOFTWARE.
     %do %while ( %IteratingOver(CPWs_First) );
     %do %while ( %IteratingOver(CPWs_Second) );
         %if &CPWs_Third_Count eq 0 %then %do;
-            %if &CrossProductWords_N %then %do;&dlm%end;%else 
-            %let CrossProductWords_N=1;&CPWs_First_Word.&joinchar.&CPWs_Second_Word%end;
-        %else %do;
+            %if &CrossProductWords_N %then %do;&dlm%end; %else %let CrossProductWords_N=1;
+            %do;&CPWs_First_Word&JoinChar&CPWs_Second_Word%end;
+        %end; %else %do;
             %do %while ( %IteratingOver(CPWs_Third) );
-                %if &CrossProductWords_N %then %do;&dlm%end;%else 
-                %let CrossProductWords_N=1;&CPWs_First_Word.&joinchar.&CPWs_Second_Word.&joinchar.&CPWs_Third_Word%end;
+                %if &CrossProductWords_N %then %do;&dlm%end;%else %let CrossProductWords_N=1;
+                %do;&CPWs_First_Word&JoinChar&CPWs_Second_Word&JoinChar&CPWs_Third_Word%end;
+            %end;
         %end;
     %end;
     %end;

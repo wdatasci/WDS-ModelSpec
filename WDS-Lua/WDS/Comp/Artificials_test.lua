@@ -104,15 +104,17 @@ if is_main then
 
 local gp = require('gnuplot')
 
-if false then
+if true then
 
 --for iT,T in pairs({"None","Constant","Hats","Levels","iHats","BZ2","BZ3"}) do
-for iT,T in pairs({"Categorical","CategoricalNumeric","Hats","Levels","iHats","BZ2","BZ3"}) do
+for iT,T in pairs({"Categorical","CategoricalNumeric","Hats","Levels","DiscreteRC","DiscreteLC","iHats","BZ2","BZ3"}) do
+
+    print("T=",T)
 
     V1=fVariableMatter{
             Treatment=T
             , CriticalValues={ -6, -1, 3, 6, 8, 9 }
-            , CleanLimits={ -8, 9.5 }
+            , CleanLimits={ -8, 10.5 }
         }
     print("V1=",wds.show(V1))
     V1.CritVals:print("V1.CritVals:")
@@ -122,6 +124,7 @@ for iT,T in pairs({"Categorical","CategoricalNumeric","Hats","Levels","iHats","B
     V1_n_cols=fArtificialsCount{Treatment=V1.Treatment, CriticalValues=V1.CritVals}
     print("V1_n_cols=",wds.show(V1_n_cols))
     
+    XW:print("XW:")
     XA=fArtificials{Input=XW,VariableMatter=V1}
     XA:print("XA:")
 
@@ -220,7 +223,7 @@ local g = gp{
 }:plot('output.'..T..'.png')
 
 
-q()
+--q()
     
 end
 

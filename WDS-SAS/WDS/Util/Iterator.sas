@@ -30,7 +30,7 @@ SOFTWARE.
 %let Iterator_Loaded=1;
 
 %macro IteratorInit(name, arg, dlm=%str( ));
-    %global &name._List &name._Count &name._Index &name._Index_Lag1 &name._Word &name._Word_Lag1 &name._dlm;
+    %global &name._List &name._Count &name._Index &name._Index_Lag1 &name._Word &name._Word_Lag1 &name._Word_Lead1 &name._Word_Last &name._dlm;
     %let &name._List=%nrquote(&arg);
     %let &name._Count=%WordCount(%nrquote(&arg),dlm=%str(&dlm));
     %let &name._Index_Lag1=-1;
@@ -38,34 +38,47 @@ SOFTWARE.
     %let &name._Word_Lag1=;
     %let &name._Word=;
     %let &name._dlm=%str(&dlm);
+    %if &&&name._Count gt 0 %then 
+    %let &name._Word_Last=%sysfunc(trim(%sysfunc(left(%qscan(%superq(&name._List),%superq(&name._Count),%superq(&name._dlm))))));
+    %else %let &name._Word_Last=;
+    %if &&&name._Count gt 0 %then 
+    %let &name._Word_Lead1=%sysfunc(trim(%sysfunc(left(%qscan(%superq(&name._List),1,%superq(&name._dlm))))));
+    %else %let &name._Word_Lead1=;
 %mend;
 
 %macro IteratorRangeInit(name, start, stop, step=1, dlm=%str( ));
-    %global &name._List &name._Count &name._Index &name._Index_Lag1 &name._Word &name._Word_Lag1 &name._dlm;
+    %global &name._List &name._Count &name._Index &name._Index_Lag1 &name._Word &name._Word_Lag1 &name._Word_Lead1 &name._Word_Last &name._dlm;
     %let &name._List=%range(start=&start,stop=&stop,step=&step,dlm=%str(&dlm));
     %let &name._Count=%WordCount(%superq(&name._List),dlm=%str(&dlm));
     %let &name._Index_Lag1=-1;
     %let &name._Index=0;
     %let &name._Word_Lag1=;
+    %let &name._Word_Lead1=&start;
     %let &name._Word=;
     %let &name._dlm=%str(&dlm);
 %mend;
 
 %macro IteratorReset(name);
-    %global &name._List &name._Count &name._Index &name._Index_Lag1 &name._Word &name._Word_Lag1 &name._dlm;
+    %global &name._List &name._Count &name._Index &name._Index_Lag1 &name._Word &name._Word_Lag1 &name._Word_Lead1 &name._Word_Last &name._dlm;
     %let &name._Index_Lag1=-1;
     %let &name._Index=0;
     %let &name._Word_Lag1=;
     %let &name._Word=;
+    %if &&&name._Count gt 0 %then 
+    %let &name._Word_Lead1=%sysfunc(trim(%sysfunc(left(%qscan(%superq(&name._List),1,%superq(&name._dlm))))));
+    %else %let &name._Word_Lead1=;
 %mend;
 
 %macro IteratingOver(name);
-    %global &name._List &name._Count &name._Index &name._Index_Lag1 &name._Word &name._Word_Lag1 &name._dlm;
+    %global &name._List &name._Count &name._Index &name._Index_Lag1 &name._Word &name._Word_Lag1 &name._Word_Lead1 &name._Word_Last &name._dlm;
     %if %superq(&name._Index) lt %superq(&name._Count) %then %do;
         %let &name._Index_Lag1=&&&name._Index;
         %let &name._Word_Lag1=&&&name._Word;
         %let &name._Index=%eval(&&&name._Index+1);
-        %let &name._Word=%qscan(%superq(&name._List),&&&name._Index,%superq(&name._dlm));
+        %let &name._Word=%sysfunc(trim(%sysfunc(left(%qscan(%superq(&name._List),&&&name._Index,%superq(&name._dlm))))));
+        %if &&&name._Index eq &&&name._Count %then
+        %let &name._Word_Lead1=;
+        %else %let &name._Word_Lead1=%sysfunc(trim(%sysfunc(left(%qscan(%superq(&name._List),%eval(&&&name._Index+1),%superq(&name._dlm))))));
     1 %end;
     %else %do;
         %let &name._Index_Lag1=-1;
