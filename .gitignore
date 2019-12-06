@@ -56,3 +56,8 @@ __pycache__
 /**/build/
 /**/test/output
 ~*
+WDS-Cpp/lib/WDS_Matrix_CLR-dbg.dll
+WDS-Cpp/lib/WDS_Matrix_CLR-dbg.pdb
+*.dll
+*.pdb
+*.lib

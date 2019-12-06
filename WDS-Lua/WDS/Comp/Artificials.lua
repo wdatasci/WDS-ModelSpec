@@ -79,25 +79,50 @@ eTreatment=
     , None = 0
     , Constant = 1
     , CodedMissings = 2
-    , Discrete = 3
-    , Hats = 4
-    , iHats = 5
-    , BSplineOrder2 = 6
-    , BSplineOrder3 = 7
-    , Categorical = 8
-    , CategoricalNumeric = 9
+    , DiscreteLC = 3
+    , DiscreteRC = 4
+    , Hats = 5
+    , iHats = 6
+    , BSplineOrder2 = 7
+    , BSplineOrder3 = 8
+    , Categorical = 9
+    , CategoricalNumeric = 10
 
     , aliases={
         Straight="None"
         , Numeric="None"
         , Missings="CodedMissings"
-        , Buckets="Discrete"
-        , Levels="Discrete"
-        , Discretize="Discrete"
-        , Intervals="Discrete"
-        , Disc="Discrete"
-        , BZ0="Discrete"
-        , BSO0="Discrete"
+
+        , BucketsLC="DiscreteLC"
+        , LevelsLC="DiscreteLC"
+        , DiscretizeLC="DiscreteLC"
+        , IntervalsLC="DiscreteLC"
+        , DiscLC="DiscreteLC"
+        , BZ0LC="DiscreteLC"
+        , BSO0LC="DiscreteLC"
+        , CAGLAD="DiscreteLC"
+        , COLLOR="DiscreteLC"
+        , LCRL="DiscreteLC"
+
+        , BucketsRC="DiscreteRC"
+        , LevelsRC="DiscreteRC"
+        , DiscretizeRC="DiscreteRC"
+        , IntervalsRC="DiscreteRC"
+        , DiscRC="DiscreteRC"
+        , BZ0RC="DiscreteRC"
+        , BSO0RC="DiscreteRC"
+        , CADLAG="DiscreteRC"
+        , CORLOL="DiscreteRC"
+        , RCLL="DiscreteRC"
+
+        , Buckets="DiscreteRC"
+        , Levels="DiscreteRC"
+        , Discretize="DiscreteRC"
+        , Intervals="DiscreteRC"
+        , Disc="DiscreteRC"
+        , BZ0="DiscreteRC"
+        , BSO0="DiscreteRC"
+
         , BZ1="Hats"
         , BSO1="Hats"
         , IntegratedHats="iHats"
@@ -281,7 +306,11 @@ fVariableMatter=
             rv.nCritValRows=1
             rv.nArtVars = rv.nCritVals + 1
             rv.iArtVar_Last=rv.nArtVars-1
-        elseif rv.Treatment==eTreatment.Discrete then
+        elseif rv.Treatment==eTreatment.DiscreteLC then
+            rv.nCritValRows=1
+            rv.nArtVars = rv.nCritVals + 2
+            rv.iArtVar_Last=rv.nArtVars-1
+        elseif rv.Treatment==eTreatment.DiscreteRC then
             rv.nCritValRows=1
             rv.nArtVars = rv.nCritVals + 2
             rv.iArtVar_Last=rv.nArtVars-1
@@ -329,7 +358,7 @@ fVariableMatter=
             _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
         elseif (rv.Treatment == eTreatment.BSplineOrder3) and rv.nCritVals <= 5 then
             _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
-        elseif (rv.Treatment == eTreatment.Discrete or rv.Treatment == eTreatment.Categorical or rv.Treatment == eTreatment.CategoricalNumeric)
+        elseif (rv.Treatment == eTreatment.DiscreteLC or rv.Treatment == eTreatment.DiscreteRC or rv.Treatment == eTreatment.Categorical or rv.Treatment == eTreatment.CategoricalNumeric)
             and rv.nCritVals == 0 then
             _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
         end
@@ -423,6 +452,8 @@ fArtificials=
         local dCVs={} --for sequential differences
         local d2CVs={} --for two-step sequential differences
         local d3CVs={} --for three-step sequential differences
+
+        local eps=0.00000001
 
         local rv
 
@@ -579,8 +610,8 @@ fArtificials=
 
                 rc[{r, ia}] = x
 
-            elseif x <= CVs(1) then
-                --'all non-missing first artificials are 1 left of the first critical value, except iHats
+            elseif x <= CVs(1) + eps then
+                --'all non-missing first artificials are 1 left of the first critical value, except iHats and DiscreteRC
                 i = 1
                 ia = 2
                 if varm.Treatment == eTreatment.iHats then
@@ -590,11 +621,16 @@ fArtificials=
 
                 else
 
+                        if (varm.Treatment == eTreatment.DiscreteRC) and (x >= CVs(1) - eps) then
+                            i = i + 1
+                            ia = ia + 1
+                        end
+
                         rc[{r, ia}] = 1
 
                     end
-            elseif x >= CVs(varm.nCritVals) then
-                --'all non-missing last artificials are 1 right of the last critical value, except iHats
+            elseif x >= CVs(varm.nCritVals) - eps then
+                --'all non-missing last artificials are 1 right of the last critical value, except iHats and DiscreteLC
                 i = varm.nCritVals
                 ia = varm.nArtVars
                 if varm.Treatment == eTreatment.iHats then
@@ -611,6 +647,11 @@ fArtificials=
 
                 else
 
+                        if (varm.Treatment == eTreatment.DiscreteLC) and (x <= CVs(varm.nCritVals) - eps) then
+                            i = i + 1
+                            ia = ia + 1
+                        end
+
                         rc[{r, ia}] = 1
 
                     end
@@ -621,19 +662,37 @@ fArtificials=
                 
                 --'find the critical value interval.....
                 local i=varm.nCritVals-1
-                for _i = varm.nCritVals - 1, 1, -1 do
-                    if x >= CVs(_i) then
-                        i=_i
-                        break
+                if varm.Treatment == eTreatment.DiscreteLC then
+                    for _i = varm.nCritVals - 1, 1, -1 do
+                        if x > CVs(_i) + eps then
+                            i=_i
+                            break
+                        end
+                    end
+                    i=i+1
+                elseif varm.Treatment == eTreatment.DiscreteRC then
+                    for _i = varm.nCritVals - 1, 1, -1 do
+                        if x > CVs(_i) - eps then
+                            i=_i
+                            break
+                        end
+                    end
+                    i=i+1
+                else
+                    for _i = varm.nCritVals - 1, 1, -1 do
+                        if x >= CVs(_i) then
+                            i=_i
+                            break
+                        end
                     end
                 end
                 
                 --'usual VBA index
                 ia = i + 1
 
-                if varm.Treatment == eTreatment.Discrete then
+                if varm.Treatment == eTreatment.DiscreteLC or varm.Treatment == eTreatment.DiscreteRC then
 
-                    rc[{r, ia+1}] = 1
+                    rc[{r, ia}] = 1
 
                 elseif varm.Treatment == eTreatment.Hats then
                     tempdouble = (x - CVs(i)) / dCVs(i)
@@ -861,6 +920,8 @@ fArtificialsScored=
         local d2CVs={} --for two-step sequential differences
         local d3CVs={} --for three-step sequential differences
 
+        local eps=0.00000001
+
         local rv
 
     
@@ -1030,8 +1091,8 @@ fArtificialsScored=
                     for k = 1, nscores do
                         rc[{r, k}] = Coef{k, 2} * x
                     end --k
-                elseif x <= CVs(1) then
-                    --'all non-missing first artificials are 1 left of the first critical value, except iHats
+                elseif x <= CVs(1) + eps then
+                    --'all non-missing first artificials are 1 left of the first critical value, except iHats and DiscreteRC
                     i = 1
                     ia = 2
                     if varm.Treatment == eTreatment.iHats then
@@ -1040,15 +1101,19 @@ fArtificialsScored=
                             rc[{r, k}] = Coef{k, 2} * tempdouble
                         end --k
                     else
+                        if (varm.Treatment == eTreatment.DiscreteRC) and (x >= CVs(1) - eps) then
+                            i = i + 1
+                            ia = ia + 1
+                        end
                         for k = 1, nscores do
-                            rc[{r, k}] = Coef{k, 2}
+                            rc[{r, k}] = Coef{k, ia}
                         end --k
                     end
-                elseif x >= CVs(varm.nCritVals) then
-                    --'all non-missing last artificials are 1 right of the last critical value, except iHats
+                elseif x >= CVs(varm.nCritVals) - eps then
+                    --'all non-missing last artificials are 1 right of the last critical value, except iHats and DiscreteLC
+                    i = varm.nCritVals
+                    ia = varm.nArtVars
                     if varm.Treatment == eTreatment.iHats then
-                        i = varm.nCritVals
-                        ia = varm.nArtVars
                         tempdouble = (x - CVs(i) + dCVs(i - 1) / 2)
                         for k = 1, nscores do
                             rc[{r, k}] = Coef(k, ia) * tempdouble
@@ -1063,8 +1128,12 @@ fArtificialsScored=
                             rc[{r, k}] = rc{r, k} + Coef{k, ia} * dCVs(j) / 2
                         end --k
                     else
+                        if (varm.Treatment == eTreatment.DiscreteLC) and (x <= CVs(varm.nCritVals) - eps) then
+                            i = i + 1
+                            ia = ia + 1
+                        end
                         for k = 1, nscores do
-                            rc[{r, k}] = Coef{k, varm.nArtVars}
+                            rc[{r, k}] = Coef{k, ia}
                         end --k
                     end
                 else
@@ -1072,19 +1141,38 @@ fArtificialsScored=
                     --'main guts of the function.....
                     
                     --'find the critical value interval.....
-                    local i
-                    for _i = varm.nCritVals - 1, 1, -1 do
-                        if x >= CVs(_i) then
-                            i=_i
-                            break
+                    local i=varm.nCritVals-1
+                    if varm.Treatment == eTreatment.DiscreteLC then
+                        for _i = varm.nCritVals - 1, 1, -1 do
+                            if x > CVs(_i) + eps then
+                                i=_i
+                                break
+                            end
                         end
-                    end --i
+                        i=i+1
+                    elseif varm.Treatment == eTreatment.DiscreteRC then
+                        for _i = varm.nCritVals - 1, 1, -1 do
+                            if x > CVs(_i) - eps then
+                                i=_i
+                                break
+                            end
+                        end
+                        i=i+1
+                    else
+                        for _i = varm.nCritVals - 1, 1, -1 do
+                            if x >= CVs(_i) then
+                                i=_i
+                                break
+                            end
+                        end
+                    end
+                
                     
                     --'usual VBA index
                     ia = i + 1
-                    if varm.Treatment == eTreatment.Discrete then
+                    if varm.Treatment == eTreatment.DiscreteLC or varm.Treatment == eTreatment.DiscreteRC then
                         for k = 1, nscores do
-                            rc[{r, k}] = Coef{k, ia+1}
+                            rc[{r, k}] = Coef{k, ia}
                         end --k
                     elseif varm.Treatment == eTreatment.Hats then
                         tempdouble = (x - CVs(i)) / dCVs(i)
