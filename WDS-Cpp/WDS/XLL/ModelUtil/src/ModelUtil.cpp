@@ -6,8 +6,8 @@
 
 using namespace xll;
 
-#include "WDSMatrix.h"
-using namespace WDSMatrix;
+#include "WDS\Comp\Matrix.h"
+using namespace WDS::Comp::Matrix;
 
 static AddIn XLL_WDS_Comp_Matrix_RowNormed(
 	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_Comp_Matrix_RowNormed", 4), L"WDS.Comp.Matrix.RowNormed")
