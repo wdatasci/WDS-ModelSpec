@@ -2,6 +2,8 @@
 #include <iostream>
 #include "WDSMatrix.h"
 
+#include <variant>
+
 using namespace WDSMatrix;
 
 //int main(array<System::String ^> ^args)
@@ -176,6 +178,21 @@ int main() //array<System::String> args)
 
 	double rv = A[3, mi];
 	cout << "A[3,mi]=" << rv << endl;
+	
+
+	arma::field<std::variant<double,std::wstring>> sMat(1, 2);
+
+	sMat(0, 0) = 3;
+	sMat(0, 1) = L"what";
+
+	rv = sMat(0, 0).index();
+
+	cout << "sMat" << endl;
+	cout << std::get<0>(sMat(0,0)) << endl;
+	std::wstring tempstring = std::get<std::wstring>(sMat(0, 1));
+	std::wcout << tempstring << endl;
+
+
 
 	cout << "fin" << endl;
 

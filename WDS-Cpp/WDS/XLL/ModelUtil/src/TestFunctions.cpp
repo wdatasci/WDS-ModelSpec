@@ -6,8 +6,10 @@
 
 using namespace xll;
 
-#include "WDSMatrix.h"
-using namespace WDSMatrix;
+#include "WDS\Comp\Matrix.h"
+using namespace WDS::Comp::Matrix;
+//#include "WDS\ModelSpec\Artificials.h"
+//using namespace WDS::ModelSpec;
 
 static AddIn XLL_WDS_Test_Matrix_Inv(
 	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_Test_Matrix_Inv", 4), L"WDS.Test.Matrix.Inv")

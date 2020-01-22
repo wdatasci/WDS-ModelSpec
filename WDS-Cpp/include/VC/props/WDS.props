@@ -6,6 +6,7 @@
     <WDSProject>WDS-ModelSpec</WDSProject>
     <WDSProjectBranch>master</WDSProjectBranch>
     <WDSCppLib>$(WDataSci)\$(WDSProject)\$(WDSProjectBranch)\WDS-Cpp</WDSCppLib>
+    <WDSCLib>$(WDataSci)\$(WDSProject)\$(WDSProjectBranch)\WDS-C</WDSCLib>
     <IntelSWTools>$(IntelSWTools_ROOT)\compilers_and_libraries_2019.1.144\windows</IntelSWTools>
     <TBBIncludeDir>$(IntelSWTools)\tbb\include</TBBIncludeDir>
     <TBBLibDir>$(IntelSWTools)\tbb\lib\intel64_win\vc_mt</TBBLibDir>
@@ -22,8 +23,8 @@
     <DAALLibDir>$(DAALProductDir)</DAALLibDir>
   </PropertyGroup>
   <PropertyGroup>
-    <IncludePath>$(WDSCppLib)\include;$(TBBIncludeDir);$(xll12_ROOT);$(IncludePath)</IncludePath>
-    <SourcePath>.\src;$(WDSCppLib)\WDS\src</SourcePath>
+    <IncludePath>$(WDSCppLib)\include;$(WDSCLib)\include;$(TBBIncludeDir);$(xll12_ROOT);$(IncludePath)</IncludePath>
+    <SourcePath>.\src;$(WDSCppLib)\WDS\src;$(WDSCLib)\WDS\src</SourcePath>
     <LibraryPath>$(WDSCppLib)\lib;$(TBBLibDir)\vc_mt;$(LibraryPath)</LibraryPath>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
@@ -57,6 +58,10 @@
   <ItemGroup>
     <BuildMacro Include="WDSCppLib">
       <Value>$(WDSCppLib)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="WDSCLib">
+      <Value>$(WDSCLib)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
     <BuildMacro Include="IntelSWTools">

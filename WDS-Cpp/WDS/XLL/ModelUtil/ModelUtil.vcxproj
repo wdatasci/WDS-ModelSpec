@@ -108,6 +108,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="WrappedArtificials.cpp" />
     <ClCompile Include="src-ExcelSDK\FRAMEWRK.C" />
     <ClCompile Include="src-ExcelSDK\MemoryManager.cpp" />
     <ClCompile Include="src-ExcelSDK\MemoryPool.cpp" />
