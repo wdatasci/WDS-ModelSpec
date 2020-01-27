@@ -20,10 +20,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
+--[[
+
+For the WDS-Lua library, WDS.lua is the primary module interface.  It provides
+for several common treatments across languages, and some general utility functions.
+
+For example:
+    By including the following at the top of a CLI session:
+        wds=require("WDS")
+
+    One can use:
+        help()
+    or 
+        help(module_name)         --i.e., help(wds)
+
+    To display the info object of module_name, which was built during the definition 
+    of module_name via a decorator as used below.
+
+--]]
+
+
+
+
 --CodeRef: CW - hints from
---https://stackoverflow.com/questions/9145432/load-lua-files-by-relative-path
---https://stackoverflow.com/questions/42217459/how-to-read-a-data-file-at-a-package-path-on-lua-5-1
---https://stackoverflow.com/questions/38800475/confusion-with-debug-getlocal-in-lua
+--  https://stackoverflow.com/questions/9145432/load-lua-files-by-relative-path
+--  https://stackoverflow.com/questions/42217459/how-to-read-a-data-file-at-a-package-path-on-lua-5-1
+--  https://stackoverflow.com/questions/38800475/confusion-with-debug-getlocal-in-lua
+
+
 
 -- the localizing of arg below shorts the global arg of a program that might require this module
 local arg 
@@ -42,11 +66,13 @@ else
     dbg=function() end
 end
 
---for localizing the module environment:
---  using _M for module-specific placements with _M as the return table
---  using a local _G for the global environment and direct placements
---  to avoid copying the usuals from _G into _M, the metafunction __index pulls from _G as needed
---  new values are placed directly into _M (and kept from _G) via _M's __newindex metafunction
+--[[
+For localizing the module environment:
+  using _M for module-specific placements with _M as the return table
+  using a local _G for the global environment and direct placements
+  to avoid copying the usuals from _G into _M, the metafunction __index pulls from _G as needed
+  new values are placed directly into _M (and kept from _G) via _M's __newindex metafunction
+--]]
 
 local _M={}
 local _G=_G
@@ -66,8 +92,10 @@ end
 _ENV=__env_extension__(_M,_G)
 
 
--- this is a simplified way of providing an info element which the help function
--- can be used to query
+--[[
+This is a simplified way of providing an info element which the help function
+can be used to query.
+--]]
 
 info={name=module_name
     ,path=module_path
@@ -94,9 +122,14 @@ info={name=module_name
     , _ENV=_M
 }
 
-local _AddtoModuleHelp
+
+--[[
+For the AddToModuleHelp decorator, it is a function which returns a table with a specialized
+".." metaoperation which updates the an info table while passing through the argument.
+--]]
+
+local _AddToModuleHelp
 _AddToModuleHelp=function(infoblock)
-    local name="Unk"
     local usuals={_ENV=1, name=1, doc=1, info=1}
     for k,v in pairs(infoblock) do
         if usuals[k] then
@@ -324,7 +357,6 @@ end
 local __show
 __show=
 function (obj,opts)
-    if true then
     opts=opts or {}
     opts.maxdepth=opts.maxdepth or 10
     opts.depth=opts.depth or 1
@@ -335,52 +367,6 @@ function (obj,opts)
     opts.sep=opts.sep or ", "
     local lrv=__show__(obj,opts,1)
     return __show_str__(lrv,opts)
-end
-
-
-    if false then
-    local lrv=__show__(obj,opts,ldepth)
-    opts=opts or {}
-    opts.maxdepth=opts.maxdepth or 10
-    opts.depth=opts.depth or 1
-    opts.hidden=opts.hidden or true
-    opts.indent=opts.indent or ""
-    local depth,indent
-    depth=ldepth or opts.depth
-    indent=lindent or opts.indent
-    if type(obj) ~= "table" then
-        return tostring(obj)
-    end
-    local lsep=opts.sep or ", "
-    local i,j,k,f,rv
-    rv=""--{__indent__=indent}
-    for k,f in pairs(obj) do
-        if k~="__parent__" then
-            if type(f)=="function" then
-                table.insert(rv,{k=k,v=tostring(f),__indent__=" "})
-            elseif type(f)=="table" then
-                if depth and depth>0 then
-                    rv=rv .. "["..k.."]={"..__show(f,opts,depth-1).."}"
-                else
-                    --rv=rv .. "["..k.."]="..tostring(f)
-                    rv=rv .. "["..k.."]="
-                end
-            else    
-                rv=rv .. "[k=["..__show(k).."]]="..tostring(f)
-            end
-        end
-    end
-    if hidden~=nil then
-        if obj.__classname__ then
-            rv=rv..lsep.."__classname__="..obj.__classname__
-        end
-        if obj.__parent__ then
-            rv=rv..lsep.."__parent__="..obj.__parent__
-        end
-        rv=rv..lsep.."metatable="..__show(getmetatable(obj))
-    end
-    return rv
-end
 end
 
 show=AddToModuleHelp{
@@ -403,10 +389,8 @@ function (obj)
             rv=rv .. ", "
         end
         if type(f)=="function" then
-            --rv=rv .. k.."=function"
             rv=rv .. k.."="..tostring(f)
         elseif type(f)=="table" then
-            --rv=rv .. k.."=table"
             rv=rv .. k.."="..tostring(f)
         else    
             rv=rv .. tostring(f)
@@ -955,7 +939,7 @@ end
 
 deeper_copy=
 AddToModuleHelp{
-    table_simple_copy=[==[A deeper copy of an object (metatables, userdata, and threads are pointed to for class and reference purposes).
+    deeper_copy=[==[A deeper copy of an object (metatables, userdata, and threads are pointed to for class and reference purposes).
                 Notes:
                     - the hidden field name, __parent__, will point to newly created logical parents
     ]==]
@@ -1214,7 +1198,7 @@ function(obj)
         end
     end
     rv_bIsValidValue=function(a)
-        if wds.bIn(_G.type(a),"string","number") and ( (obj[a]~=nil) or (obj.__aliases__ and obj.__aliases__[a]~=nil) ) then
+        if bIn(_G.type(a),"string","number") and ( (obj[a]~=nil) or (obj.__aliases__ and obj.__aliases__[a]~=nil) ) then
             return true
         else
             return false
@@ -1307,7 +1291,7 @@ end
 
 bIsInf=
 AddToModuleHelp{
-    bIsNaN=[==[A check for floating point +inf.]==]
+    bIsInf=[==[A check for floating point +inf.]==]
     , info=info
 } ..
 function(arg) 
@@ -1323,7 +1307,7 @@ end
 
 bIsNegInf=
 AddToModuleHelp{
-    bIsNaN=[==[A check for floating point -inf.]==]
+    bIsNegInf=[==[A check for floating point -inf.]==]
     , info=info
 } ..
 function(arg) 
