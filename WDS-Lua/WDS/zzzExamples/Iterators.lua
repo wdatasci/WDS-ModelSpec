@@ -1,3 +1,9 @@
+--- Test script of iterator structures.
+-- @within ExamplesHuh
+-- @script Iterators_test
+
+
+
 --[[ mirroring ../Python/examples/Iterators.py
     1: basic iterator examples
     2: filter examples
@@ -476,8 +482,6 @@ _generator_subdirectories=function(self,options,overrides)
                                     ::continue_allcontents::
                                 end
                             end
-                            ---[[
-                            --print('s     =',s)
                             local i=0
                             for s2 in _generator_subdirectories(self,options,{mindepth=1,maxdepth=1,type="d",local_path=s}) do
                                 i=i+1

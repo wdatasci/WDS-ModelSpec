@@ -20,6 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
+--- A test of WDS.Comp.Artificials
+-- @within WDS.Comp
+-- @script Artificials_test
+
 local wds=require("WDS")
 local wdsu=require("WDS.Util")
 
@@ -28,17 +32,15 @@ local arts=require("WDS.Comp.Artificials")
 local pesc=require("WDS.Util.python_esc")
 local mat=require("WDS.Comp.Matrix")
 
-
 math.randomseed(os.time())
 
-
-local is_main=wds.is_main(arg)
-print("is_main=",is_main)
+local bIsMain=wds.bIsMain(arg)
+print("bIsMain=",bIsMain)
 print("arg=",wds.show(arg))
 
 --print("dir()=") dir()
 
-if is_main then
+if bIsMain then
 
     options=args_opts.ArgumentParser('usual')
     opts_rv1, opts_rv2=options:parse(arg)

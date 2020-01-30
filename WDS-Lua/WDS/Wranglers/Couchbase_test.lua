@@ -20,16 +20,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
---- A test of WDS.Wranglers.url
+--- A test of WDS.Wranglers.Couchbase
 -- @within WDS.Wranglers
--- @script url_test
+-- @script Couchbase_test
+
 
 wds=require("WDS")
 wdsu=require("WDS.Util")
 pesc=require("WDS.Util.python_esc")
-url=require("WDS.Wranglers.url")
-
+lcb=require("WDS.Wranglers.Couchbase")
+wjson=require("WDS.Wranglers.json")
 args_opts=require("WDS.Util.args_opts")
+
 options=args_opts.ArgumentParser('usual')
 
 options:add_argument{name="fetch"
@@ -55,13 +57,11 @@ if opts_rv1.help then
     options:help()
     print()
     print("Module help()")
-    print(wds.help(url))
+    print(wds.help(lcb))
     os.exit()
 end
 
 
-u="https://wypasekdatascience.com/index-html/wdatasci/"
-u="http://date.jsontest.com"
 u="https://www.sec.gov/Archives/edgar/data/1696935/000095013119004146/index.json"
 print("URL u=",u)
 
@@ -77,9 +77,46 @@ end
     
 print("a=",wds.show(a))
 
-wjson=require("WDS.Wranglers.json")
-
 o=wjson.JSON(a)
 
+-- Note: CJW - For a local credential file to simplify the test, 
+-- on WSL/ubuntu, a file in my home directory has
+-- Couchbase_localhost_credentials={user="AAAAAA", password="AAAAAA"}
+
+load(io.open("/home/"..os.getenv("USER").."/Couchbase_localhost_credentials.lua","r"):read("*all"))()
+cb_cred=Couchbase_localhost_credentials
+
+print("input Couchbase user > (default: "..cb_cred.user..")")
+user=io.read("*l")
+if #user==0 then
+    user=cb_cred.user
+end
+print("input Couchbase password > (default from /home/"..os.getenv("USER").."/Couchbase_localhost_credentials.lua)")
+password=io.read("*l")
+if #password==0 then
+    password=cb_cred.password
+end
+
+server_address="couchbase://localhost/SEC"
+print("input Couchbase server address > (default: "..server_address..")")
+s=io.read("*l")
+if #s>0 then
+    server_address=s
+end
+
+doc_name="general_test_example"
+print("input Couchbase target document name> (default: "..doc_name..")")
+d=io.read("*l")
+if #d>0 then
+    doc_name=d
+end
+
+rc = o << {hey="what"}
+
+rc,rv=Couchbase_CAPI_store(server_address,user,password,doc_name,tostring(o))
+print("store rc=",rc," rv=",rv)
+
+rc,rv=Couchbase_CAPI_get(server_address,user,password,doc_name)
+print("get rc=",rc," rv=",rv)
 
 

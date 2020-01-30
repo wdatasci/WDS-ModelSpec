@@ -20,20 +20,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
+--- A test of WDS.Util.args_opts
+-- @within WDS.Util
+-- @script args_opts_test
 
 local wds=require("WDS")
 local wdsu=require("WDS.Util")
 
 local arg=arg or table.pack(...)
-local is_main=wds.is_main(arg)
-print("is_main=",is_main)
+local bIsMain=wds.bIsMain(arg)
+print("bIsMain=",bIsMain)
 print("arg=",wds.show(arg))
 
 local args_opts=require("WDS.Util.args_opts")
 
-if is_main then
+if bIsMain then
     
-    -- options=args_opts.ArgumentParser()
     options=args_opts.ArgumentParser('usual')
 
     -- print("options=",wds.show(options))

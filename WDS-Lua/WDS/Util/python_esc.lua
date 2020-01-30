@@ -20,10 +20,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
---some python-esc things, especially for the WDS test code......
+--- A few utilities similar to common Python elements.
+-- @submodule WDS.Util
 
+-- Require the base module and set free names into the module
+-- environment to be returned.
 local wds=require("WDS")
+local _M={}
+local _G=_G
+_ENV=wds.EnvExtension(_M,_G)
+
 local wdsu=require("WDS.Util")
+
+local __parent__="Util"
+local __name__="python_esc"
+local module_name=__parent__.."."..__name__
+local module_path=""
+
+local dbg
+if __NO_DEBUG__==nil then
+    module_path=debug.getinfo(1,"S").source
+    dbg=require("debugger")
+    dbg.auto_where=2
+else
+    dbg=function() end
+end
 
 local arg 
 
@@ -33,11 +54,7 @@ local module_name="WDS.Util.python_esc"
 
 local module_path=debug.getinfo(1,"S").source
 
-local mrv={}
-
--- 
-
-mrv.info={name=module_name
+info={name=module_name
     ,path=module_path
     ,doc=module_name .. " ("..module_path..")"..[==[
     A set of functions which mirror some of the python code
@@ -47,35 +64,62 @@ mrv.info={name=module_name
         x=list_range(l) will return the python equivalent of list(range(l))
 
     ]==]
+    ,docmap={}
+    ,_ENV=_M
 }
-
---a python3-ish range iterator, but lua-ish in that end-points are inclusive
-mrv.range=function(a,b,c) 
-    if b==nil then a,b=1,a end 
-    if c==nil then c=1 end 
-    local _t={a,b,c,0,a-c} 
-    return function(t, j) 
-                _t[5]=_t[5]+_t[3]
-                if _t[5]<=_t[2] then 
-                    return _t[5] 
-                end 
-            end,_t,0 
+-- localizing AddToModuleHelp to globally assign to this module's info table
+local AddToModuleHelp=function(tbl,tbl2) 
+    local k,v
+    for k,v in pairs(tbl) do
+        if type(v)=="string" and string.find(v,"^%-%-%[%[%-%-") and string.find(v,"%-%-%]%]%-%-$") then
+            v=string.sub(v,7,#v-6)
+            tbl[k]=v
+        end
+    end
+    tbl.info=info 
+    return wds.__AddToModuleHelp(tbl,tbl2) 
 end
 
-mrv.list=function(f) local rv={} for v in (function () return f, {}, 0 end)()  do table.insert(rv,v) end return rv end
+range=AddToModuleHelp{
+    range=[==[--[[--
+            A python3-ish range iterator, but lua-ish in that end-points are inclusive.
+--]]--]==]
+--@function range
+} .. 
+function(a,b,c) 
+    if b==nil then a,b=1,a end 
+    if c==nil then c=1 end 
+    local __state__={a,b,c,0,a-c} 
+    return function(t, j) 
+                t[5]=t[5]+t[3]
+                if t[5]<=t[2] then 
+                    return t[5] 
+                else
+                    return nil
+                end 
+            end,__state__,0 
+end
+
+list=function(f) local rv={} for v in (function () return f, {}, 0 end)()  do table.insert(rv,v) end return rv end
 
 
-mrv.list_range=function(obj)
-    if type(obj)~="number" then
-        return nil
+list_range=AddToModuleHelp{
+    list_range=[==[--[[--
+            A python3-ish list(range()) object, as opposed to the iterator, range().
+            @function list_range
+--]]--]==]} ..
+function(a,b,c)
+    if type(a)~="number" then
+        a=tonumber(a)
+        if a==nil then return nil end
     end
+    if b==nil then a,b=1,a end 
+    if c==nil then c=1 end 
     local rv={}
-    for i=0,(tonumber(obj)-1),1 do
-        table.insert(rv,i)
-    end
+    for i=a,b,c do table.insert(rv,i) end
     return rv
 end
 
 
-return mrv
+return _M
 

@@ -1,4 +1,4 @@
---[[Copyright (c) 2019 Wypasek Data Science, Inc.
+--[[Copyright 2019, Wypasek Data Science, Inc.  (WDataSci, WDS)
 --Released under the MIT open source license.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,37 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
---- A simple collection of tools for to add a few wget-like functionalities.
--- @submodule WDS.Wranglers
--- @within WDS.Wranglers
+--- WDS computational utilities
+-- @module WDS.Comp
 
-local wds=require("WDS")
-local wdsu=require("WDS.Util")
-local pesc=require("WDS.Util.python_esc")
-local lcurl=require "lcurl"
+local wds=require "WDS"
 
-local __parent__="Wranglers"
-local __name__="url"
-local module_name=__parent__.."."..__name__
+local module_name_dots=( ... or "main-call-without-args" )
+local module_name="Comp"
+
 local module_path=""
-
-local docstring=module_name .. " ("..module_path..")"..[==[
-    A simple collection of tools for to add a few wget-like functionalities.
-]==]
-
-local dbg
 if __NO_DEBUG__==nil then
     module_path=debug.getinfo(1,"S").source
-    dbg=require("debugger")
-    dbg.auto_where=2
-else
-    dbg=function() end
-end
-
-if wds.bIsMain(table.pack(...),module_name) then
-    print("test with "..__parent__.."/"..__name__.."_test.lua")
-    print(docstring)
-    os.exit()
 end
 
 local _M={}
@@ -59,29 +39,14 @@ _ENV=wds.EnvExtension(_M,_G)
 
 info={name=module_name
     ,path=module_path
-    ,doc=docstring
     ,docmap={}
+    ,doc=module_name .. " ("..module_path..")"..[==[
+            A general set of utilities to add the usual suspects to programs and the interactive session.
+]==]
 }
 
-local AddToModuleHelp=function(tbl); tbl.info=info; return wds.AddToModuleHelp(tbl); end
-
-
-get=AddToModuleHelp{
-    get=[==[--[[--
-            A wrapper for lcurl.easy which returns the input url.
---]]--]==]
--- @function get
-} ..
-function(url,dlm)
-    dlm=(dlm or "\n")
-    local __data={}
-    local __data_writer=function(line) _M_G.table.insert(__data,line) end
-    lcurl.easy {url=url, writefunction=__data_writer} :perform()
-    return _M_G.table.concat(__data,dlm)
+if module_name_dots=="main-call-without-args" or wds.bIsMain(table.pack(...),module_name) then
+    print("TODO")
 end
 
-
 return wds.EnvLock(_M)
-
-
-

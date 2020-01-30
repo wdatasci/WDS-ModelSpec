@@ -20,16 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
---The WDS usual
+--- A package of data wranglers for the WDS lua library.
+-- @module WDS.Wranglers
+
 local wds=require "WDS"
 
---WDS-Lua/WDS/Wranglers/__init__.lua - top level package
-
--- the localizing of arg below shorts the global arg of a program that might require this module
-local arg 
-
 local module_name_dots=( ... or "main-call-without-args" )
--- to hard-code use.......
 local module_name="Wranglers"
 
 local module_path=""
@@ -37,34 +33,20 @@ if __NO_DEBUG__==nil then
     module_path=debug.getinfo(1,"S").source
 end
 
-local mrv={}
-local _M_G=_G
+local _M={}
+local _G=_G
+_ENV=wds.EnvExtension(_M,_G)
 
--- this is a simplified way of providing an info element which the help function
--- can be used to query
-
-mrv.info={name=module_name
+info={name=module_name
     ,path=module_path
-    ,doc=module_name .. " ("..module_path..")"..[==[
-    A collection of data wranglers.
-
-    ]==]
     , docmap={}
+    ,doc=module_name .. " ("..module_path..")"..[==[
+            A collection of data wranglers.
+]==]
 }
 
-if module_name_dots=="main-call-without-args" or wds.is_main(table.pack(...)) then
-    print("testing in "..module_name)
-    print("module_path "..module_path)
-    print()
-    print("help on "..module_name)
-    print(wds.help(mrv))
-    print()
-    print("show(_G)")
-    print(wds.show(_G))
-    print(wds.show_keys(_G,1))
-
+if module_name_dots=="main-call-without-args" or wds.bIsMain(table.pack(...)) then
+    print("TODO")
 end
 
-
-return mrv
-
+return wds.EnvLock(_M)

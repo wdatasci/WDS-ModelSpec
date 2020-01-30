@@ -1,0 +1,13 @@
+file={ "__init__.lua"
+    , "Functions.lua"
+    , "HelloWorld.lua"
+    , "HelloWorldExtended.lua"
+    , "Iterators.lua"
+    , "LuaGnuPlotExample.lua"
+    , "LuaGraphExam1.lua"
+    , "MonkeyPatch.lua"
+    , "general_test.lua"
+    , "lua_Couchbase_capi_minimal.c"
+    , "lua_capi_example1.c"
+    , "lua_swig_example1.c"
+}

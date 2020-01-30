@@ -20,34 +20,63 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
---[[
+--[[-- A base module for the WDS-Lua libraries, developed for use by Wypasek Data Science, Inc., but released under the MIT open source license.
 
-For the WDS-Lua library, WDS.lua is the primary module interface.  It provides
-for several common treatments across languages, and some general utility functions.
+<p>Links</p>
+<ul>
+<li><a href="https://wypasekdatascience.com">Wypasek Data Science</a></li>
+<li><a href="https://github.com/wdatasci/WDS-ModelSpec/tree/master/WDS-Lua">WDS-Lua github</a></li>
+</ul>
 
-For example:
-    By including the following at the top of a CLI session:
-        wds=require("WDS")
-
-    One can use:
-        help()
-    or 
-        help(module_name)         --i.e., help(wds)
-
-    To display the info object of module_name, which was built during the definition 
-    of module_name via a decorator as used below.
-
---]]
+<p>For the WDS-Lua library, WDS.lua is the primary module interface.  It provides
+for several common treatments across languages, and some general utility functions.</p>
 
 
+<p>Usage example:</p>
+<ul>
+<li><font size="1">Assuming parent directory of WDS.lua and the WDS directory tree is within the LUA_PATH variable, i.e., LUA_PATH contains WDS-Lua/?.lua:</font>
+<code><br>
+-- By including the following at the top of a CLI session:<br>
+        wds=require("WDS")<br>
+-- One can use:<br>
+        help()  --i.e., to display help for all modules if exists
+-- or <br>
+        help(module_name)         --i.e., help(wds)<br>
+-- To display the info object of module_name, which was built during the definition <br>
+-- of module_name via a decorator as used below.<br>
+</code>
+</li>
+</ul>
 
+<p>Conventions used in the WDS-Lua libraries:</p>
+<ul>
+<li>Within the module definitions, new free names are placed directly into the returned environment. See <i>EnvExtension</i> use at the top of sub-modules for usage.</li>
+<li>Several conventions and globalized functions will be familiar to python and R users:
+    <ul>
+    <li>Hidden Field Names start and end with "__", i.e., "__AAA__". Of course, these names are not actually hidden but intended for internal class purposes.</li>
+    <li>Boolean test functions usually start with "bIs", such as "bIsMain" for use in testing a module.</li>
+    <li>Sub module/directories will have a common __init__.lua file. The base module, WDS.lua, modifies the search path so that require("WDS.Util") will load WDS/Util/__init__.lua (of course, if WDS/Util.lua does not exist). The exception is the WDS.lua module which defines this behavior and so there is no WDS/__init__.lua file.
+    <li>Familiar functions implemented and globalized for the CLI:
+        <ul>
+            <li>help( obj ) - returns obj.info.doc, if it exists (see AddToModuleHelp), or calls os.execute("ldoc -m "..obj)</li>
+            <li>dir( obj ) - calls print(wds.show_keys(obj))</li>
+            <li>show( obj ) - calls print(wds.show(obj))</li>
+            <li>q() - calls os.exit() (as in R)</li>
+        </ul>
+    </li>
+</li>
+<li>The help(module) CLI functionality is based first on an info table in module environment. A module's info table is initialized at the top with inserted information via an <i>AddToModuleHelp</i> decorator. See WDS.lua and submodules for examples.
+</li>
+<li>The <i>AddToModuleHelp</i> decorator gobbles (an old TeX term) a table that contains at least one key-value pair for object name and doc string.  The doc string can contain luadoc information which will be stripped, see the WDS.lua source.
+</li>
+</ul>
 
---CodeRef: CW - hints from
---  https://stackoverflow.com/questions/9145432/load-lua-files-by-relative-path
---  https://stackoverflow.com/questions/42217459/how-to-read-a-data-file-at-a-package-path-on-lua-5-1
---  https://stackoverflow.com/questions/38800475/confusion-with-debug-getlocal-in-lua
+@module WDS
+@copyright 2018,2019
+@license MIT
+@author Christian Wypasek, Wypasek Data Science, Inc.
 
-
+--]]--
 
 -- the localizing of arg below shorts the global arg of a program that might require this module
 local arg 
@@ -128,20 +157,29 @@ For the AddToModuleHelp decorator, it is a function which returns a table with a
 ".." metaoperation which updates the an info table while passing through the argument.
 --]]
 
-local _AddToModuleHelp
-_AddToModuleHelp=function(infoblock)
-    local usuals={_ENV=1, name=1, doc=1, info=1}
+__AddToModuleHelp__luadocstrip__=function(infoblock)
+    local k,v
     for k,v in pairs(infoblock) do
-        if usuals[k] then
-            if k=="_ENV" then
-                infoblock.info=_ENV.info
-            end
-        elseif type(v)=="string" then
+        if type(v)=="string" and string.find(v,"^%-%-%[%[%-%-(.*)%-%-%]%]%-%-") then
+            v=string.sub(v,7,#v-6)
+            v=string.gsub(v,"<br>\n","\n")
+            infoblock[k]=v
+        end
+    end
+    return infoblock
+end
+
+__AddToModuleHelp=function(infoblock)
+    local usuals={_ENV=1, name=1, path=1, doc=1, ldoc=1, info=1}
+    __AddToModuleHelp__luadocstrip__(infoblock)
+    local k,v
+    for k,v in pairs(infoblock) do
+        if (not usuals[k]) and type(v)=="string" then
             infoblock.name=k
             infoblock.doc=v
             break
-        end
-    end
+        end -- if not usuals
+    end -- k,v
     return setmetatable({},{__concat=
     function(tmp,obj,obj2)
         infoblock.info.docmap[infoblock.name]={name=infoblock.name,doc=infoblock.doc,obj=obj}
@@ -156,25 +194,62 @@ _AddToModuleHelp=function(infoblock)
     end})
 end
 
-AddToModuleHelp=_AddToModuleHelp{
-    AddToModuleHelp=[==[A decorator for adding entries to a module's info.docmap table.]==]
-    , info=info} ..
-_AddToModuleHelp
+
+AddToModuleHelp=__AddToModuleHelp{
+    AddToModuleHelp=[==[--[[--
+            A decorator for adding entries to a module's info.docmap table.
+--]]--]==]
+-- @function AddToModuleHelp
+, info=info} ..
+__AddToModuleHelp
 
 
 EnvExtension=AddToModuleHelp{
-    EnvExtension=[==[A environment customizer for use at the top of modules.
-                General usage:
-                    --top of module
-                    local wds=require("WDS")
-                    local _M={}
-                    local _G=_G
-                    _ENV=wds.EnvExtension(_M,_G)
-                    <<< module body >>>
-                    return _ENV
-                    ]==]
-    , info=info} ..
+    EnvExtension=[==[--[[--
+            A environment customizer for use at the top of modules.
+
+                General usage:<br>
+                    --top of module<br>
+                    local wds=require("WDS")<br>
+                    local _M={}<br>
+                    local _G=_G<br>
+                    _ENV=wds.EnvExtension(_M,_G)<br>
+                    <<< module body >>><br>
+                    return _M<br>
+                    --or 
+                    return wds.EnvLock(_M)
+--]]--]==]
+-- @function EnvExtension
+, info=info} ..
 __env_extension__
+
+EnvLock=AddToModuleHelp{
+    EnvLock=[==[--[[--
+            A environment locker for use at the return of modules.
+
+                General usage:<br>
+                    --top of module<br>
+                    <<< module body >>><br>
+                    return EnvLock(_ENV)<br>
+
+--]]--]==]
+-- @function EnvLock
+, info=info} ..
+function(env) return setmetatable({},{__index=env,__newindex=function(t,k,v) error("Error, cannot change locked table") end
+    ,__metatable=false
+}) end
+
+
+__indent_newlines=function(arg,indent)
+    return indent..string.gsub(arg,"\n","\n"..indent)
+end
+__ldoc_m=function(arg)
+    local tmp=io.popen("LUA_INIT=;ldoc -m "..arg.." 2>&1")
+    local rv=tmp:read("*all")
+    rc=tmp:close();
+    return rc,"ldoc -m "..arg.."\n"..__indent_newlines(rv,"      ")
+end
+
 
 help=
 function(obj,...)
@@ -200,6 +275,10 @@ function(obj,...)
                 end
             end
         end
+    end
+    if type(obj)=="string" then
+        local a,b=__ldoc_m(obj)
+        if a then return b end
     end
     if found or (#arg>0 and arg[1].quiet~=nil) then
         return rv
@@ -235,25 +314,37 @@ function(obj,...)
     return rv
 end
 
+--[[-- A global help function.
+
+            help(module) will display a module.info.doc if exists<br>
+            help(string_arg) will attempt to call "ldoc -m "..string_arg<br>
+
+            @function help
+--]]--
 _G.help=
-AddToModuleHelp{
-    help=[==[A global help function]==]
-    , info=info} ..
 function (obj)
     local k,v,rv,a,b
     if obj==nil then
-        rv="Global help"
+        print("Global help")
         for k,v in pairs(_G) do
-            if type(v)=="table" then
-                rv=rv..help(v,{quiet=true})
+            if type(v)=="table" and v.info then
+                print("WDS help for "..k)
+                print(help(v,{quiet=true}))
+            else
+                a,b=__ldoc_m(k)
+                if a then
+                    print(b)
+                end
             end
         end
         if rv=="Global help" then
             rv="Global help\n  help .info.doc strings not found"
         end
-        return rv
+        return
     end
     if type(obj)=="string" then
+        a,b=__ldoc_m(obj)
+        if a then return b end
         obj=_G[obj]
     end
     return help(obj)
@@ -261,8 +352,11 @@ end
 
 
 dir=AddToModuleHelp{
-    dir=[==[A python-like dir() function to show table keys.]==]
-    ,info=info} ..
+    dir=[==[--[[--
+            A python-like dir() function to show table keys.
+--]]--]==]
+-- @function dir
+,info=info } ..
 function (obj) 
     if obj == nil then
         obj=_G
@@ -282,13 +376,14 @@ function (obj,opts,ldepth)
     opts=opts or {}
     opts.maxdepth=opts.maxdepth or 10
     opts.depth=opts.depth or 1
+    ldepth=ldepth or opts.depth
     opts.hidden=opts.hidden or false
     opts.indent=opts.indent or ""
     local depth,indent,hidden
     depth=ldepth or opts.depth
     hidden=opts.hidden
     if type(obj) ~= "table" then
-        return {__depth__=depth,__type__=type(obj),{k=nil,v=tostring(obj)}}
+        return {__depth__=depth,__type__=type(obj),k=nil,v=tostring(obj)}
     end
     local i,j,k,f,rv
     rv={__depth__=depth,__type__="table"}
@@ -298,14 +393,14 @@ function (obj,opts,ldepth)
             if hidden then
                 table.insert(rv,{__type__="hidden",k=k,v=k})
             else
-                --continue
+                -- continue
             end
         else
             if type(f)=="function" then
                 table.insert(rv,{__type__="function",k=k,v=tostring(f)})
             elseif type(f)=="table" then
                 if depth and depth<=opts.maxdepth then
-                    local lrv=__show__(f,opts,depth+1)
+                    local lrv=__show__(f,opts,ldepth+1)
                     table.insert(rv,{__type__="table",k=k,v=lrv})
                 else
                     table.insert(rv,{__type__="depthexceedtable",k=k,v="<<show depth exceeded>>"})
@@ -318,8 +413,6 @@ function (obj,opts,ldepth)
     if hidden then
         local mt=getmetatable(obj)
         if mt~=nil then
-            --local lrv=__show__(mt,opts,opts.maxdepth-2)
-            --table.insert(rv,{__depth__=opts.maxdepth-2,__type__="table",k="metatable",v=lrv})
             table.insert(rv,{__depth__=1,__type__="metatable",k="metatable",v=tostring(mt)})
         end
     end
@@ -327,15 +420,19 @@ function (obj,opts,ldepth)
 end
 
 local __show_str__
-__show_str__=function(arg,opts)
-    local depth=arg.__depth__ or 0
+__show_str__=function(arg,opts,ldepth)
+    ldepth=ldepth or opts.depth or 0
+    local maxdepth=opts.maxdepth or 10
+    if ldepth>maxdepth then
+        ldepth=maxdepth
+    end
     local linesep=opts.linesep or " "
     local itemsep=opts.itemsep or ","
     local indent=opts.indent or " "
-    local lindent=string.rep(indent,depth)
+    local lindent=string.rep(indent,ldepth)
     local b,i,j,k,v
     if arg.__type__~="table" then
-        return arg[1].v
+        return arg.v
     end
     local rv={}
     for i,b in ipairs(arg) do
@@ -346,7 +443,7 @@ __show_str__=function(arg,opts)
         if b.__type__~="table" then
             s=s..b.v
         else
-            s=s..__show_str__(b.v,opts)
+            s=s..__show_str__(b.v,opts,ldepth+1)
         end
         table.insert(rv,s)
     end
@@ -365,14 +462,17 @@ function (obj,opts)
     opts.itemsep=opts.itemsep or ","
     opts.linesep=opts.linesep or " "
     opts.sep=opts.sep or ", "
-    local lrv=__show__(obj,opts,1)
+    local lrv=__show__(obj,opts)
     return __show_str__(lrv,opts)
 end
 
 show=AddToModuleHelp{
-        show=[==[A simple table dump to string]==]
-    , info=info} ..
-    __show
+        show=[==[--[[--
+            A simple table dump to string
+--]]--]==]
+-- @function show
+, info=info} ..
+__show
 
 _G.show=function(obj,opts,ldepth) print(show(obj,opts,ldepth)) end
 
@@ -400,8 +500,11 @@ function (obj)
 end
 
 keys=AddToModuleHelp{
-    keys=[==[A simple function to pull a table's keys into a indexed table.]==]
-    , info=info} ..
+    keys=[==[--[[--
+            A simple function to pull a table's keys into a indexed table.
+--]]--]==] 
+-- @function keys
+, info=info} ..
 function (obj,opts)
     if type(obj) ~= "table" then
         return nil
@@ -418,7 +521,12 @@ function (obj,opts)
     return rv
 end
 
-show_keys=
+show_keys=AddToModuleHelp{
+    show_keys=[==[--[[--
+            As simple function that returns a string of a table's keys.
+--]]--]==]
+-- @function show_keys
+, info=info} ..
 function (obj, opts)
     if type(obj) ~= "table" then
         return ""
@@ -432,6 +540,8 @@ function (obj, opts)
     return table.concat(lkeys,lsep)
 end
 
+--- A global dir() function.
+-- @function _G.dir
 _G.dir=
 function (obj,opts) 
     opts=opts or {}
@@ -444,10 +554,12 @@ function (obj,opts)
     return
 end
 
-locals=
-AddToModuleHelp{
-    locals=[==[A simple query of the locals available.]==]
-    , info=info} ..
+locals=AddToModuleHelp{
+    locals=[==[--[[--
+            A simple query of the locals available (uses debug library).
+--]]--]==]
+-- @function locals
+, info=info} ..
 function ()
     local rv={}
     local i=0
@@ -490,8 +602,11 @@ end
 
 StringUnquote=
 AddToModuleHelp{
-    StringUnquote=[==[Returns a string without surrounding quotes.]==]
-    , info=info} ..
+    StringUnquote=[==[--[[--
+            Returns a string without surrounding quotes.
+--]]--]==]
+-- @function StringUnquote
+, info=info} ..
 function(arg)
     if type(arg)~="string" then
         return tostring(arg)
@@ -505,8 +620,11 @@ end
 
 StringExportable=
 AddToModuleHelp{
-    StringExportable=[==[A simple function to return a string for serialization purposes.]==]
-    , info=info} ..
+    StringExportable=[==[--[[--
+            A simple function to return a string for serialization purposes.
+--]]--]==]
+-- @function StringExportable
+, info=info} ..
 function(word,keyquote)
     local rv=string.format("%q",word)
     rv=string.sub(rv,2,#rv-1)
@@ -528,64 +646,63 @@ end
 -- using the semi-standard dump example to create an lson
 do
     local local_lson
-    local_lson=function(name,t,includereturn,indent,kname)
-        indent=indent or ""
-        local name1, qname
+    local_lson=function(obj,opts)
+        opts=opts or {}
+        local indent=opts.indent or ""
+        local name1, qname, kname
         local t1,qt
-        if name then
-            name1,qname=StringExportable(tostring(name),1)
+        if opts.name then
+            name1,qname=StringExportable(tostring(opts.name),1)
             name1=qname
-            qname=qname.."="
+            qname=qname.." ="
         else
             name1=""
             qname=""
         end
-        local kname=kname
-        local bKey=kname~=nil
-        if bKey then
-            t1,kname=StringExportable(kname)
+        if opts.kname then
+            t1,kname=StringExportable(opts.kname,true)
             kname=kname.." = "
         else 
             kname=""
         end
-        if t == nil then
+        if obj == nil then
             return qname..indent..kname.."{__nil__=true}"
-        elseif type(t)=="string" then
-            t1,qt=StringExportable(t)
+        elseif type(obj)=="string" then
+            t1,qt=StringExportable(obj)
             return qname..indent..kname.."[["..t1.."]]"
-        elseif type(t)=="boolean" or type(t)=="number" then
-            return qname..indent..kname..tostring(t)
-        elseif type(t)=="function" then
-            return qname..indent..kname.."[["..string.dump(t).."]]"
-        elseif type(t)=="userdata" or type(t)=="thread" then
-            return qname..indent..kname.."[[cannot be serialized, "..type(t).."]]"
+        elseif type(obj)=="boolean" or type(obj)=="number" then
+            return qname..indent..kname..tostring(obj)
+        elseif type(obj)=="function" then
+            return qname..indent..kname.."[["..string.dump(obj).."]]"
+        elseif type(obj)=="userdata" or type(obj)=="thread" then
+            return qname..indent..kname.."[[cannot be serialized, "..type(obj).."]]"
         end
         local rvs=qname..indent..kname.."{\n"
 
         local i,k,v
         local seen={}
         local bSep=false
-        local n=rawlen(t)
+        local n=rawlen(obj)
         for i=1,n,1 do
-            v=rawget(t,i)
+            v=rawget(obj,i)
             if bSep then rvs=rvs..",\n" end
             seen[i]=i
-            rvs=rvs..local_lson(nil,v,nil,indent.."   ")
+            rvs=rvs..local_lson(v,{indent=indent.."   "})
             bSep=true
         end
-        i=next(t)
+        i=next(obj)
         while i do
             if seen[i]==nil then
                 seen[i]=i
-                v=rawget(t,i)
+                v=rawget(obj,i)
                 if bSep then rvs=rvs..",\n" end
-                rvs=rvs..local_lson(nil,v,nil,indent.."   ",i)
+                rvs=rvs..local_lson(v,{indent=indent.."   ",kname=i})
                 bSep=true
             end
-            i=next(t,i)
+            i=next(obj,i)
         end
-        if includereturn then
-            if name then
+        if opts.includereturn then
+            if opts.name then
                 return rvs.."}\nreturn "..name1.."\n"
             else
                 return "return "..rvs.."}\n"
@@ -597,11 +714,12 @@ do
     _M.lson=local_lson
 end
 
-
-rtrim=
-AddToModuleHelp{
-    rtrim=[==[A simple string right trim function.]==]
-    , info=info } .. 
+rtrim=AddToModuleHelp{
+    rtrim=[==[--[[--
+            A simple string right trim function.
+--]]--]==]
+-- @function rtrim
+, info=info } .. 
 function(arg,to_be_removed)
     to_be_removed=to_be_removed or "([%s%c\a\b\f\n\r\t\v]*)"
     local a
@@ -613,10 +731,12 @@ function(arg,to_be_removed)
     end
 end
 
-ltrim=
-AddToModuleHelp{
-    rtrim=[==[A simple string left trim function.]==]
-    , info=info } .. 
+ltrim=AddToModuleHelp{
+    rtrim=[==[--[[--
+            A simple string left trim function.
+--]]--]==]
+-- @function ltrim
+, info=info } .. 
 function(arg,to_be_removed)
     to_be_removed=to_be_removed or "([%s%c\a\b\f\n\r\t\v]*)"
     local a
@@ -629,10 +749,12 @@ function(arg,to_be_removed)
     end
 end
 
-trim=
-AddToModuleHelp{
-    trim=[==[A simple string trim function.]==]
-    , info=info } .. 
+trim=AddToModuleHelp{
+    trim=[==[--[[--
+            A simple string trim function.
+--]]--]==]
+-- @function trim
+, info=info } .. 
 function(arg,to_be_removed)
     to_be_removed=to_be_removed or "([%s%c\a\b\f\n\r\t\v]*)"
     local a
@@ -656,21 +778,23 @@ function(arg,to_be_removed)
     end
 end
 
-
-
-string_startswith_exp= 
-AddToModuleHelp{
-    string_startswith_exp=[==[A simple boolean test if a string starts with a match pattern.]==]
-    , info=info} ..
+string_startswith_exp=AddToModuleHelp{
+    string_startswith_exp=[==[--[[--
+            A simple boolean test if a string starts with a match pattern.
+--]]--]==]
+-- @function string_startswith_exp
+, info=info} ..
 function (arg1,arg2)
     i,j=string.find(arg1,"^"..arg2) 
     return i and i==1
 end
 
-string_startswith= 
-AddToModuleHelp{
-    string_startswith=[==[A simple boolean test if a string starts with another string.]==]
-    , info=info} ..
+string_startswith=AddToModuleHelp{
+    string_startswith=[==[--[[--
+            A simple boolean test if a string starts with another string.
+--]]--]==]
+-- @function string_startswith
+, info=info} ..
 function (arg1,arg2)
     if type(arg1)~="string" then
         arg1=tostring(arg1)
@@ -678,7 +802,7 @@ function (arg1,arg2)
     if type(arg2)~="string" then
         arg2=tostring(arg2)
     end
-    --check for magic characters which will need to be escaped
+    -- check for magic characters which will need to be escaped
     local i,j=string.find(arg2,"[%(%_%.%%%+%-%*%?%[%]%^%$]") 
     if i then
         arg2=string.gsub(arg2,"[%(%_%.%%%+%-%*%?%[%]%^%$]","%%%1") 
@@ -686,16 +810,18 @@ function (arg1,arg2)
     return string_startswith_exp(arg1,arg2)
 end
 
-string_split= 
-AddToModuleHelp{
-    string_split=[==[A simple string split.]==]
-    , info=info} ..
+string_split=AddToModuleHelp{
+    string_split=[==[--[[--
+            A simple string split.
+--]]--]==]
+-- @function string_split
+, info=info} ..
 function (s,dlm,quoted,trimit)
     if dlm==nil then
         dlm=" "
     end
     local rv={}
-    --for the pattern "(.-)"..dlm 
+    -- for the pattern "(.-)"..dlm 
     --  . finds any character
     --  .- finds 0 or more characters, but the smallest matching string
     --  (.-) captures 0 or more characters, but the smallest matching string
@@ -706,7 +832,7 @@ function (s,dlm,quoted,trimit)
     --  the tail.
     local _s
     if trimit then
-        _s=_G.string.gsub(s,"^%s*(.-)%s*$","%1")..dlm
+        _s=string.gsub(s,"^%s*(.-)%s*$","%1")..dlm
         if quoted then
             _s=dlm.._s
         end
@@ -720,22 +846,22 @@ function (s,dlm,quoted,trimit)
         local starti=1
         local stop=false
         while not stop do
-            local a,b,c,d=_G.string.find(_s,"^"..dlm.."%s-([\"'])(.-)%1%s-"..dlm,starti)
+            local a,b,c,d=string.find(_s,"^"..dlm.."%s-([\"'])(.-)%1%s-"..dlm,starti)
             if a~=nil then
                 if d==nil or #d==0 then
-                    _G.table.insert(rv,"")
+                    table.insert(rv,"")
                 else
-                    _G.table.insert(rv,d)
+                    table.insert(rv,d)
                 end
                 starti=b-#dlm+1
                 stop=(b==#_s)
             else
-                a,b,c=_G.string.find(_s,"^"..dlm.."(.-)"..dlm,starti)
+                a,b,c=string.find(_s,"^"..dlm.."(.-)"..dlm,starti)
                 if a~=nil then
                     if c==nil or #c==0 then
-                        _G.table.insert(rv,"")
+                        table.insert(rv,"")
                     else
-                        _G.table.insert(rv,c)
+                        table.insert(rv,c)
                     end
                     starti=b-#dlm+1
                     stop=(b==#_s)
@@ -745,21 +871,22 @@ function (s,dlm,quoted,trimit)
             end
         end
     else
-        for _seg in _G.string.gmatch(_s,"(.-)"..dlm) do
-            _G.table.insert(rv,_seg)
+        for _seg in string.gmatch(_s,"(.-)"..dlm) do
+            table.insert(rv,_seg)
         end
     end
     return rv
 end
 
+-- For the WDS.lua module, in a location with a WDS subdirectory,
 -- check to see if python-esc module __init__.lua files can be found on paths
 -- with /WDS/ or :\WDS\ 
 
--- print("package.path=",package.path)
 if string.find(package.path,"%?.__init__.lua") == nil then
     local s=""
     for k,v in pairs(string_split(package.path,";")) do
-        if ( string.find(v,"WDS(.-)%?%.lua$") ~= nil ) and ( string.find(v,"%?.%?") == nil ) then
+        if ( string.find(v,"WDS(.-)%?%.lua$") ~= nil ) 
+            and ( string.find(v,"%?.%?") == nil ) then
             if string.find(v,":\\") == nil then
                 s= s .. ";" .. string.match(v,"(.-)%?%.lua$") .. "?/__init__.lua"
             else
@@ -773,17 +900,17 @@ if string.find(package.path,"%?.__init__.lua") == nil then
     end
 end
 
---is_main, if called in the ``main'' function includes arg[-1]=lua<<version>>
-is_main=AddToModuleHelp{
-    is_main=[==[A boolean for tests in module files, use like wds.is_main(arg,modulename).]==]
-    , info=info} ..
+
+-- bIsMain, if called in the ``main'' function includes arg[-1]=lua<<version>>
+bIsMain=AddToModuleHelp{
+    bIsMain=[==[--[[--
+            A boolean for tests in module files, usage wds.bIsMain(table.pack(...),modulename).
+--]]--]==]
+-- @function bIsMain
+, info=info} ..
 function(args,module_name)
     if module_name and args[0] then
-        if string.find(args[0],module_name..".lua") then
-            return true
-        else
-            return false
-        end
+        return (string.find(args[0],module_name..".lua")~=nil)
     end
     return ( args and ( 
             ( args[0] and args[-1] and string_startswith_exp(args[-1],"lua[56]%.") )
@@ -792,15 +919,25 @@ function(args,module_name)
 end
     
 q=AddToModuleHelp{
-    q=[==[An R-like q() function to exit.  Added to globals.]==]
-    , info=info} ..
+    q=[==[--[[--
+            An R-like q() function to exit.  Added to globals.
+--]]--]==]
+-- @function q
+, info=info} ..
     function()
     os.exit()
 end
 
+--- A global R-like q() function to exit.
+-- @function _G.q
+_G.q=q
+
 bIn=AddToModuleHelp{
-    bIn=[==[An SQL-like in() function, but use as bIn(arg, a1, a2, ..., an) for 'arg in(a1, a2, ..., an)'.]==]
-    , info=info} ..
+    bIn=[==[--[[--
+            An SQL-like in() function, but use as bIn(arg, a1, a2, ..., an) for 'arg in(a1, a2, ..., an)'.
+--]]--]==]
+-- @function bIn
+, info=info} ..
     function(a,...)
     local arg=table.pack(...)
     for i,v in ipairs(arg) do
@@ -811,15 +948,16 @@ bIn=AddToModuleHelp{
     return false
 end
 
-bIsHiddenFieldName=
-AddToModuleHelp{
-    bIsHiddenFieldName=[==[A boolean check for python-like fields expected to be hidden, i.e, __AAA__.]==]
-    , info=info } ..
+bIsHiddenFieldName=AddToModuleHelp{
+    bIsHiddenFieldName=[==[--[[--
+            A boolean check for python-like fields expected to be hidden, i.e, __AAA__.
+--]]--]==]
+-- @function bIsHiddenFieldName
+, info=info } ..
 function(arg)
     if type(arg)~="string" then return false end
     return (string.find(arg,"^__(.*)__$")~=nil)
 end
-
 
 local local_table_simple_value_comp
 local_table_simple_value_comp=function(a,b)
@@ -855,16 +993,20 @@ local_table_simple_value_comp=function(a,b)
     return true
 end
 
-table_simple_value_comp=
-AddToModuleHelp{
-    table_simple_value_comp=[==[A not-too-deep comp of two tables.]==]
-    , info=info} ..
+table_simple_value_comp=AddToModuleHelp{
+    table_simple_value_comp=[==[--[[--
+            A not-too-deep comp of two tables.
+--]]--]==]
+-- @function table_simple_value_comp
+, info=info} ..
 local_table_simple_value_comp
 
-simple_copy=
-AddToModuleHelp{
-    table_simple_copy=[==[A not-too-deep copy of an object.]==]
-    , info=info} ..
+simple_copy=AddToModuleHelp{
+    table_simple_copy=[==[--[[--
+            A not-too-deep copy of an object.
+--]]--]==]
+-- @function simple_copy
+, info=info} ..
 function(obj)
     if bIn(type(obj),"string","number") then
         local rv=obj
@@ -899,7 +1041,6 @@ __deeper_copy__=function(obj,opts,lopts)
     end
     local obj___copy__=obj.__copy__
     if obj___copy__~=nil then
-        --assert(type(obj.__copy__)=="function","Error __deeper_copy__: if hidden field name __copy__ exists, it must be a function")
         if type(obj___copy__)=="function" then
         rv=obj___copy__()
     else
@@ -937,38 +1078,33 @@ __deeper_copy__=function(obj,opts,lopts)
     end
 end
 
-deeper_copy=
-AddToModuleHelp{
-    deeper_copy=[==[A deeper copy of an object (metatables, userdata, and threads are pointed to for class and reference purposes).
-                Notes:
-                    - the hidden field name, __parent__, will point to newly created logical parents
-    ]==]
-    , info=info} ..
+deeper_copy=AddToModuleHelp{
+    deeper_copy=[==[--[[--
+                A deeper copy of an object (metatables, userdata, and threads are pointed to for class and reference purposes).
+                    Notes:
+                        - the hidden field name, __parent__, will point to newly created logical parents
+--]]--]==]
+-- @function deeper_copy
+, info=info} ..
 function(obj)
     return __deeper_copy__(obj)
 end
 
---[[
-local lson=function(args)
-    local s=""
-    if type(arg)=="table" then
-        
-    else
-    end
-end
---]]
-
 nilable_instance_of=function(obj,extension_methods)
-    local l__index
-    local l__newindex
-    l__index=function(t,k) 
-        if k=="new" then
+    local __mt=getmetatable(obj) or {}
+    local __extension_methods=extension_methods or {}
+    local __index
+    local __newindex
+    __index=function(t,k) 
+        if __mt[k] then
+            return obj[k]
+        elseif k=="new" then
             do
                 local rv={}
                 for i,v in pairs(obj) do
                     rv[i]=v
                 end
-                return setmetatable(rv,{__index=l__index,__newindex=l__newindex})
+                return setmetatable(rv,{__index=__index,__newindex=__newindex})
             end
         elseif k=="__class__" then
             return obj
@@ -983,8 +1119,7 @@ nilable_instance_of=function(obj,extension_methods)
             error(k.."  is not a valid key") 
         end 
     end
-
-    l__newindex=function(t,k,v) 
+    __newindex=function(t,k,v) 
         if v==nil and obj[k] then 
             rawset(t,k,{__nil__=true}) 
         elseif obj[k] then 
@@ -993,17 +1128,19 @@ nilable_instance_of=function(obj,extension_methods)
             error(k.." is not a valid key") 
         end 
     end
-    return setmetatable({__proto=obj},{__index=l__index,__newindex=l__newindex})
+    return setmetatable({__proto=obj},{__index=__index,__newindex=__newindex})
 end
 
-length=
-AddToModuleHelp{
-    length=[==[A length function to count pairs of a table (since # does not work that way...).
-                    By default, the first returned value does not include hidden field names (i.e., __AAA__).
-                    Returns N,N1,N2,NH,N2Fields,NHFields 
-                        where N=#pairs, N1=#arg, N2=N-N1, NH=#hidden, and N[2H]Fields is a list of N[2H] field names.
-    ]==]
-    , info=info} ..
+length=AddToModuleHelp{
+    length=[==[--[[--
+            A length function to count pairs of a table (since # does not work that way...).
+
+                    By default, the first returned value does not include hidden field names (i.e., __AAA__).<br>
+                    Returns N,N1,N2,NH,N2Fields,NHFields <br>
+                        where N=#pairs, N1=#arg, N2=N-N1, NH=#hidden, and N[2H]Fields is a list of N[2H] field names.<br>
+--]]--]==]
+-- @function length
+, info=info} ..
 function(obj)
     if type(obj)~="table" then
         return 1
@@ -1020,7 +1157,7 @@ function(obj)
             nh=nh+1
             nhfields[k]=k
         elseif type(k)=="number" and 1<=k and k<=n1 then
-            --continue
+            -- continue
         else
             n2=n2+1
             n2fields[k]=k
@@ -1031,10 +1168,12 @@ function(obj)
 end
 
 
-EnumLike=
-AddToModuleHelp{
-    EnumLike=[==[A decorator to create an Enum like table that is read only.]==]
-    , info=info} ..
+EnumLike=AddToModuleHelp{
+    EnumLike=[==[--[[--
+            A decorator to create an Enum like table that is read only.
+--]]--]==]
+-- @function EnumLike
+, info=info} ..
 function(obj)
     assert(type(obj)=="table", "Error EnumLike: decorator must be called on a table")
     obj.__aliases__=obj.__aliases__ or {}
@@ -1042,7 +1181,7 @@ function(obj)
 
     local __n__,i,k,v,__min__,__max 
 
-    --convert lists to keys
+    -- convert lists to keys
     __min__=obj.__min__ or 0
     for k,v in ipairs(obj) do 
         assert(type(v)=="string", "Error EnumLike: if initiating with a list, entries must be strings")
@@ -1091,7 +1230,7 @@ function(obj)
             return obj
         elseif k=="__copy__" then
             return setmetatable({data=t.data},rv_ClassMT)
-            --return function()return setmetatable({data=t.data},rv_ClassMT) end
+            -- return function()return setmetatable({data=t.data},rv_ClassMT) end
         elseif tk=="number" then
             if obj.__keys_rev__[k]==nil then
                 error("Error EnumLike, enum value "..k.." not in object")
@@ -1101,6 +1240,8 @@ function(obj)
             return setmetatable({data=k.data},rv_ClassMT)
         elseif k=="bIsValid" then
             return rv_bIsValid
+        elseif k=="bIsTheSameEnumLike" then
+            return function(arg)return type(arg)=="table" and rv_bIsValid(arg.data) and getmetatable(arg)==rv_ClassMT end
         elseif k=="__classname__" then
             return _G.rawget(obj,"__classname__") or "EnumLike"
         elseif k=="__class__" then
@@ -1137,31 +1278,31 @@ function(obj)
         if ta=="table" and tb=="table" then
             if a.__class__==b.__class__ then
                 return a.data==b.data
-                --return _G.rawget(a,1)==_G.rawget(b,1)
+                -- return _G.rawget(a,1)==_G.rawget(b,1)
             elseif a.__class__==rv_ClassMT then
                 return a.data==b.data
-                --return _G.rawget(a,1)==b[1]
+                -- return _G.rawget(a,1)==b[1]
             elseif b.__class__==rv_ClassMT then
                 return a.data==b.data
-                --return _G.rawget(b,1)==a[1]
+                -- return _G.rawget(b,1)==a[1]
             end
         elseif ta=="table" then 
             if tb=="number" then
                 return a.data==b
-                --return _G.rawget(a,1)==b
+                -- return _G.rawget(a,1)==b
             elseif tb=="string" then
                 return a.data==_G.rawget(obj,b)
-                --return _G.rawget(a,1)==_G.rawget(obj,b)
+                -- return _G.rawget(a,1)==_G.rawget(obj,b)
             else
                 error("Unknown comp in EnumLike object between "..a.." and "..b)
             end
         elseif tb=="table" then
             if ta=="number" then
                 return b.data==a
-                --return _G.rawget(b,1)==a
+                -- return _G.rawget(b,1)==a
             elseif ta=="string" then
                 return b.data==_G.rawget(obj,a)
-                --return _G.rawget(b,1)==_G.rawget(obj,c)
+                -- return _G.rawget(b,1)==_G.rawget(obj,c)
             else
                 error("Unknown comp in EnumLike object between "..a.." and "..b)
             end
@@ -1225,10 +1366,12 @@ function(obj)
     return setmetatable(rv,rv_ClassMT),obj
 end
 
-AddToEnv=
-AddToModuleHelp{
-    AddToEnv=[==[Take a table and add key/value pairs to a target table/environment.]==]
-    , info=info} ..
+AddToEnv=AddToModuleHelp{
+    AddToEnv=[==[--[[--
+            Takes a table and adds key/value pairs to a target table/environment.
+--]]--]==]
+-- @function AddToEnv
+, info=info} ..
 function(env,obj)
     if type(obj)~="table" or type(env)~="table" then
         error('Input to AddToEnv must be a single target table/env and a single source table.')
@@ -1239,15 +1382,46 @@ function(env,obj)
     return env
 end
 
-NaN=0/0
-Inf=math.huge
-NegInf=-1/0
+local wdsnull=require("WDS.NULL")
 
-bIsNaN=
-AddToModuleHelp{
-    bIsNaN=[==[A check for floating point nan.]==]
-    , info=info
-} ..
+NULL=AddToModuleHelp{
+    NULL=[==[--[[--
+            A null object singleton.
+
+            Since a lua nil object is collected, NULL represents a persistent, non-mutable singleton.<br>
+            All variables assigned a NULL reference the same object and the test x==y holds if both x and y are NULLs.<br>
+--]]--]==]
+-- @field NULL
+, info=info } ..  wdsnull.NULL
+
+
+NaN=AddToModuleHelp{
+    NaN=[==[--[[--
+            A floating point NaN constant.
+--]]--]==]
+-- @field NaN
+, info=info } ..  (0/0)
+
+Inf=AddToModuleHelp{
+    Inf=[==[--[[--
+            A floating point inf constant.
+--]]--]==]
+-- @field Inf
+, info=info } ..  (math.huge)
+
+NegInf=AddToModuleHelp{
+    NegInf=[==[--[[--
+            A floating point -inf constant.
+--]]--]==]
+-- @field NegInf
+, info=info } ..  (-1/0)
+
+bIsNaN=AddToModuleHelp{
+    bIsNaN=[==[--[[--
+            A check for floating point NaN.
+--]]--]==]
+-- @function bIsNaN
+, info=info} ..
 function(arg) 
     if type(arg)=="number" then return (arg~=arg) end
     if type(arg)=="string" then 
@@ -1272,11 +1446,12 @@ local __bIsFinite= function(arg)
     end
 end
         
-bIsFinite=
-AddToModuleHelp{
-    bIsFinite=[==[A check for a finite number.]==]
-    , info=info
-} ..
+bIsFinite=AddToModuleHelp{
+    bIsFinite=[==[--[[--
+            A check for a finite number.
+--]]--]==]
+-- @function bIsFinite
+, info=info } ..
 function(arg) 
     if type(arg)=="number" then return __bIsFinite(arg) end
         if bIn(string.lower(arg),"inf","infinity","+inf","-inf","1/0","-1/0","nan","na") then 
@@ -1289,10 +1464,12 @@ function(arg)
     return false
 end
 
-bIsInf=
-AddToModuleHelp{
-    bIsInf=[==[A check for floating point +inf.]==]
-    , info=info
+bIsInf=AddToModuleHelp{
+    bIsNaN=[==[--[[--
+            A check for floating point +inf.
+--]]--]==]
+-- @function bIsInf
+, info=info
 } ..
 function(arg) 
     if type(arg)=="number" then return (arg==Inf) end
@@ -1305,23 +1482,67 @@ function(arg)
     return false
 end
 
-bIsNegInf=
-AddToModuleHelp{
-    bIsNegInf=[==[A check for floating point -inf.]==]
-    , info=info
-} ..
+bIsNegInf=AddToModuleHelp{
+    bIsNaN=[==[--[[--
+            A check for floating point -inf.
+--]]--]==]
+-- @function bIsNegInf
+, info=info } ..
 function(arg) 
-    if type(arg)=="number" then return (arg==NegInf) end
+    if type(arg)=="number" then 
+        return (arg==NegInf) 
+    end
     if type(arg)=="string" then 
         if bIn(string.lower(arg),"-inf","-infinity","-1/0") then 
             return true
+        else
+            error("Error bIsInf: cannot check \""..arg.."\" for -inf.")
         end
-        error("Error bIsInf: cannot check \""..arg.."\" for -inf.")
     end
     return false
 end
 
-isEmpty=function(obj)
+bIsTrue=AddToModuleHelp{
+    bIsTrue=[==[--[[--
+            A boolean check for a boolean true value.
+--]]--]==]
+-- @function bIsTrue
+, info=info } ..
+function(arg)
+    if arg==true then return true end
+    if arg==nil or arg==false or arg==NULL then return false end
+    local targ=type(arg)
+    if targ=="number" then
+        -- un-lua-like, take a 0 value, NaN, or +/-Inf as false
+        return bIsFinite(arg) and math.abs(arg)>1e-10
+    elseif targ=="string" then
+        local larg=trim(string.lower(arg))
+        if larg=="false" then
+            return false
+        elseif larg=="true" then
+            return true
+        elseif bIn(larg,"0","f","no","n") then
+            return false
+        elseif bIn(larg,"1","t","yes","y") then
+            return true
+        end
+    else
+        return (arg==arg)
+    end
+end
+
+bIsEmpty=AddToModuleHelp{
+    bIsEmpty=[==[--[[--
+            A boolean check for what are considered empty values (nil,NULL,"",{}).<br>
+
+                Note: Unless the optional second argument includes {hidden=true}, <br>
+                    hidden field names (i.e., of the form __AAA__), are not counted.<br>
+--]]--]==]
+-- @function bIsEmpty
+, info=info } ..
+function(obj,opts)
+    opts=opts or {}
+    opts.hidden=opts.hidden or false
     if obj==nil then
         return true
     elseif type(obj)=="string" then
@@ -1331,7 +1552,9 @@ isEmpty=function(obj)
             return false
         else
             for k,v in pairs(obj) do
-                return false
+                if opts.hidden and not bIsHiddenFieldName(k) then
+                    return false
+                end
             end
         end
         return true
@@ -1339,6 +1562,8 @@ isEmpty=function(obj)
     return false
 end
 
+--- A test function for WDS, used if bIsMain(...)
+-- @function __testcall__
 __testcall__=function()
     print("testing in "..module_name)
     print("module_path "..module_path)
@@ -1348,10 +1573,10 @@ __testcall__=function()
     print()
     print("show(_G)")
     print(show(_G))
-    print(show_keys(_G,1))
+    print(show_keys(_G,{depth=3}))
     t={1,3,4,hey="what",["x.1"]=44}
     print("wds.show(t)=",show(t))
-    ts=lson("t",t,1)
+    ts=lson(t,{name="t",includereturn=true})
     print("wds.lson(\"t\",t,1)=",ts)
     t2=load(ts)()
     print("wds.show(load(ts)())=",show(t2))
@@ -1383,9 +1608,9 @@ __testcall__=function()
 
 end
 
-if module_name_dots=="main-call-without-args" or is_main(table.pack(...)) then
+if module_name_dots=="main-call-without-args" or bIsMain(table.pack(...),module_name) then
     __testcall__()
 end
 
-return _M
+return EnvLock(_M)
 

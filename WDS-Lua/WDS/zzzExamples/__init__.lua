@@ -20,12 +20,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
---- WDS general utilities
--- @module WDS.Util
+--[[--
+A general collection of scratch examples and local references.  These files are 
+either self-sufficient or tests of the library.  There are often parallels with 
+other WDS libraries, such as WDS-Python.
 
-local wds=require "WDS"
+The zzz-name is solely for alphabetized sorting purposes.
+
+@example WDS.zzzExamples
+
+--]]--
+
+-- the localizing of arg below shorts the global arg of a program that might require this module
+local arg 
 
 local module_name_dots=( ... or "main-call-without-args" )
+-- to hard-code use.......
 local module_name="Util"
 
 local module_path=""
@@ -33,20 +43,32 @@ if __NO_DEBUG__==nil then
     module_path=debug.getinfo(1,"S").source
 end
 
-local _M={}
-local _G=_G
-_ENV=wds.EnvExtension(_M,_G)
 
-info={name=module_name
+local mrv={}
+local _M_G=_G
+
+mrv.info={name=module_name
     ,path=module_path
-    , docmap={}
     ,doc=module_name .. " ("..module_path..")"..[==[
-            A general set of utilities to add the usual suspects to programs and the interactive session.
+    A general set of utilities to add the usual suspects to programs 
+    and the interactive session.
+
     ]==]
+    , docmap={}
 }
 
-if module_name_dots=="main-call-without-args" or wds.bIsMain(table.pack(...)) then
-    print("TODO")
+if module_name_dots=="main-call-without-args" or wds.is_main(table.pack(...)) then
+    print("testing in "..module_name)
+    print("module_path "..module_path)
+    print()
+    print("help on "..module_name)
+    print(wds.help(mrv))
+    print()
+    print("show(_G)")
+    print(wds.show(_G))
+    print(wds.show_keys(_G,1))
 end
 
-return wds.EnvLock(_M)
+
+return mrv
+

@@ -1,65 +1,16 @@
+--- Copyright 2018, 2019 Wypasek Data Science, Inc., released under the MIT open source license
+
+--- A general testing script for a collection of modules.
+-- Within WDS/zzzExamples.
+-- @script general_test
+
 
 arg=nil
 wds=require("WDS")
 print(package.path)
 wdsu=require("WDS.Util")
 
-lcb=require("WDS.zzzExamples.lua_Couchbase_capi_minimal")
-print("wds.show(lcb)")
-print(wds.show(lcb));
-print("wds.show(lua_Couchbase_capi_minimal)")
-print(wds.show(lua_Couchbase_capi_minimal));
-rc=lua_Couchbase_capi_minimal("couchbase://localhost/SEC","CJWypasek","CJWypasek","general_test_example",[[{
-    "x":"huh","y":"what"
-}]])
-rc=lua_Couchbase_capi_minimal("couchbase://localhost/SEC","CJWypasek","CJWypasek","general_test_example2",[[{
-"directory": {
-"item": [
-{
-"last-modified": "2019-12-13 17:41:54",
-"name": "0000950131-19-004146-index-headers.html",
-"type": "text.gif",
-"size": ""
-},
-{
-"last-modified": "2019-12-13 17:41:54",
-"name": "0000950131-19-004146-index.html",
-"type": "text.gif",
-"size": ""
-},
-{
-"last-modified": "2019-12-13 17:41:54",
-"name": "0000950131-19-004146.txt",
-"type": "text.gif",
-"size": ""
-},
-{
-"last-modified": "2019-12-13 17:41:54",
-"name": "sdart171absee_1212-0814.htm",
-"type": "text.gif",
-"size": "25457"
-},
-{
-"last-modified": "2019-12-13 17:41:54",
-"name": "sdart171ex102.xml",
-"type": "text.gif",
-"size": "122930977"
-},
-{
-"last-modified": "2019-12-13 17:41:54",
-"name": "sdart171ex103.xml",
-"type": "text.gif",
-"size": "23096"
-}
-],
-"name": "hey",
-"parent-dir": "/Archives/edgar/data/1696935"
-}
-}]])
-print("rc=",rc)
-
-print("fin")
-q()
+-- Couchbase tests moved to WDS/Wranglers/Couchbase_test.lua
 
 lua_swig_example1=require("WDS.zzzExamples.lua_swig_example1")
 print("wds.show(lua_swig_example1)")

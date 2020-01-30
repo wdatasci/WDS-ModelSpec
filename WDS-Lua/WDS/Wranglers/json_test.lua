@@ -20,9 +20,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
+--- A test of WDS.Wranglers.json
+-- @within WDS.Wranglers
+-- @script json_test
+
+
 local wds=require("WDS")
 local wdsu=require("WDS.Util")
 local pesc=require("WDS.Util.python_esc")
+wjson=require("WDS.Wranglers.json")
 
 local args_opts=require("WDS.Util.args_opts")
 options=args_opts.ArgumentParser('usual')
@@ -31,17 +37,17 @@ if opts_rv1.help then
     options:help()
     print()
     print("Module help()")
-    print(wds.help(mat))
+    print(wds.help(wjson))
     os.exit()
 end
 
 
-wjson=require("WDS.Wranglers.json")
 
 x=wjson.JSON(wjson.jtype.array)
 rc=x << 3
 rc=x << 3
 print(wds.show(x))
+
 
 z=wds.deeper_copy(x)
 print(wds.show(z))
@@ -113,7 +119,6 @@ print("c=",c)
 
 
 
-if false then
 
 print("a=","||"..a.."||")
 print("wds.trim(a)=","||"..wds.trim(a).."||")
@@ -180,4 +185,3 @@ print("c=",wds.show(c))
 
 
 
-end

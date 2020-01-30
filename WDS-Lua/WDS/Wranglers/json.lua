@@ -20,6 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
+--- A pure-lua simple implementation of a few json utilities.
+-- @submodule WDS.Wranglers
+-- @within WDS.Wranglers
+
+
 local wds=require("WDS")
 local wdsu=require("WDS.Util")
 local pesc=require("WDS.Util.python_esc")
@@ -30,6 +35,11 @@ local __name__="json"
 local module_name=__parent__.."."..__name__
 local module_path=""
 
+local docstring=module_name .. " ("..module_path..")"..[==[
+    A pure-lua simple implementation of a few json utilities.
+]==]
+
+
 local dbg
 if __NO_DEBUG__==nil then
     module_path=debug.getinfo(1,"S").source
@@ -39,44 +49,50 @@ else
     dbg=function() end
 end
 
-local docstring=module_name .. " ("..module_path..")"..[==[
-    A pure-lua simple implementation of a few json utilities.
-    ]==]
-
-local isMain=wds.is_main(arg,module_name)
-if isMain then
+if wds.bIsMain(table.pack(...),module_name) then
     print("test with "..__parent__.."/"..__name__.."_test.lua")
     print(docstring)
     os.exit()
 end
 
---for localizing the module environment:
---  using wds.EnvExtension to pass unknown __index lookups to _G but place new free names into _M
---  return _M at the end of the module
-
 local _M={}
 local _G=_G
 _ENV=wds.EnvExtension(_M,_G)
 
---to use with out prefix....
+-- to use with out prefix....
 bIsHiddenFieldName=wds.bIsHiddenFieldName
-NULL=wdsm.NULL
+NULL=wds.NULL
 NaN=wds.NaN
 
---this module's info table for use with wds.help
+-- this module's info table for use with wds.help
 info={name=module_name
     ,path=module_path
     ,doc=docstring
     ,docmap={}
 }
 
---localizing AddToModuleHelp to globally assign to this module's info table
+-- localizing AddToModuleHelp to globally assign to this module's info table
 local AddToModuleHelp=function(tbl,tbl2); tbl.info=info; return wds.AddToModuleHelp(tbl,tbl2); end
 
---And EnumLike object for a json value type
-jtype=
-AddToModuleHelp{
-    jtype=[==[An EnumLike object of json value types.]==]
+jtype=AddToModuleHelp{
+    jtype=[==[--[[--
+            An EnumLike object of json value types.<br>
+
+            Use as in other languages where enum prefix is required:<br>
+                jtype.object<br>
+                jtype.array<br>
+                jtype.number<br>
+                jtype.string<br>
+                jtype.boolean (for true or false literals)<br>
+                jtype.null<br>
+            <br>
+            An additional, jtype.unk, is included for an undefined type.<br>
+            <br>
+            jtypes number, string, boolean, and null are considers atoms.<br>
+            jtypes boolean and null are literals.<br>
+            jtypes object and array are collections.<br>
+--]]--]==]
+-- @table jtype
 } ..  wds.EnumLike{ 
       unk=0
     , object=1
@@ -89,11 +105,12 @@ AddToModuleHelp{
 }
 __jtype_obj=jtype.__objref__
 
-bIsWSP=
-AddToModuleHelp{
-    bIsWSP=[==[A check to see if a single character input is json whitespace.]==]
-} ..
-function(arg)
+bIsWSP=AddToModuleHelp{
+    bIsWSP=[==[--[[--
+            A check to see if a single character input is json whitespace.
+--]]--]==]
+-- @function bIsWSP
+} ..  function(arg)
     if type(arg)~="string" and string.len(arg)~=1 then 
         return false
     end
@@ -125,9 +142,11 @@ local __JSON_prototype__={
     , __parent__=nil    -- for tree structures and assignments
 }
 
-bIsJSON=
-AddToModuleHelp{
-    bIsJSON=[==[A boolean check for argument as a JSON instance.]==]
+bIsJSON=AddToModuleHelp{
+    bIsJSON=[==[--[[--
+            A boolean check for argument as a JSON instance. <br>
+--]]--]==]
+-- @function bIsJSON
 } .. function(a)
     if a==nil then return false end
     if type(a)~="table" then return false end
@@ -143,15 +162,19 @@ bIsJTypeLiteralNameToken=function(a) return wds.bIn(a,jtype.boolean,jtype.null) 
 bIsJTypeAtom=function(a) return wds.bIn(a,jtype.string,jtype.number,jtype.boolean,jtype.null) end
 bIsJTypeArray=function(a) return a==jtype.array end
 bIsJTypeObject=function(a) return a==jtype.object end
+bIsJTypeCollection=function(a) return a==jtype.array or a==jtype.object end
 
 bIsJSONUnk=function(a) return (bIsJSON(a)) and bIsJTypeUnk(a.jtype) end
 bIsJSONBoolean=function(a) return (bIsJSON(a)) and bIsJTypeBoolean(a.jtype) end
 bIsJSONNULL=function(a) return (bIsJSON(a)) and bIsJTypeNULL(a.jtype) end
 bIsJSONLiteralNameToken=function(a) return (bIsJSON(a)) and bIsJTypeLiteralNameToken(a.jtype) end
 bIsJSONAtom=function(a) return (bIsJSON(a)) and bIsJTypeAtom(a.jtype) end
+bIsJSONArray=function(a) return (bIsJSON(a)) and bIsJTypeArray(a.jtype) end
+bIsJSONObject=function(a) return (bIsJSON(a)) and bIsJTypeObject(a.jtype) end
+bIsJSONCollection=function(a) return (bIsJSON(a)) and bIsJTypeCollection(a.jtype) end
 
---Predefines are for use within other functions before they are defined.
---Note:  AAA_insert inserts variable type argument into a type AAA self.
+-- Predefines are for use within other functions before they are defined.
+-- Note:  AAA_insert inserts variable type argument into a type AAA self.
 --       insert_AAA inserts a type AAA argument into variable type self.
 local __JSON_new__=function()end
 local __JSON_new_object__=function()end
@@ -206,9 +229,9 @@ local __parse_move_to_next_non_WSP=function()end
 local __JSON_class_____shl
 local __JSON_class_____tostring
 
---The suffix 'raw__' will be used here for functions without argument assertions which 
---are redundant in functions where argument assertions have already been performed.
---The unk, null, true, and false constructors are raw__ trivially.
+-- The suffix 'raw__' will be used here for functions without argument assertions which 
+-- are redundant in functions where argument assertions have already been performed.
+-- The unk, null, true, and false constructors are raw__ trivially.
 
 __JSON_new_unk__=function(__parent__) return setmetatable({jtype=jtype.unk,__parent__=__parent__},__JSON_class__) end
 __JSON_new_null__=function(__parent__) return setmetatable({jtype=jtype.null,__parent__=__parent__},__JSON_class__) end
@@ -222,7 +245,7 @@ __JSON_new_atom__raw__=function(arg,arg2,__parent__) return setmetatable({data=a
 __JSON_new_array__raw__=function(__parent__) return setmetatable({data={},jtype=jtype.array,__parent__=__parent__},__JSON_class__) end
 __JSON_new_object__raw__=function(__parent__) return setmetatable({data={},keys={},keys_rev={},jtype=jtype.object,__parent__=__parent__},__JSON_class__) end
 
---a simple repointing of fields
+-- a simple repointing of fields
 __JSON_repoint__raw__=function(self,arg,opts)
     __JSON_empty__(self)
     self.data=arg.data
@@ -235,7 +258,7 @@ __JSON_repoint__raw__=function(self,arg,opts)
     self.keys=arg.keys
     self.keys_rev=arg.keys_rev
     self.jtype=arg.jtype
-    --__parent__ does not get reassigned
+    -- __parent__ does not get reassigned
     if opts~=nil then
         local k,v
         for k,v in opts do
@@ -247,8 +270,8 @@ end
 
 __JSON_array_empty__=function(self)
     __JSON_empty__(self)
-    self.data={}
-    self.jtype=jtype.array
+    rawset(self,"data",{})
+    rawset(self,"jtype",jtype.array)
 end
 
 __JSON_array_insert__raw__=function(self,arg,karg,opts)
@@ -262,7 +285,7 @@ __JSON_array_insert__raw__=function(self,arg,karg,opts)
             error("Error JSON: inserts into arrays must indices in 1..(#self.data+1)")
         end
     end
-    if arg==nil or arg==NULL then --inserting a json null
+    if arg==nil or arg==NULL then -- inserting a json null
         local self_data=rawget(self,"data")
         assert((karg==nil) or ( (karg>=1) and (karg<=(#self_data)+1) ),"Error JSON: inserts into arrays must have nil or valid integer key.")
         if karg==nil or karg==#self_data then
@@ -298,8 +321,9 @@ __JSON_array_insert__raw__=function(self,arg,karg,opts)
         elseif targ=="table" then -- insert integer indexed values
             local i,v
             for i=1,#arg,1 do
-                v=arg[i]
+                v=__JSON_new__(arg[i])
                 __JSON_array_insert__raw__(self,v)
+                self_data[#self_data].__parent__=self
             end
         else
             error("Error JSON: unknown insert type into array json value")
@@ -310,10 +334,10 @@ end
 
 __JSON_object_empty__=function(self)
     __JSON_empty__(self)
-    self.data={}
-    self.keys={}
-    self.keys_rev={}
-    self.jtype=jtype.object
+    rawset(self,"data",{})
+    rawset(self,"keys",{})
+    rawset(self,"keys_rev",{})
+    rawset(self,"jtype",jtype.object)
 end
 
 __JSON_object_insert__raw__=function(self,arg,karg)
@@ -406,24 +430,25 @@ __JSON_object_insert__raw__=function(self,arg,karg)
 
 end
 
---Functions that do not need argument checks.
+-- Functions that do not need argument checks.
 
---__JSON_empty__ is used to remove references recursively.
+-- __JSON_empty__ is used to remove references recursively.
 __JSON_empty__=function(self)
-    local i,j,k,v
-    if self.jtype==jtype.object or self.jtype==jtype.array then
+    local k,v
+    local self_type=rawget(self,"type")
+    if self_jtype==jtype.object or self_jtype==jtype.array then
         for k,v in ipairs(rawget(self,"data")) do 
-            v.__parent__=nil 
+            rawset(v,"__parent__",nil)
             __JSON_empty__(v) 
         end
     end
-    self.data=nil
-    self.keys=nil
-    self.keys_rev=nil
-    self.jtype=jtype.unk
+    rawset(self,"data",nil)
+    rawset(self,"keys",nil)
+    rawset(self,"keys_rev",nil)
+    rawset(self,"jtype",jtype.unk)
 end
         
---Functions with argument checks (non-raw__).
+-- Functions with argument checks (non-raw__).
 
 __JSON_new_boolean__=function(arg) 
     assert(type(arg)=="boolean","Error __JSON_new_boolean__: argument must be boolean")
@@ -468,13 +493,13 @@ __JSON_atom_insert__=function(self,arg,karg,opts)
         end
         if bIsJTypeAtom(arg.jtype) then
             if karg==nil then
-                if opts.__array_insert__ then --perserve existing value as the first element of a list
+                if opts.__array_insert__ then -- perserve existing value as the first element of a list
                     local tmpjtype=self.jtype
                     local tmpdata=self.data
                     __JSON_array_empty__(self)
                     __JSON_array_insert__raw__(self,__JSON_new_atom__raw(tmpdata,tmpjtype,self))
                     __JSON_array_insert__raw__(self,arg)
-                elseif opts.__preserve_jtype__ and self.jtype~=arg.jtype and not bIsJTypeNULL(self.jtype) then --does not preserve NULL
+                elseif opts.__preserve_jtype__ and self.jtype~=arg.jtype and not bIsJTypeNULL(self.jtype) then -- does not preserve NULL
                     if self.jtype==jtype.boolean then
                         if wds.bIn(arg.jtype,jtype.unk,jtype.NULL) then
                             rawset(self,"data",false)
@@ -506,12 +531,12 @@ __JSON_atom_insert__=function(self,arg,karg,opts)
                         rawset(self,"data",tostring(rawget(arg,"data")))
                     end
                 else
-                    --change atom type
+                    -- change atom type
                     self.jtype=arg.jtype
                     rawset(self,"data",rawget(self,"data"))
                 end
             else
-                --change to an object
+                -- change to an object
                 __JSON_object_empty__(self)
                 __JSON_object_insert__raw__(self,arg,karg)
             end
@@ -623,8 +648,8 @@ __JSON_insert__=function(self,arg,karg,opts)
     return self
 end
 
---insert_AAA atom inserts into atoms can change type
---insert_AAA with a key can change an atom or empty array into an object
+-- insert_AAA atom inserts into atoms can change type
+-- insert_AAA with a key can change an atom or empty array into an object
 __JSON_insert_atom__=function(self,targ,arg,karg)
     assert(targ~jtype.null or arg==nil or arg==NULL,"Error JSON: inserting a NULL can only take a nil or NULL argument")
     if karg==nil then
@@ -658,7 +683,7 @@ __JSON_new__=function(arg)
         rv=__JSON_new_null__()
     elseif bIsJSON(arg) then
         rv=wds.deeper_copy(arg)
-    elseif jtype.bIsValid(arg) then
+    elseif jtype.bIsTheSameEnumLike(arg) then
         if arg==jtype.unk then
             rv=__JSON_new_unk__()
         elseif arg==jtype.null then
@@ -702,88 +727,75 @@ end
 
 __JSON_class__index_base.new=__JSON_new__
 __JSON_class__index_base.AsStringValue=function(self, arg) 
-    assert(type(arg)=="string", "Error: attempted JSON.AsStringValue() with non-string argument")
-    self.jtype=jtype.string
-    self.data=nil
-    self.keys=nil
-    self.keys_rev=nil
-    self.data=arg
+    if arg~=nil then
+        __JSON_empty__(self)
+        self.jtype=jtype.string
+        if type(arg)=="string" then
+            self.data=arg
+        else
+            self.data=tostring(arg)
+        end
+    elseif self.jtype~=jtype.string then
+        local s=self:__tostring()
+        __JSON_empty__(self)
+        self.jtype=jtype.string
+        self.data=s
+    end
 end
 __JSON_class__index_base.AsNumberValue=function(self, arg) 
-    assert(type(arg)=="number", "Error: attempted JSON.AsNumberValue() with non-number argument")
+    local self_data=rawget(self,"data")
+    __JSON_empty__(self)
     self.jtype=jtype.number
-    self.data=nil
-    self.keys=nil
-    self.keys_rev=nil
-    self.data=arg
+    if arg~=nil then
+        self.data=tonumber(arg)
+    else
+        self.data=tonumber(self_data)
+    end
 end
 __JSON_class__index_base.AsBooleanValue=function(self, arg) 
-    assert(type(arg)=="boolean", "Error: attempted JSON.AsBooleanValue() with non-boolean argument")
+    local self_data=rawget(self,"data")
+    __JSON_empty__(self)
     self.jtype=jtype.boolean
-    self.data=nil
-    self.keys=nil
-    self.keys_rev=nil
-    self.data=arg
+    if arg~=nil then
+        if bIsJSON(arg) then
+            if arg.jtype==jtype.boolean then
+                self.data=arg.data
+            else
+                self.data=bIsTrue(arg.data)
+            end
+        else
+            self.data=bIsTrue(arg)
+        end
+    else
+        self.data=bIsTrue(self_data)
+    end
+    return self
 end
 __JSON_class__index_base.AsNULLValue=function(self, arg) 
-    if arg~=nill then
-        if arg~=wdsm.NULL then
-            error("Error: attempted JSON.AsNULLValue() with non-nil or NULL argument")
-        end
-    end
+    assert(arg~=nil and arg~=NULL,"Error JSON: AsNULLValue can only take a nil or NULL argument")
+    __JSON_empty__(self)
     self.jtype=jtype.null
-    self.data=nil
-    self.keys=nil
-    self.keys_rev=nil
+    return self
 end
 __JSON_class__index_base.AsArrayValue=function(self, arg) 
-    self.jtype=jtype.array
-    self.data=nil
-    self.keys=nil
-    self.keys_rev=nil
-    self.data={}
-    local rc=self << arg
-    return rc
+    if arg==nil and self.jtype==jtype.array then 
+        return self
+    else
+        __JSON_array_empty__(self)
+        local rc=self << arg
+        return rc
+    end
 end
 __JSON_class__index_base.AsObjectValue=function(self, arg) 
-    self.jtype=jtype.object
-    self.data=nil
-    self.keys=nil
-    self.keys_rev=nil
-    self.data={}
-    self.keys={}
-    self.keys_rev={}
-    local rc=self << arg
-    return rc
+    __JSON_object_empty__(self)
+    if arg==nil and self.jtype==jtype.object then
+        return self
+    else
+        __JSON_object_empty__(self)
+        local rc=self << arg
+        return rc
+    end
 end
-
-__JSON_class__index_base.data=function(self,arg) return rawget(self,"data") end
-
-__JSON_class__index_base.dataref=function(self,arg) 
-    if rawget(self,"data")==nil then
-        rawset(self,"data",{})
-    end
-    return rawget(self,"data") end
-
-__JSON_class__index_base.keysref=function(self,arg) 
-    if rawget(self,"keys")==nil then
-        rawset(self,"keys",{})
-    end
-    if rawget(self,"keys_ref")==nil then
-        rawset(self,"keys_rev",{})
-    end
-    return rawget(self,"keys") end
-
-__JSON_class__index_base.keys_revref=function(self,arg) 
-    if rawget(self,"keys")==nil then
-        rawset(self,"keys",{})
-    end
-    if rawget(self,"keys_ref")==nil then
-        rawset(self,"keys_rev",{})
-    end
-    return rawget(self,"keys_rev") end
-
-__JSON_class__index_base.jtype=function(self,arg) return rawget(self,"jtype") end
 
 __JSON_class__index_base.len=function(self,arg)
     if self.jtype==jtype.object or self.jtype==jtype.array then
@@ -794,44 +806,74 @@ __JSON_class__index_base.len=function(self,arg)
 end
 
 __JSON_class__index_base.length=__JSON_class__index_base.len
-__JSON_class__index_base.__class__=__JSON_class__
-__JSON_class__index_base.__classname__="JSON"
-__JSON_class__index_base.print="TODO"
 
 __JSON_class__.__index=function(self,arg)
-    local rv=__JSON_class__index_base[arg] 
-    if rv~=nil then
-        return rv
-    elseif arg==nil then
-        return rawget(self,"data")
-    else
-        if bIsHiddenFieldName(arg) then
-            return nil
+
+    -- The easy short circuits.
+    if wds.bIn(arg,"jtype","data","keys","keys_rev","__parent__") then
+        return rawget(self,arg)
+    end
+
+    local self_jtype=rawget(self,"jtype")
+    local self_data
+    local self_keys
+    local k
+
+    -- Simple returns for atoms.
+    if arg==nil then
+        assert(self_jtype~=jtype.unk, "Error JSON: cannot return unknown json type")
+        if self_jtype==jtype.null then return NULL end
+        if wds.bIn(self_jtype,jtype.boolean,jtype.number,jtype.string) then
+            return rawget(self,"data")
         end
-        if self.jtype==jtype.object then
-            local dataref=__JSON_class__index_base.dataref(self)()
-            local keysref=__JSON_class__index_base.keysref(self)()
-            local keys_revref=__JSON_class__index_base.keys_revref(self)()
-            if keys_revref[arg]~=nil then
-                return dataref[arg]
-            elseif keysref[arg]~=nil then
-                return dataref[keysref[arg]]
-            else
-                return nil
-            end
-        elseif self.jtype==jtype.array and type(arg)=="number" then
-            local dataref=rawget(self,"data")
-            if arg==1 and type(dataref)~="table" then
-                return dataref
-            elseif arg>=1 and arg<=#dataref then
-                return dataref[arg]
-            else 
-                return nil
-            end
+    elseif type(arg)=="number" then
+        assert(self_jtype==jtype.array,"Error JSON: integer indexing reserved for arrays")
+    end
+
+    -- Return only a small number of hidden fields.
+    if wds.bIsHiddenFieldName(arg) then
+        if arg=="__class__" then 
+            return __JSON_class__
+        elseif arg=="__classname__" then
+            return "JSON"
         else
             return nil
         end
     end
+
+    -- Index values for arrays point directly to self.data.
+    if self_jtype==jtype.array then
+        self_data=rawget(self,"data")
+        if type(arg)=="number" then
+            if arg>=1 and arg<=#self_data then 
+                return self_data[arg] 
+            else
+                return nil
+            end
+        end
+    end
+
+    -- For objects, check keys first.  This will override other __index possible returns.
+    if self_jtype==jtype.object then
+        self_data=rawget(self,"data")
+        self_keys=rawget(self,"keys")
+        k=self_keys[arg]
+        if k then return self_data[k] end
+    end
+
+    return __JSON_class__index_base[arg] 
+
+end
+
+__JSON_class__.__newindex=function(self,key,value)
+    
+    -- The easy short circuits.
+    if wds.bIn(key,"jtype","data","keys","keys_rev","__parent__") then
+        return rawset(self,key,value)
+    end
+
+    __JSON_class_____shl(self,value,key)
+
 end
 
 __JSON_class__.__len=function(self)
@@ -842,8 +884,13 @@ __JSON_class__.__len=function(self)
             return #self.data 
         end
     end
+    if self.jtype==jtype.unk then
+        error("Error JSON: a type of unknown does not have a length")
+    end
     return 1
 end
+
+
 
 __JSON_class_____tostring=function(self,opts,lopts)
 
@@ -861,30 +908,37 @@ __JSON_class_____tostring=function(self,opts,lopts)
     
     local indent=string.rep(opts.indent,lopts.depth)..lopts.extraindent
     local indentM1=string.rep(opts.indent,lopts.depth-1)..lopts.extraindent
+
+    local self_jtype=rawget(self,"jtype")
+    local self_data=rawget(self,"data")
+    local self_keys
+    local self_keys_rev
     
-    if self.jtype==jtype.unk then
+    if self_jtype==jtype.unk then
         return "unk"
-    elseif self.jtype==jtype.null then
+    elseif self_jtype==jtype.null then
         return "null"
-    elseif wds.bIn(self.jtype,jtype.boolean,jtype.number) then 
-        return tostring(self.data)
-    elseif self.jtype==jtype.string then
-        return "\""..(self.data or "").."\""
-    elseif self.jtype==jtype.array then
+    elseif wds.bIn(self_jtype,jtype.boolean,jtype.number) then 
+        return tostring(self_data)
+    elseif self_jtype==jtype.string then
+        return "\""..(self_data or "").."\""
+    elseif self_jtype==jtype.array then
         local i,j,v
         local tmp={}
-        for i,v in ipairs(self.data or {}) do
+        for i,v in ipairs(self_data or {}) do
             table.insert(tmp,__JSON_class_____tostring(v
                 ,opts,{depth=lopts.depth+1,extraindent=lopts.extraindent}))
         end
         return "["..opts.linesep..indent..table.concat(tmp,opts.itemsep..opts.linesep..indent)..opts.linesep..indentM1.."]"
-    elseif self.jtype==jtype.object then
+    elseif self_jtype==jtype.object then
+        -- self_keys=rawget(self,"keys")
+        self_keys_rev=rawget(self,"keys_rev")
         local i,j,v,k
         local rv=indent.."{\n"
         local tmp={}
         j=0
-        for i,v in pairs(self.data) do
-            k=self.keys_rev[i]
+        for i,v in pairs(self_data) do
+            k=self_keys_rev[i]
             local tmpindent=string.rep(" ",#k+#opts.itemsep)
             table.insert(tmp,"\""..k.."\""..opts.kvsep..__JSON_class_____tostring(v
                 ,opts,{depth=lopts.depth+1,extraindent=lopts.extraindent..tmpindent}))
@@ -896,9 +950,103 @@ __JSON_class_____tostring=function(self,opts,lopts)
 
 end
 
-__JSON_class__.__tostring=__JSON_class_____tostring
 
-__JSON_class__index_base.toggle_tostring=function()
+__JSON_class__.__tostring=__JSON_class_____tostring
+__JSON_class__index_base.print=__JSON_class_____tostring
+
+__JSON_class__index_base.tonumber=function(self)
+    local self_jtype=self.jtype
+    assert(self_jtype~=jtype.unk,"Error JSON: tonumber not defined for unknown json value type")
+    if self_jtype==jtype.null then
+        return nil
+    elseif self_jtype==jtype.number or self_jtype==jtype.string then
+        return tonumber(self.data)
+    else
+        return nil
+    end
+end
+
+local __JSON_class__number_metamethod_prep=function(a,b,f)
+    local leftjson=bIsJSON(a)
+    local rightjson=bIsJSON(b)
+    local leftvalue,rightvalue
+    if leftjson then
+        leftvalue=a:tonumber()
+    else
+        leftvalue=tonumber(a)
+    end
+    if leftvalue==nil then return nil end
+    if rightjson then
+        rightvalue=b:tonumber()
+    else
+        rightvalue=tonumber(b)
+    end
+    if rightvalue==nil then return nil end
+    return f(leftvalue,rightvalue)
+end
+    
+local __JSON_class__string_metamethod_prep=function(a,b,f)
+    local leftvalue=tostring(a)
+    local rightvalue=tostring(b)
+    return f(leftvalue,rightvalue)
+end
+    
+__JSON_class__.__add=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return x+y end) end
+__JSON_class__.__sub=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return x-y end) end
+__JSON_class__.__mul=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return x*y end) end
+__JSON_class__.__div=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return x/y end) end
+__JSON_class__.__mod=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return x % y end) end
+__JSON_class__.__pow=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return x^y end) end
+__JSON_class__.__unm=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return -x end) end
+__JSON_class__.__idiv=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return x//y end) end
+
+
+__JSON_class__.__concat=function(a,b)end
+__JSON_class__.__concat=function(a,b)
+    local bisjson_a=bIsJSON(a)
+    local bisjson_b=bIsJSON(b)
+    if bisjson_a and bisjson_b then
+        if a.jtype==b.jtype then
+            if wds.bIn(a.jtype,jtype.array,jtype.object)  then
+                local rv=JSON(a)
+                rc=rv << b
+                return rv
+            elseif a.jtype==jtype.string then
+                return a.data..b.data
+            else
+                error("Error JSON: '..' operator not defined for json values of type "..a.jtype)
+            end
+        else
+            error("Error JSON: '..' operator not defined for json values of type "..a.jtype.." and "..b.jtype)
+        end
+    elseif bisjson_a then
+            if wds.bIn(a.jtype,jtype.array,jtype.object)  then
+                local rv=__JSON_new__(a)
+                __JSON_class_____shl(rv,b)
+                return rv
+            elseif a.jtype==jtype.string then
+                return a.data..tostring(b)
+            else
+                error("Error JSON: '..' operator not defined for json values of type "..tostring(a.jtype))
+            end
+    elseif bisjson_b then
+            if wds.bIn(b.jtype,jtype.array,jtype.object)  then
+                local rv=__JSON_new__(a)
+                __JSON_class_____shl(rv,b)
+                return rv
+            elseif b.jtype==jtype.string then
+                return tostring(a)..b.data
+            else
+                error("Error JSON: '..' operator not defined for json values of type "..b.jtype)
+            end
+    else
+        local ja=__JSON_new__(a)
+        local jb=__JSON_new__(b)
+        return __JSON_class__.__concat(ja,jb)
+    end
+end
+
+__JSON_class__index_base.toggle_tostring=function(self)
     if __JSON_class__.__tostring then
         __JSON_class__.__tostring=nil
     else
@@ -907,14 +1055,15 @@ __JSON_class__index_base.toggle_tostring=function()
 end
 
 __JSON_insert_null__raw__=function(self,karg)
-    if wds.bIn(self.jtype,jtype.unk,jtype.null) then 
+    local self_jtype=self.jtype
+    if wds.bIn(self_jtype,jtype.unk,jtype.null) then 
         self.jtype=jtype.null
-    elseif bIsJTypeAtom(self.jtype) then
+    elseif bIsJTypeAtom(self_jtype) then
         __JSON_empty__(self)
         self.jtype=jtype.null
-    elseif self.jtype==jtype.array then
+    elseif self_jtype==jtype.array then
         __JSON_array_insert__raw__(self,arg,karg)
-    elseif self.jtype==jtype.object then
+    elseif self_jtype==jtype.object then
         assert(karg~=nil, "Error JSON: << into object requires a key")
         local ltmp=__JSON_new_null__()
         _JSON_object_insert(self,ltmp,karg)
@@ -925,20 +1074,21 @@ __JSON_insert_null__raw__=function(self,karg)
 end
 
 __JSON_insert_atom__raw__=function(self,arg,karg)
-    if self.jtype==jtype.unk or self.jtype==jtype.null then 
+    local self_jtype=self.jtype
+    if self_jtype==jtype.unk or self_jtype==jtype.null then 
         self.jtype=jtype(type(arg))
         self.data=arg
         return self 
     end
-    if bIsJTypeAtom(self.jtype) and karg==nil then
+    if bIsJTypeAtom(self_jtype) and karg==nil then
         self.jtype=jtype(type(arg))
         self.data=arg
         return self
     end
-    if self.jtype==jtype.array then
+    if self_jtype==jtype.array then
         __JSON_array_insert__raw__(self,arg,karg)
         return self
-    elseif self.jtype==jtype.object then
+    elseif self_jtype==jtype.object then
         assert(karg~=nil, "Error JSON: << into object requires a key")
         local ltmp=__JSON_new_null__()
         _JSON_object_insert(self,ltmp,karg)
@@ -948,18 +1098,54 @@ __JSON_insert_atom__raw__=function(self,arg,karg)
     end
 end
 
-__JSON_class_____shl=function(self, arg, karg) --k[ey]arg is used for pushing in a keyed value to an object
+__JSON_class_____shl=function(self, arg, karg) -- k[ey]arg is used for pushing in a keyed value to an object
+
     local targ=type(arg)
-    if arg==nil or arg==NULL then
+    local self_jtype=rawget(self,"jtype")
+    local self_data
+    local self_keys
+    local self_keys_rev
+
+    if arg==nil then
+        if karg~=nil then
+            if self_jtype==jtype.object then
+                self_keys=rawget(self,"keys")
+                local k=self_keys[karg]
+                if k then
+                    self_data=rawget(self,"data")
+                    self_keys_rev=rawget(self,"keys_rev")
+                    __JSON_empty__(self_data[k])
+                    local i
+                    table.remove(self_data,k)
+                    table.remove(self_keys_rev,k)
+                    for i=k,#self_data,1 do
+                        self_keys[self_keys_rev[i]]=i
+                    end
+                    self_keys[karg]=nil
+                end
+            elseif self_jtype==jtype.array then
+                self_data=rawget(self,"data")
+                if self_data[karg] then
+                    table.remove(self_data,karg)
+                end
+            else
+                error("Error JSON: cannot access a keyed value for type "..self_jtype)
+            end
+        else
+            __JSON_empty__(self)
+            setmetatable(self,nil)
+            self=nil
+        end
+    elseif arg==NULL then
         __JSON_insert_null__raw__(self,karg)
         return self
-    elseif self.jtype==jtype.unk or bIsJTypeAtom(self.jtype) then
+    elseif self_jtype==jtype.unk or bIsJTypeAtom(self_jtype) then
         return __JSON_atom_insert__(self,arg,karg)
-    elseif self.jtype==jtype.array then 
+    elseif self_jtype==jtype.array then 
         return __JSON_array_insert__raw__(self,arg,karg)
-    elseif self.jtype==jtype.object then
+    elseif self_jtype==jtype.object then
         return __JSON_object_insert__raw__(self,arg,karg)
-    elseif self.jtype==jtype.unk then
+    elseif self_jtype==jtype.unk then
         assert(karg==nil, "Error JSON: cannot insert keyed element into an atomic")
         if karg==nil then
             if targ=="number" then
@@ -1000,15 +1186,81 @@ __JSON_class__.__shl=function(self,arg)
     return __JSON_class_____shl(self,arg)
 end
 
+__JSON_class__.__call=function(self,k)end
 __JSON_class__.__call=function(self,k)
     if k==nil then
-        return self.data
+        local self_jtype=self.jtype
+        assert(self_jtype~=jtype.unk,"Error JSON: the call of a json value not defined for an unknown type.")
+        if self_jtype==jtype.null then
+            return NULL
+        elseif bIsJTypeAtom(self_jtype) then
+            return self.data
+        elseif self_jtype==jtype.array then
+            local rv={}
+            local i,v
+            for i,v in ipairs(self.data) do
+                table.insert(rv,__JSON_class__.__call(v,nil))
+            end
+            return rv
+        elseif self_jtype==jtype.object then
+            local self_data=self.data
+            local self_keys=self.keys
+            local self_keys_rev=self.keys_rev
+            local rv={}
+            local i,v
+            for i,v in ipairs(self_data) do
+                rv[self_keys_rev[i]]=__JSON_class__.__call(v,nil)
+            end
+            return rv
+        else
+            error("Error JSON: internal error")
+        end
     elseif type(k)=="string" and self.jtype==jtype.object then
         return self.data[self.keys[k]]
     elseif type(k)=="number" and wds.bIn(self.jtype,jtype.object,jtype.array) then
         return self.data[k]
     else 
         error("Other calls to JSON() not implemented")
+    end
+end
+
+__JSON_class__.__pairs=function(self)end
+__JSON_class__.__pairs=function(self)
+    local self_jtype=self.jtype
+    if self_jtype==jtype.unk then
+        error("Error JSON: pairs(jsonvalue) not available for an unknown json value type")
+        return function(s,var) return nil,nil end,{},0
+    elseif bIsJTypeAtom(self_jtype) then
+        local __state__={0,1,self.data}
+        return function(s,var) if s[1]==0 then s[1]=1; return 1,self.data; end; end,__state__,0
+    elseif self_jtype==jtype.array then
+        local __state__={0,0,self.data}
+        __state__[2]=#__state__[3]
+        return function(s,var)
+            if s[1]<s[2] then
+                s[1]=s[1]+1
+                return s[1],s[3][s[1]]
+            else
+                return nil,nil
+            end
+        end,__state__,0
+    elseif self_jtype==jtype.object then
+        local __state__={0,0
+                ,self.data or {}
+                ,self.keys or {}
+                ,self.keys_rev or {}
+        }
+        __state__[2]=#__state__[3]
+        return function(s,var)
+            if s[1]<s[2] then
+                s[1]=s[1]+1
+                return s[5][s[1]],s[3][s[1]]
+            else
+                return nil,nil
+            end
+        end,__state__,0
+    else
+        error("Error JSON: internal error")
     end
 end
 
@@ -1026,15 +1278,14 @@ __JSON_parse__=function(self,arg,start,stop)
     start=start or 1
     stop=stop or string.len(arg)
     local lrv
-    print("arg=",wds.show(arg))
     start,stop,lrv=__JSON_parse_value__(nil,arg,start,stop)
-    print("lrv=",wds.show(lrv))
-    if self.jtype==jtype.unk or bIsJTypeAtom(self.jtype) then
+    local self_jtype=self.jtype
+    if self_jtype==jtype.unk or bIsJTypeAtom(self_jtype) then
         __JSON_empty__(self)
         __JSON_repoint__raw__(self,lrv)
-    elseif self.jtype==jtype.array then
+    elseif self_jtype==jtype.array then
         __JSON_array_insert__raw__(self,lrv)
-    elseif self.jtype==jtype.object then
+    elseif self_jtype==jtype.object then
         __JSON_object_insert__raw__(self,lrv)
     else
         error("Error JSON: internal error")
@@ -1043,9 +1294,13 @@ __JSON_parse__=function(self,arg,start,stop)
 end
 __JSON_class__index_base.parse=__JSON_parse__
 
-JSON=
-AddToModuleHelp{
-    JSON=[==[A simple class for holding JSON data.]==]
+JSON=AddToModuleHelp{
+    JSON=[==[--[[--
+            A simple class constructor for holding JSON data.<br>
+
+            See json_test.lua for examples<br>
+--]]--]==]
+-- @function JSON
 } ..
 function(arg)
     if arg==nil then
@@ -1061,7 +1316,7 @@ function(arg)
     elseif bIsJSON(arg) then
         return wds.deeper_copy(arg)
     end
-    if type(arg)=="string" and string.find(arg,"^([%s%c\a\b\f\n\r\t\v]*)[\"{[]")~=nil then --a json string value
+    if type(arg)=="string" and string.find(arg,"^([%s%c\a\b\f\n\r\t\v]*)[\"{[]")~=nil then -- a json string value
         local rv=__JSON_new__()
         return rv:parse(arg)
     else
@@ -1136,7 +1391,7 @@ __JSON_parse_value__=function(self,arg,start,stop,targettype)
         
             j=j+1
 
-            --first, pull a key
+            -- first, pull a key
             lstart,lstop,lrv=__JSON_parse_value__(rv,arg,j,stop,jtype.string)
             lkey=wds.StringUnquote(lrv.data)
 
@@ -1154,7 +1409,7 @@ __JSON_parse_value__=function(self,arg,start,stop,targettype)
             j=lstop+1
             lstart,lstop,c = __parse_move_to_next_non_WSP(arg,j,stop)
             if c=="," then
-                --continue
+                -- continue
                 j=lstart
             elseif c=="}" then
                 j=lstart
@@ -1195,7 +1450,7 @@ __JSON_parse_value__=function(self,arg,start,stop,targettype)
             j=lstop+1
             lstart,lstop,c = __parse_move_to_next_non_WSP(arg,j,stop)
             if c=="," then
-                --continue
+                -- continue
                 j=lstart
             elseif c=="]" then
                 foundstop=true
@@ -1216,7 +1471,7 @@ __JSON_parse_value__=function(self,arg,start,stop,targettype)
 
     local lcmpword
 
-    if wds.bIn(c,"f","t","n") then --parsing a boolean or null which must be precisely false, true, or null
+    if wds.bIn(c,"f","t","n") then -- parsing a boolean or null which must be precisely false, true, or null
 
         i=start
         if c=="f" then
@@ -1250,10 +1505,10 @@ __JSON_parse_value__=function(self,arg,start,stop,targettype)
 
     end
 
-    if string.find(c,"[+%-%d]") then --parsing a number
+    if string.find(c,"[+%-%d]") then -- parsing a number
 
         if start==stop then -- last character case
-            if string.find(c,"[%d]") then --parsing a single digit integer (ending on [+-] is not valid)
+            if string.find(c,"[%d]") then -- parsing a single digit integer (ending on [+-] is not valid)
                 lrv=tonumber(string.sub(arg,start,stop))
                 if lrv==nil then
                     error("JSON parsing error, number value parsing fails ||"..string.sub(arg,start,stop).."||")
@@ -1289,9 +1544,11 @@ __JSON_parse_value__=function(self,arg,start,stop,targettype)
 
 end
 
-parse=
-AddToModuleHelp{
-    parse=[==[A simple json parser returning a lua structure.]==]
+parse=AddToModuleHelp{
+    parse=[==[--[[--
+            A simple json parser returning a lua structure.
+--]]--]==]
+-- @function parse
 } .. 
 function(arg)
     local start=1
@@ -1303,4 +1560,4 @@ function(arg)
     return rv
 end
 
-return _M
+return wds.EnvLock(_M)
