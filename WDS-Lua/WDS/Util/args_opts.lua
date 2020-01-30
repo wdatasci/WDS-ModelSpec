@@ -20,15 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
---[[ a Python-argsparse-like object --]]
+--[[-- A Python-argsparse-like object 
+--]]--
+-- @submodule WDS.Util
 
 local wds=require("WDS")
 local wdsu=require("WDS.Util")
 
 local module_name="WDS.Util.args_opts"
-local is_main=wds.is_main(arg,module_name)
-if is_main then
-    print("test with WDS.Util/args_opts_test")
+local bIsMain=wds.bIsMain(arg,module_name)
+if bIsMain then
+    error("test with WDS.Util/args_opts_test")
 end
 
 local module_path=""

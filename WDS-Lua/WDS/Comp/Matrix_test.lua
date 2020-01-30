@@ -20,6 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
+--- A test of WDS.Comp.Matrix
+-- @within WDS.Comp
+-- @script Matrix_test
+
 local wds=require("WDS")
 local wdsu=require("WDS.Util")
 local pesc=require("WDS.Util.python_esc")
@@ -210,19 +214,19 @@ A:print("A:")
     EE=C*D.data
     EE:print("EE:")
 
-    L=mat.dLetterMatrix(4,4)
+    L=mat.sMatrix(4,4)
     L:print("L:")
 
     L2=L..L
     L2:print("L2:")
 
-    L=mat.dLetterMatrix(4,4,4)
+    L=mat.sMatrix(4,4,4)
     L:print("L:")
 
-    L=mat.dLetterMatrix(4,4,4,false)
+    L=mat.sMatrix(4,4,4,false)
     L:print("L:")
 
-    L=mat.dLetterMatrix(4,4,4,nil,20)
+    L=mat.sMatrix(4,4,4,nil,20)
     L:print("L:")
 
 

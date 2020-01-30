@@ -20,20 +20,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
+--- A pure-lua implementation of the WDS standard Artificial variable handling set.
+-- @submodule WDS.Comp
+
+
 local wds=require("WDS")
 local wdsu=require("WDS.Util")
 
 local module_name_dots=( ... or "main-call-without-args" )
 local module_name="WDS.Comp.Artificials"
 
-if module_name_dots=="main-call-without-args" or wds.is_main(table.pack(...)) then
+if module_name_dots=="main-call-without-args" or wds.bIsMain(table.pack(...),module_name) then
     print("test with "..string.gsub(module_name,"%.","/").."_test.lua")
-    q()
+    wds.q()
 end
 
 local module_path=""
+local dbg
 if __NO_DEBUG__==nil then
     module_path=debug.getinfo(1,"S").source
+    dbg=require("debugger")
+    dbg.auto_where=2
+else
+    dbg=function() end
 end
 
 local mat=require("WDS.Comp.Matrix")
@@ -42,9 +51,9 @@ local pesc=require("WDS.Util.python_esc")
 -- swapping _ENV/_G to restrict everything to this module, but the
 -- usual suspects will need to be accessed through _M_G
 
-local _M_G=_G
-local _M_ENV={}
-_ENV=_M_ENV
+local _M={}
+local _G=_G
+_ENV=wds.EnvExtension(_M,_G)
 
 wds.AddToEnv(_ENV,{NULL=mat.NULL,dMatrix=mat.dMatrix,dMatrix_WrapOrRef=mat.dMatrix_WrapOrRef})
 
@@ -53,7 +62,7 @@ wds.AddToEnv(_ENV,{NULL=mat.NULL,dMatrix=mat.dMatrix,dMatrix_WrapOrRef=mat.dMatr
 info={name=module_name
     ,path=module_path
     ,doc=module_name .. " ("..module_path..")"..[==[
-    A pure-lua implementation of the standard Artificials set.
+    A pure-lua implementation of the WDS standard Artificial variable handling set.
     For this module, arguments will either be positional, as in f(a,b,c,d),
     or optional, as in f{a=a,b=b,c=c,d=d}.  Any mixed will treat all non-named
     first, and later optionals as overrides, as in f{a,c=b,d}=f{a=a,b=d,c=b,d=nil).
@@ -69,10 +78,12 @@ WDSModuleName = module_name
 local AddToModuleHelp=function(tbl); tbl.info=info; return wds.AddToModuleHelp(tbl); end
 
 
-eTreatment=
-    AddToModuleHelp{
-        eTreatment=[==[An enum of treatment types.]==]
-    } ..
+eTreatment=AddToModuleHelp{
+        eTreatment=[==[--[[--
+                An EnumLike object for artificial treatment types.
+--]]--]==]
+-- @table eTreatment
+} ..
     wds.EnumLike{
 
       Unknown = -1
@@ -88,7 +99,7 @@ eTreatment=
     , Categorical = 9
     , CategoricalNumeric = 10
 
-    , aliases={
+    , __aliases__={
         Straight="None"
         , Numeric="None"
         , Missings="CodedMissings"
@@ -140,9 +151,11 @@ eTreatment=
 }
 
 tVariableMatter=wds.AddToModuleHelp{
-    tVariableMatter=[==[The return type of fVariableMatter.]==]
-    ,info=info} ..
-    wds.nilable_instance_of({
+    tVariableMatter=[==[--[[--
+            The return type of fVariableMatter.
+--]]--]==]
+-- @function tVariableMatter
+,info=info } ..  wds.nilable_instance_of({
 
         Name=""
         , Handle=""
@@ -235,11 +248,12 @@ local fVarArgs=function(positional_order,...)
 
 local fVariableMatter_Args={"Treatment","CriticalValues","CleanLimitLeftValue","CleanLimitRightValue","CoefficientsValues"}
 
-fVariableMatter=
-    AddToModuleHelp{
-        fVariableMatter=[==[Evaluate all of the usual constants associated with a treatment.]==]
-    } ..
-    function(...)
+fVariableMatter=AddToModuleHelp{
+        fVariableMatter=[==[--[[--
+                Evaluate all of the usual constants associated with a treatment.
+--]]--]==]
+-- @function fVariableMatter
+} ..  function(...)
         local args=fVarArgs(fVariableMatter_Args,...)
         --_M_G.print("args=",wds.show(args,2))
         local Treatment=args.Treatment
@@ -397,9 +411,11 @@ fVariableMatter=
 local fArtificialsCount_Args={"Treatment","CriticalValues"}
 
 fArtificialsCount=wds.AddToModuleHelp{
-    fArtificialsCount=[==[Returns just the expected number of artificials.]==]
-    , info=info} ..
-    function(...)
+    fArtificialsCount=[==[--[[--
+            Returns just the expected number of artificials.
+--]]--]==]
+-- @function fArtificialsCount
+, info=info} ..  function(...)
         local args=fVarArgs(fArtificialsCount_Args,...)
         if args.VariableMatter then
             return args.VariableMatter.nArtVars
@@ -412,9 +428,11 @@ fArtificialsCount=wds.AddToModuleHelp{
 local fArtificialsLabels_Args={"Treatment","CriticalValues","VariableBaseName"}
 
 fArtificialsLabels=wds.AddToModuleHelp{
-    fArtificialsLabels=[==[Returns the labels for artificials for a given treatment and set of critical values.]==]
-    , info=info} ..
-    function(...)
+    fArtificialsLabels=[==[--[[--
+            Returns the labels for artificials for a given treatment and set of critical values.
+--]]--]==]
+-- @function fArtificialsLabels
+, info=info} ..  function(...)
         local args=fVarArgs(fArtificialsLabels_Args,...)
         local Treatment, CriticalValues, varm, VariableBaseName, suffix_sep
         if args.VariableMatter then
@@ -433,12 +451,12 @@ fArtificialsLabels=wds.AddToModuleHelp{
 
 local fArtificials_Args={"Treatment","Input","CriticalValues","CleanLimitLeftVal","CleanLimitRightVal"}
 
-fArtificials=
-    AddToModuleHelp{
-        fArtificials=[==[
-        Returns a matrix of artificials given treatment parameters and a value or vector of values.]==]
-    } ..
-    function(...)
+fArtificials=AddToModuleHelp{
+        fArtificials=[==[--[[--
+        Returns a matrix of artificials given treatment parameters and a value or vector of values.
+--]]--]==]
+-- @function fArtificials
+} ..  function(...)
         local args=fVarArgs(fArtificials_Args,...)
         local varm=args.VariableMatter or fVariableMatter(args.Treatment,args.CriticalValues,args.CleanLimitLeftValue,args.CleanLimitRightValue,args.CoefficientValues)
         local Input=dMatrix_WrapOrRef(args.Input)
@@ -899,12 +917,12 @@ end
 
 local fArtificialsScored_Args={"Treatment","Input","CriticalValues","CoefficientValues","CleanLimitLeftVal","CleanLimitRightVal"}
 
-fArtificialsScored=
-    AddToModuleHelp{
-        fArtificialsScored=[==[
-        Returns a matrix of scored artificials given treatment parameters and a value or vector of values.]==]
-    } ..
-    function(...)
+fArtificialsScored=AddToModuleHelp{
+        fArtificialsScored=[==[--[[--
+            Returns a matrix of scored artificials given treatment parameters and a value or vector of values.
+--]]--]==]
+-- @function fArtificialsScored
+} ..  function(...)
         local args=fVarArgs(fArtificialsScored_Args,...)
         local varm=args.VariableMatter or fVariableMatter(args.Treatment,args.CriticalValues,args.CleanLimitLeftvalue,args.CleanLimitRightValue,args.CoefficientValues)
         local Input=dMatrix_WrapOrRef(args.Input)
@@ -1394,7 +1412,7 @@ fArtificialsScored=
 
 end
 
-return _ENV
+return wds.EnvLock(_M)
 
 
 

@@ -20,6 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 --]]
 
+--- A pure-lua simple implementation of a basic matrix library.
+--  This lua implementation mirrors the WDS.Comp.Matrix.h C++ library which 
+--  is based on the classic Stroustrup C++ library and Armadillo.
+--  @submodule WDS.Comp
+
+
 local wds=require("WDS")
 local wdsu=require("WDS.Util")
 local pesc=require("WDS.Util.python_esc")
@@ -28,28 +34,19 @@ local __parent__="Comp"
 local __name__="Matrix"
 local module_name=__parent__.."."..__name__
 local module_path=""
+local dbg
 if __NO_DEBUG__==nil then
     module_path=debug.getinfo(1,"S").source
+    dbg=require("debugger")
+    dbg.auto_where=2
+else
+    dbg=function() end
 end
 
---for localizing the module environment:
---  using _M for module-specific placements with _M as the return table
---  using a local _G for the global environment and direct placements
---  to avoid copying the usuals from _G into _M, the metafunction __index pulls from _G as needed
---  new values are placed directly into _M (and kept from _G) via _M's __newindex metafunction
 
 local _M={}
 local _G=_G
-_G.setmetatable(_M,{
-    __index=function(self,k) 
-        if _G.rawget(self,k)~=nil then 
-            return _G.rawget(self,k) 
-        else return _G[k] 
-        end 
-    end
-    , __newindex=function(self,k,v) _G.rawset(_M,k,v) end
-})
-_ENV=_M
+_ENV=wds.EnvExtension(_M,_G)
 
 local docstring=module_name .. " ("..module_path..")"..[==[
     A pure-lua simple implementation of a basic matrix library.
@@ -57,8 +54,7 @@ local docstring=module_name .. " ("..module_path..")"..[==[
     is based on the classic Stroustrup C++ library and Armadillo.
     ]==]
 
-local isMain=wds.is_main(arg,module_name)
-if isMain then
+if wds.bIsMain(table.pack(...),module_name) then
     print("test with "..__parent__.."/"..__name__.."_test.lua")
     print(docstring)
     os.exit()
@@ -71,67 +67,11 @@ info={name=module_name
     ,_ENV=_M
 }
 
+-- localizing AddToModuleHelp to globally assign to this module's info table
+local AddToModuleHelp=function(tbl); tbl.info=info; return wds.AddToModuleHelp(tbl); end
 
-local _AddToModuleHelp=function(tbl); tbl.info=info; return wds.AddToModuleHelp(tbl); end
-
---using a builder here to enable the singleton reference back to rv
-
-local NULL_Builder=function()
-    local rv={} -- unless NULL_Builder is called again, will be the singular class instance
-    return setmetatable(rv,{
-        __tostring=function(a) return "NULL" end
-        , __call=function() return nil end
-        , __eq=function(a,b)
-            if type(a)=="table" and a.__classname__ and a.__classname__=="NULL" then
-                if b==nil then 
-                    return true 
-                elseif type(b)=="table" then
-                    if b.__class__ and b.__class__==a.__class__ then 
-                        return true 
-                    elseif b.__classname__ and b.__classname__=="NULL" then 
-                        return true 
-                    elseif b.__nil__ then 
-                        return true 
-                    end
-                elseif type(b)=="number" then
-                    return math.isinf(b) or math.isnan(b)
-                elseif type(b)=="string" then
-                    return b:len()==0
-                end
-            else
-                if a==nil then 
-                    return true 
-                elseif type(a)=="table" then
-                    if a.__class__ and a.__class__==rv then 
-                        return true 
-                    elseif a.__nil__ then 
-                        return true 
-                    end
-                elseif type(a)=="number" then
-                    return math.isinf(a) or math.isnan(a)
-                elseif type(a)=="string" then
-                    return a:len()==0
-                end
-            end
-
-            return false
-        end
-        , __index=function(t,k)
-            if k=="__class__" then 
-                return rv 
-            elseif k=="__classname__" then 
-                return "NULL"
-            end
-        end
-        , __newindex=function(t,k,v) error("Cannot change anything about a NULL singleton") end
-        })
-end
-
-NULL=
-_AddToModuleHelp{NULL=[==[A null object singleton]==]
-    } ..
-NULL_Builder()
-
+-- The construction of the NULL singleton has been moved to the WDS module.
+NULL=wds.NULL
 
 -- The dMatrix class construction --
 -- The proto data object.
@@ -146,7 +86,7 @@ local dMatrix_Obj={
 local _dMatrix_ClassMT={}
 local _dMatrix_ClassMTI={}
 
-isMatrix=function(obj)
+bIsMatrix=function(obj)
     if type(obj)=="table" then
         if obj.__class__ and obj.__class__==_dMatrix_ClassMT then
             return true
@@ -335,14 +275,14 @@ _dMatrix_ClassMTI.__index=function(t,k)
         if type(k[1])=="number" then
             if type(k[2])=="number" then
                 return t.data[_dMatrix_IJ_index(t,k[1],k[2])]
-            elseif wds.isEmpty(k[2]) then
+            elseif wds.bIsEmpty(k[2]) then
                 --return an iterator
                 return _dMatrix_RowIterator(t,k[1])
             else
                 error("unknown index method")
             end
         elseif type(k[2])=="number" then
-            if wds.isEmpty(k[1]) then
+            if wds.bIsEmpty(k[1]) then
                 --return an iterator
                 return _dMatrix_ColumnIterator(t,k[2])
             else
@@ -535,9 +475,9 @@ _dMatrix_ClassMT.__shl=function(self,v)
 
 _dMatrix_ClassMT.__concat=function(a,b)
     local rv={}
-    if isMatrix(a) then
+    if bIsMatrix(a) then
         local tb=type(b)
-        if isMatrix(b) then
+        if bIsMatrix(b) then
             rv.n_rows,rv.n_cols=math.min(a.n_rows,b.n_rows),(a.n_cols+b.n_cols)
             _dMatrix_set_size(rv,rv.n_rows,rv.n_cols)
             for i=1,rv.n_rows do
@@ -623,10 +563,10 @@ _dMatrix_ClassMT.__newindex=function(self,k,v)
 l__op=function(lo,ro,oper)
         local rv={}
         _dMatrix_set_size(rv,0,0)
-        if NULL==ro or isNULLOrError(ro) then
+        if NULL==ro or bIsNULLOrError(ro) then
             rv.n_rows,rv.n_cols=lo.n_rows,lo.n_cols
             for i=1,lo.n_rows*lo.n_cols do table.insert(rv.data,NULL) end
-        elseif NULL==lo or isNULLOrError(lo) then
+        elseif NULL==lo or bIsNULLOrError(lo) then
             rv.n_rows,rv.n_cols=ro.n_rows,ro.n_cols
             for i=1,ro.n_rows*ro.n_cols do table.insert(rv.data,NULL) end
         elseif type(ro)=="number" then
@@ -740,9 +680,11 @@ l__op=function(lo,ro,oper)
 
 
 
-dMatrix=
-_AddToModuleHelp{
-    dMatrix=[==[A simple matrix-like class (actual a function building an object with dMatrix properties/methods).]==]
+dMatrix=AddToModuleHelp{
+    dMatrix=[==[--[[--
+            A constructor for a simple matrix-like class with dMatrix properties/methods.
+--]]--]==]
+-- @function dMatrix
     } .. 
 function(a,...)
     local args=table.pack(...)
@@ -772,35 +714,33 @@ function(a,...)
     return setmetatable(rv,_dMatrix_ClassMT)
 end
 
-dZeros=
-_AddToModuleHelp{
-    dZeros=[==[A dMatrix call with zeros.]==]
-    } .. 
-function(a,b)
-    return dMatrix(a,b,0.0)
-end
+dZeros=AddToModuleHelp{
+    dZeros=[==[--[[--
+            A dMatrix call with zeros.
+--]]--]==]
+-- @function dZeros
+} ..  function(a,b) return dMatrix(a,b,0.0) end
 
-dOnes=
-_AddToModuleHelp{
-    dOnes=[==[A dMatrix call with ones.]==]
-    } .. 
-function(a,b)
-    return dMatrix(a,b,1.0)
-end
+dOnes=AddToModuleHelp{
+    dOnes=[==[--[[--
+            A dMatrix call with ones.
+--]]--]==]
+-- @function dOnes
+} ..  function(a,b) return dMatrix(a,b,1.0) end
 
-dRandom=
-_AddToModuleHelp{
-    dRandom=[==[A dMatrix call filled with random().]==]
-    } .. 
-function(a,b)
-    return dMatrix(a,b,math.random)
-end
+dRandom=AddToModuleHelp{
+    dRandom=[==[--[[--
+            A dMatrix call filled with random().
+--]]--]==]
+-- @function dRandom
+} ..  function(a,b) return dMatrix(a,b,math.random) end
 
-dLetterMatrix=
-_AddToModuleHelp{
-    dCharMatrix=[==[A random letter or word matrix.]==]
-    } .. 
-function(a,b,l,fill,mx)
+sMatrix=AddToModuleHelp{
+    sMatrix=[==[--[[--
+            A random letter or word matrix.
+--]]--]==]
+-- @function sMatrix
+} ..  function(a,b,l,fill,mx)
     if l==nil then l=1 end
     if fill==nil then fill=true end
     if mx==nil then mx=52 end
@@ -830,15 +770,12 @@ function(a,b,l,fill,mx)
 end
 
 
-
-
-
-
-isdMatrix=
-    _AddToModuleHelp{
-        isdMatrix=[==[Boolean test for dMatrix.]==]
-    } .. 
-    function(a)
+bIsdMatrix=AddToModuleHelp{
+        bIsdMatrix=[==[--[[--
+                A Boolean test for dMatrix.
+--]]--]==]
+-- @function bIsdMatrix
+} ..  function(a)
         if type(a)~="table" then
             return false
         end
@@ -851,12 +788,13 @@ isdMatrix=
         return false
     end
 
-dMatrix_WrapOrRef=
-    _AddToModuleHelp{
-        dMatrix_WrapOrRef=[==[Returns either a reference to an existing dMatrix or wraps something.]==]
-    } ..
-    function(a,...)
-        if isdMatrix(a) then
+dMatrix_WrapOrRef=AddToModuleHelp{
+        dMatrix_WrapOrRef=[==[--[[--
+                Returns either a reference to an existing dMatrix or wraps something.
+--]]--]==]
+-- @function dMatrix_WrapOrRef
+} ..  function(a,...)
+        if bIsdMatrix(a) then
             return a
         else
             local rv=dMatrix():wrap(a,...)
@@ -864,12 +802,13 @@ dMatrix_WrapOrRef=
         end
     end
 
-dMatrix_SimpleDiffVector=
-    _AddToModuleHelp{
-        dMatrix_SimpleDiffVector=[==[Returns a difference sequence.]==]
-    } ..
-    function(a,d)
-        assert(isdMatrix(a) 
+dMatrix_SimpleDiffVector=AddToModuleHelp{
+        dMatrix_SimpleDiffVector=[==[--[[--
+                Returns a difference sequence.
+--]]--]==]
+-- @function dMatrix_SimpleDiffVector
+} ..  function(a,d)
+        assert(bIsdMatrix(a) 
                 or (a.n_rows==1 and a.n_cols==1) 
                 or (a.n_rows>d and a.n_cols>d)
                 ,"dMatrix_SimpleDiffVector requires a one dimensional matrix (single row or column).")
@@ -890,20 +829,30 @@ dMatrix_SimpleDiffVector=
         return rv
     end
 
-isNULLOrError=function(obj)
+bIsNULLOrError=AddToModuleHelp{
+        bIsNULLOrError=[==[--[[--
+                A Boolean check for a nil, NULL, or Error object.
+--]]--]==]
+-- @function bIsNULLOrError
+} .. function(obj)
     if obj==nil or NULL==obj then
         return true
     end
     local t=type(obj)
     if t=="number" and (obj~=obj or obj==math.huge or obj==-math.huge or obj==math.mininteger or obj==math.maxinteger) then
         return true
-    elseif t=="string" and (wds.isEmpty(obj) or wds.bIn(obj:lower(),"error","err","na","n/a","nan","nil","null")) then
+    elseif t=="string" and (wds.bIsEmpty(obj) or wds.bIn(obj:lower(),"error","err","na","n/a","nan","nil","null")) then
         return true
     end
     return false
 end
 
-isNULLOrErrorOrZero=function(obj)
+bIsNULLOrErrorOrZero=AddToModuleHelp{
+        bIsNULLOrErrorOrZero=[==[--[[--
+                A Boolean check for nil, NULL, Error, or Zero object.
+--]]--]==]
+-- @function bIsNULLOrErrorOrZero
+} .. function(obj)
     if obj==nil or NULL==obj or obj==0 then
         return true
     end
@@ -920,14 +869,19 @@ isNULLOrErrorOrZero=function(obj)
         end
     elseif t=="number" and (math.isnan(obj) or math.isinf(obj) or obj==math.mininteger) then
         return true
-    elseif t=="string" and (wds.isEmpty(obj) or wds.bIn(obj:lower(),"0","zero","error","err","na","n/a","nan","nil","null")) then
+    elseif t=="string" and (wds.bIsEmpty(obj) or wds.bIn(obj:lower(),"0","zero","error","err","na","n/a","nan","nil","null")) then
         return true
     end
     return false
 end
 
 
-CDbl=function(obj)
+CDbl=AddToModuleHelp{
+    CDbl=[==[--[--
+            A safe conversion to a number or NULL.
+--]]--]==]
+-- @function CDbl
+} .. function(obj)
     local rv
     local ok, msg=pcall(function() rv=tonumber(obj) end)
     if not ok then
@@ -936,7 +890,12 @@ CDbl=function(obj)
     return rv
 end
 
-isNumeric=function(obj)
+bIsNumeric=AddToModuleHelp{
+    bIsNumeric=[==[--[[--
+            A Boolean check for a non-NULL numeric value.
+--]]--]==]
+-- @function bIsNumeric
+} .. function(obj)
     if NULL==obj then
         return false
     end
@@ -945,7 +904,7 @@ end
 
 
 
-return _M
+return wds.EnvLock(_M)
 
 
 
