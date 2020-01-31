@@ -97,11 +97,18 @@ if #password==0 then
     password=cb_cred.password
 end
 
-server_address="couchbase://localhost/SEC"
+server_address="couchbase://localhost"
 print("input Couchbase server address > (default: "..server_address..")")
 s=io.read("*l")
 if #s>0 then
     server_address=s
+end
+
+bucket="SEC"
+print("input Couchbase bucket > (default: "..bucket..")")
+b=io.read("*l")
+if #b>0 then
+    bucket=b
 end
 
 doc_name="general_test_example"
@@ -113,10 +120,21 @@ end
 
 rc = o << {hey="what"}
 
-rc,rv=Couchbase_CAPI_store(server_address,user,password,doc_name,tostring(o))
+rc,rv=Couchbase_CAPI_store(server_address,bucket,user,password,doc_name,tostring(o))
 print("store rc=",rc," rv=",rv)
 
-rc,rv=Couchbase_CAPI_get(server_address,user,password,doc_name)
-print("get rc=",rc," rv=",rv)
+rc = o << {hey="what",huh="hey"}
+
+rc,rv=Couchbase_CAPI_store(server_address,bucket,user,password,doc_name.."2",tostring(o))
+print("store rc=",rc," rv=",rv)
+
+rc,rv,rv2,rv3=Couchbase_CAPI_get(server_address,bucket,user,password,doc_name)
+print("get rc=",rc," rv=",rv," rv2=",rv2," rv3=",rv3)
+
+rc,rv,rv2=Couchbase_CAPI_query(server_address,bucket,user,password,"select * from `SEC` where hey=$1 ","\"what\"")
+print("get rc=",rc," rv=",rv," rv2=",rv2)
+
+rc,rv,rv2=Couchbase_CAPI_query(server_address,bucket,user,password,"select * from `SEC` where hey=\"what\"")
+print("get rc=",rc," rv=",rv," rv2=",rv2)
 
 
