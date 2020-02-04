@@ -75,9 +75,9 @@ get=AddToModuleHelp{
 function(url,dlm)
     dlm=(dlm or "\n")
     local __data={}
-    local __data_writer=function(line) _M_G.table.insert(__data,line) end
+    local __data_writer=function(line) table.insert(__data,line) end
     lcurl.easy {url=url, writefunction=__data_writer} :perform()
-    return _M_G.table.concat(__data,dlm)
+    return table.concat(__data,dlm)
 end
 
 
