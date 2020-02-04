@@ -2,8 +2,10 @@
 LUA=lua5.3
 
 
-all:	lua_swig_example1.so lua_capi_example1.so lua_Couchbase_capi_minimal.so
+all:	output lua_swig_example1.so lua_capi_example1.so lua_Couchbase_capi_minimal.so
 
+output:	
+	-mkdir output
 
 lua_swig_example1.so:	lua_swig_example1.c lua_swig_example1.i
 	swig -Wall -lua -o build/lua_swig_example1_wrap.c lua_swig_example1.i
