@@ -175,11 +175,7 @@ int Couchbase_CAPI_store(lua_State *L){
     if (err != LCB_SUCCESS) return lua_return_Couchbase_error(L,&instance,err,"Could not schedule connection");
 
     lcb_set_bootstrap_callback(instance, (lcb_bootstrap_callback)bootstrap_callback);
-#if USE_NEW_LCB_WAIT==1
     if (!setjmp(bootstrap_callback_env)) lcb_wait(instance, LCB_WAIT_DEFAULT);
-#else
-    if (!setjmp(bootstrap_callback_env)) lcb_wait(instance);
-#endif
     else return lua_return_Couchbase_error(L,&instance,bootstrap_callback_env_rc,"Problem with bootstrap status");
 
     err = lcb_get_bootstrap_status(instance);
@@ -196,11 +192,7 @@ int Couchbase_CAPI_store(lua_State *L){
     lcb_cmdstore_destroy(scmd);
 
     if (err != LCB_SUCCESS) return lua_return_Couchbase_error(L,&instance,err,"Could not schedule store operation");
-#if USE_NEW_LCB_WAIT==1
     if (!setjmp(store_callback_env)) lcb_wait(instance, LCB_WAIT_DEFAULT);
-#else
-    if (!setjmp(store_callback_env)) lcb_wait(instance);
-#endif
     else return lua_return_Couchbase_error(L,&instance,store_callback_env_rc,"Problem while waiting for storage operation to complete");
 
     return lua_return_Couchbase_code(L,&instance,0,"Success");
@@ -240,11 +232,7 @@ int Couchbase_CAPI_get(lua_State *L){
     if (err != LCB_SUCCESS) return lua_return_Couchbase_error(L,&instance,err,"Could not schedule connection");
 
     lcb_set_bootstrap_callback(instance, (lcb_bootstrap_callback)bootstrap_callback);
-#if USE_NEW_LCB_WAIT==1
     if (!setjmp(bootstrap_callback_env)) lcb_wait(instance, LCB_WAIT_DEFAULT);
-#else
-    if (!setjmp(bootstrap_callback_env)) lcb_wait(instance);
-#endif
     else return lua_return_Couchbase_error(L,&instance,bootstrap_callback_env_rc,"Problem with bootstrap status");
 
     err = lcb_get_bootstrap_status(instance);
@@ -271,7 +259,6 @@ int Couchbase_CAPI_get(lua_State *L){
 
     lcb_install_callback(instance, LCB_CALLBACK_GET, (lcb_RESPCALLBACK)get_callback2);
 
-    //Now fetch the item back 
     lcb_cmdget_create(&gcmd);
     lcb_cmdget_key(gcmd, key, strlen(key));
     err = lcb_get(instance, NULL, gcmd);
@@ -279,11 +266,7 @@ int Couchbase_CAPI_get(lua_State *L){
 
     if (err != LCB_SUCCESS) return lua_return_Couchbase_error(L,&instance,err,"Could not schedule retrieval operation");
 
-#if USE_NEW_LCB_WAIT==1
     if (!setjmp(get_callback_env)) lcb_wait(instance, LCB_WAIT_DEFAULT);
-#else
-    if (!setjmp(get_callback_env)) lcb_wait(instance);
-#endif
     else return lua_return_Couchbase_error(L,&instance,get_callback_env_rc,"Problem while waiting for retreive operation to complete");
 
     lua_pushnumber(L,0);
@@ -309,7 +292,7 @@ int Couchbase_CAPI_query(lua_State *L){
     lcb_STATUS err;
     lcb_INSTANCE *instance;
     lcb_CREATEOPTS *create_options = NULL;
-    lcb_CMDN1QL *gcmd;
+    lcb_CMDQUERY *gcmd;
 
     const char *connection_string = luaL_checkstring(L,1);
     const char *bucket = luaL_checkstring(L,2);
@@ -333,11 +316,7 @@ int Couchbase_CAPI_query(lua_State *L){
     if (err != LCB_SUCCESS) return lua_return_Couchbase_error(L,&instance,err,"Could not schedule connection");
 
     lcb_set_bootstrap_callback(instance, (lcb_bootstrap_callback)bootstrap_callback);
-#if USE_NEW_LCB_WAIT==1
     if (!setjmp(bootstrap_callback_env)) lcb_wait(instance, LCB_WAIT_DEFAULT);
-#else
-    if (!setjmp(bootstrap_callback_env)) lcb_wait(instance);
-#endif
     else return lua_return_Couchbase_error(L,&instance,bootstrap_callback_env_rc,"Problem with bootstrap status");
 
     err = lcb_get_bootstrap_status(instance);
@@ -385,26 +364,24 @@ int Couchbase_CAPI_query(lua_State *L){
     //int rs_index=0;
 
     // localizing the callback to return value to this function space
-    void row_callback2(lcb_INSTANCE *instance, int cbtype, const lcb_RESPN1QL *resp)
+    void row_callback2(lcb_INSTANCE *instance, int cbtype, const lcb_RESPQUERY *resp)
     {
-        lcb_STATUS rc = lcb_respn1ql_status(resp);
+        lcb_STATUS rc = lcb_respquery_status(resp);
         //ln2space(row,nrow);
         if (rc == LCB_SUCCESS) {
-            rc=lcb_respn1ql_row(resp, &row1, &nrow1);
+            rc=lcb_respquery_row(resp, &row1, &nrow1);
             //printf("h=[\x1b[%dmQUERY\x1b[0m] %s, (%d) >>>>>%.*s<<<<<\n"
             //      , err2color(rc), lcb_strerror_short(rc), (int)nrow1, (int)nrow1, row1);
             if (!bHasInitialRVs) {
                 lua_pushnumber(L,0);
-                //rc_index=lua_absindex(L,-1); //top
                 lua_newtable(L);
                 rv_index=lua_absindex(L,-1); //top
                 bHasInitialRVs=true;
             }
-            if (lcb_respn1ql_is_final(resp)) {
+            if (lcb_respquery_is_final(resp)) {
                 if (!bHasSummaryRV) {
                     bHasSummaryRV=true;
                     lua_pushstring(L,row1);
-                    //rs_index=lua_absindex(L,-1); //top
                 }
             } else {
                 nrows+=1;
@@ -422,45 +399,27 @@ int Couchbase_CAPI_query(lua_State *L){
     }
 
     //Now fetch the item back 
-    //int i=0;printf("hey %d\n",++i);
-    lcb_cmdn1ql_create(&gcmd);
-    err = lcb_cmdn1ql_statement(gcmd, query, strlen(query));
+    lcb_cmdquery_create(&gcmd);
+    err = lcb_cmdquery_statement(gcmd, query, strlen(query));
     if (err != LCB_SUCCESS) return local_lua_return_Couchbase_error(L,&instance,err,"set query statement");
 
-    //printf("hey %d\n",++i);
     if (strcmp(param1,"\"\"")!=0) {
-        err = lcb_cmdn1ql_positional_param(gcmd, param1, strlen(param1));
+        err = lcb_cmdquery_positional_param(gcmd, param1, strlen(param1));
         if (err != LCB_SUCCESS) return local_lua_return_Couchbase_error(L,&instance,err,"set query positional parameters");
     }
 
-    //if (strcmp(param2,"\"\"")!=0) {
-    //    err = lcb_cmdn1ql_positional_param(gcmd, param2, strlen(param2));
-    //    if (err != LCB_SUCCESS) return local_lua_return_Couchbase_error(L,&instance,err,"set query positional parameters");
-    //}
-
-
-    //printf("hey %d\n",++i);
-    err = lcb_cmdn1ql_option(gcmd,"pretty",strlen("pretty"),"false",strlen("false"));
+    err = lcb_cmdquery_option(gcmd,"pretty",strlen("pretty"),"false",strlen("false"));
     if (err != LCB_SUCCESS) return local_lua_return_Couchbase_error(L,&instance,err,"set query 'pretty' option");
 
-    //printf("hey %d\n",++i);
-    lcb_cmdn1ql_callback(gcmd, row_callback2);
-    err = lcb_n1ql(instance, NULL, gcmd);
+    lcb_cmdquery_callback(gcmd, row_callback2);
+    err = lcb_query(instance, NULL, gcmd);
     if (err != LCB_SUCCESS) return local_lua_return_Couchbase_error(L,&instance,err,"schedule query operation");
 
-    //printf("hey %d\n",++i);
-    lcb_cmdn1ql_destroy(gcmd);
+    lcb_cmdquery_destroy(gcmd);
 
-    //printf("hey %d\n",++i);
-#if USE_NEW_LCB_WAIT==1
     if (!setjmp(row_callback_env)) lcb_wait(instance, LCB_WAIT_DEFAULT);
-#else
-    if (!setjmp(row_callback_env)) lcb_wait(instance);
-#endif
     else return local_lua_return_Couchbase_error(L,&instance,row_callback_env_rc,"Problem while waiting for query operation to complete");
 
-    //printf("hey %d\n",++i);
-    //outputs are initialized in row_callback
     lcb_destroy(instance);
     return 3;
 }

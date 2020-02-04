@@ -81,30 +81,31 @@ o=wjson.JSON(a)
 
 -- Note: CJW - For a local credential file to simplify the test, 
 -- on WSL/ubuntu, a file in my home directory has
--- Couchbase_localhost_credentials={user="AAAAAA", password="AAAAAA"}
+-- Couchbase__credentials.localhost={host="localhost",user="AAAAAA", password="AAAAAA",bucket="AAAAAA"}
+-- ...others...
+-- Couchbase_credentials.default=Couchbase_credentials.localhost
 
-load(io.open("/home/"..os.getenv("USER").."/Couchbase_localhost_credentials.lua","r"):read("*all"))()
-cb_cred=Couchbase_localhost_credentials
+cb_cred=load(io.open("/home/"..os.getenv("USER").."/Couchbase_credentials.lua","r"):read("*all"))()
 
-print("input Couchbase user > (default: "..cb_cred.user..")")
+print("input Couchbase user > (default: "..cb_cred.default.user..")")
 user=io.read("*l")
 if #user==0 then
-    user=cb_cred.user
+    user=cb_cred.default.user
 end
 print("input Couchbase password > (default from /home/"..os.getenv("USER").."/Couchbase_localhost_credentials.lua)")
 password=io.read("*l")
 if #password==0 then
-    password=cb_cred.password
+    password=cb_cred.default.password
 end
 
-server_address="couchbase://localhost"
+server_address="couchbase://"..cb_cred.default.host
 print("input Couchbase server address > (default: "..server_address..")")
 s=io.read("*l")
 if #s>0 then
     server_address=s
 end
 
-bucket="SEC"
+bucket=cb_cred.default.bucket
 print("input Couchbase bucket > (default: "..bucket..")")
 b=io.read("*l")
 if #b>0 then
