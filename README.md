@@ -1,7 +1,10 @@
 # UNDER CONSTRUCTION
 Supporting libraries are added periodically.
 
-# Last update notes, early 2019-11:
+# Last update notes, 2020-01:
+Continuing standardization of WDS-Lua including additional documentation, a json class, and Couchbase functionality. WPS compatible SAS language macros have been added in WDS-SAS.
+
+# Previous update notes, early 2019-11:
 WDS-Cpp was added and includes a basic framework for which additional computational tools will be added.  In particular, a starting Matrix
 class, which is usually like the classic Stroustrup, but here extends armadillo.  A basic XLL wrapper starts with simple row-normalizer but
 will be extended with parameterized matrix model methods Wypasek Data Science uses.  WDS-Lua was added and WDS-Python was updated.

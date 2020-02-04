@@ -61,3 +61,4 @@ WDS-Cpp/lib/WDS_Matrix_CLR-dbg.pdb
 *.dll
 *.pdb
 *.lib
+*.so
