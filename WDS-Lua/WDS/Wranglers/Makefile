@@ -1,14 +1,12 @@
 
 LUA=lua5.3
 
-#the newer library uses lcb_wait with 2 arguments (lcb_wait3 in older library)
-COUCHBASE_FLAGS=-DUSE_NEW_LCB_WAIT=1
-COUCHBASE_FLAGS=-DUSE_NEW_LCB_WAIT=0
-
 all:	Couchbase.so
 
+#note LD_LIBRARY_PATH will need to have /usr/local/lib included
+
 Couchbase.so:	Couchbase.c
-	gcc -I/usr/include/lua5.3 -llua5.3 -shared -o Couchbase.so -Wall -fPIC Couchbase.c -L/usr/lib -lcouchbase
+	gcc -I/usr/include/lua5.3 -llua5.3 -shared -o Couchbase.so -Wall -fPIC Couchbase.c -L/usr/local/lib -lcouchbase
 
 clean:	
 	-rm Couchbase.so
