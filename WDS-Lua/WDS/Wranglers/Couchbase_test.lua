@@ -31,6 +31,7 @@ pesc=require("WDS.Util.python_esc")
 lcb=require("WDS.Wranglers.Couchbase")
 wjson=require("WDS.Wranglers.json")
 args_opts=require("WDS.Util.args_opts")
+url=require("url")
 
 options=args_opts.ArgumentParser('usual')
 
