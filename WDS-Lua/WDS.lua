@@ -628,7 +628,7 @@ AddToModuleHelp{
 function(word,keyquote)
     local rv=string.format("%q",word)
     rv=string.sub(rv,2,#rv-1)
-    local rv_needs_to_be_quoted=false
+    local rv_needs_to_be_quoted=quote_string 
     if rv_needs_to_be_quoted==false and string.find(rv,"[^%w_]") then
         rv_needs_to_be_quoted=true
     end
@@ -955,8 +955,15 @@ bIsHiddenFieldName=AddToModuleHelp{
 -- @function bIsHiddenFieldName
 , info=info } ..
 function(arg)
-    if type(arg)~="string" then return false end
-    return (string.find(arg,"^__(.*)__$")~=nil)
+    if type(arg)~="string" then 
+        return false 
+    elseif string.find(arg,"^__(.*)__$")~=nil then 
+        return true
+    elseif bIn(string.lower(arg),"pass","password","passwd") then
+        return true
+    else
+        return false;
+    end
 end
 
 local local_table_simple_value_comp
