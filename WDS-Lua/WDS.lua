@@ -1389,6 +1389,23 @@ function(env,obj)
     return env
 end
 
+AddToEnv_Raw=AddToModuleHelp{
+    AddToEnv_Raw=[==[--[[--
+            Takes a table and adds key/value pairs to a target table/environment using rawset.
+--]]--]==]
+-- @function AddToEnv
+, info=info} ..
+function(env,obj)
+    if type(obj)~="table" or type(env)~="table" then
+        error('Input to AddToEnv must be a single target table/env and a single source table.')
+    end
+    for k,v in pairs(obj) do
+        rawset(env,k,v)
+    end
+    return env
+end
+
+
 local wdsnull=require("WDS.NULL")
 
 NULL=AddToModuleHelp{
@@ -1511,7 +1528,7 @@ end
 
 bIsTrue=AddToModuleHelp{
     bIsTrue=[==[--[[--
-            A boolean check for a boolean true value.
+            A boolean check for a boolean true value, checking the usual suspects across data types, such as "true","yes",1, etc..
 --]]--]==]
 -- @function bIsTrue
 , info=info } ..

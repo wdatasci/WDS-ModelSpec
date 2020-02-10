@@ -87,6 +87,7 @@ o=wjson.JSON(a)
 -- Couchbase_credentials.default=Couchbase_credentials.localhost
 
 cb_cred=load(io.open("/home/"..os.getenv("USER").."/Couchbase_credentials.lua","r"):read("*all"))()
+cb_cred.default=cb_cred.test
 
 print("input Couchbase user > (default: "..cb_cred.default.user..")")
 user=io.read("*l")
@@ -127,16 +128,19 @@ print("store rc=",rc," rv=",rv)
 
 rc = o << {hey="what",huh="hey"}
 
-rc,rv=Couchbase_CAPI_store(server_address,bucket,user,password,doc_name.."2",tostring(o))
+rc,rv=Couchbase_CAPI_store(server_address,bucket,user,password,doc_name.."2",o)
 print("store rc=",rc," rv=",rv)
 
 rc,rv,rv2,rv3=Couchbase_CAPI_get(server_address,bucket,user,password,doc_name)
 print("get rc=",rc," rv=",rv," rv2=",rv2," rv3=",rv3)
 
-rc,rv,rv2=Couchbase_CAPI_query(server_address,bucket,user,password,"select * from `SEC` where hey=$1 ","\"what\"")
+rc,rv,rv2,rv3=Couchbase_CAPI_get_wjson(server_address,bucket,user,password,doc_name)
+print("get rc=",rc,"\nrv=",rv,"\nbIsJSON(rv)=",wjson.bIsJSON(rv),"\nrv2=",rv2,"\nrv3=",rv3)
+
+rc,rv,rv2=Couchbase_CAPI_query(server_address,bucket,user,password,"select * from `"..cb_cred.default.bucket.."` where hey=$1 ","\"what\"")
 print("get rc=",rc," rv=",rv," rv2=",rv2)
 
-rc,rv,rv2=Couchbase_CAPI_query(server_address,bucket,user,password,"select * from `SEC` where hey=\"what\"")
+rc,rv,rv2=Couchbase_CAPI_query_wjson(server_address,bucket,user,password,"select * from `"..cb_cred.default.bucket.."` where hey=\"what\"")
 print("get rc=",rc," rv=",rv," rv2=",rv2)
 
 

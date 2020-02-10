@@ -34,6 +34,8 @@ local wdsu=require("WDS.Util")
 
 local __parent__="Util"
 local __name__="python_esc"
+local module_name_dots=( ... or "main-call-without-args" )
+-- to hard-code use.......
 local module_name=__parent__.."."..__name__
 local module_path=""
 
@@ -47,12 +49,6 @@ else
 end
 
 local arg 
-
-local module_name_dots=( ... or "main-call-without-args" )
--- to hard-code use.......
-local module_name="WDS.Util.python_esc"
-
-local module_path=debug.getinfo(1,"S").source
 
 info={name=module_name
     ,path=module_path
