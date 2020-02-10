@@ -813,6 +813,9 @@ __JSON_class__.__index=function(self,arg)
     if wds.bIn(arg,"jtype","data","keys","keys_rev","__parent__") then
         return rawget(self,arg)
     end
+    if arg=="copy" then
+        return function(self) return wds.deeper_copy(self) end
+    end
 
     local self_jtype=rawget(self,"jtype")
     local self_data
@@ -897,10 +900,11 @@ __JSON_class_____tostring=function(self,opts,lopts)
     opts=opts or {}
     opts.depth=opts.depth or 1
     opts.maxdepth=opts.maxdepth or 100
-    opts.indent=opts.indent or "  "
-    opts.linesep=opts.linesep or "\n"
-    opts.itemsep=opts.itemsep or ", "
-    opts.kvsep=opts.kvsep or " : "
+    opts.indent=opts.indent or "" -- "  "
+    opts.keyindent=opts.keyindent or "" -- " "
+    opts.linesep=opts.linesep or "" -- "\n"
+    opts.itemsep=opts.itemsep or "," -- ", "
+    opts.kvsep=opts.kvsep or ":" -- " : "
 
     lopts=lopts or {}
     lopts.depth=lopts.depth or opts.depth
@@ -939,7 +943,7 @@ __JSON_class_____tostring=function(self,opts,lopts)
         j=0
         for i,v in pairs(self_data) do
             k=self_keys_rev[i]
-            local tmpindent=string.rep(" ",#k+#opts.itemsep)
+            local tmpindent=string.rep(opts.keyindent,#k+#opts.itemsep)
             table.insert(tmp,"\""..k.."\""..opts.kvsep..__JSON_class_____tostring(v
                 ,opts,{depth=lopts.depth+1,extraindent=lopts.extraindent..tmpindent}))
         end
@@ -953,6 +957,29 @@ end
 
 __JSON_class__.__tostring=__JSON_class_____tostring
 __JSON_class__index_base.print=__JSON_class_____tostring
+__JSON_class__index_base.pretty=function(self,opts,lopts)
+    opts=opts or {}
+    opts.depth=opts.depth or 1
+    opts.maxdepth=opts.maxdepth or 100
+    opts.indent=opts.indent or "  "
+    opts.keyindent=opts.keyindent or " "
+    opts.linesep=opts.linesep or "\n"
+    opts.itemsep=opts.itemsep or ", "
+    opts.kvsep=opts.kvsep or " : "
+    return __JSON_class_____tostring(self,opts,lopts)
+    end
+__JSON_class__index_base.compact=function(self,opts,lopts)
+    opts=opts or {}
+    opts.depth=opts.depth or 1
+    opts.maxdepth=opts.maxdepth or 1000
+    opts.indent=opts.indent or ""
+    opts.keyindent=opts.keyindent or ""
+    opts.linesep=opts.linesep or ""
+    opts.itemsep=opts.itemsep or ","
+    opts.kvsep=opts.kvsep or ":"
+    return __JSON_class_____tostring(self,opts,lopts)
+    end
+
 
 __JSON_class__index_base.tonumber=function(self)
     local self_jtype=self.jtype
@@ -999,6 +1026,85 @@ __JSON_class__.__mod=function(a,b) return __JSON_class__number_metamethod_prep(a
 __JSON_class__.__pow=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return x^y end) end
 __JSON_class__.__unm=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return -x end) end
 __JSON_class__.__idiv=function(a,b) return __JSON_class__number_metamethod_prep(a,b,function(x,y) return x//y end) end
+
+__JSON_class__.__eq=function(a,b)
+    local leftjson=bIsJSON(a)
+    local rightjson=bIsJSON(b)
+    local ajtype, bjtype
+    if leftjson and rightjson then
+        ajtype=a.jtype
+        bjtype=b.jtype
+        if ajtype~=bjtype then
+            return false
+        else
+            if wds.bIn(ajtype,jtype.unk,jtype.null) then 
+                return true
+            elseif bIsJTypeAtom(ajtype) then
+                return a.data==b.data
+            elseif ajtype==jtype.array then
+                if #a~=#b then
+                    return false
+                elseif #a==0 then
+                    return true
+                else
+                    local i,v,w
+                    for i,v in ipairs(a) do
+                        if v~=b[i] then return false end
+                    end
+                    return true
+                end
+            else -- obj
+                local i,v,w
+                for i,v in pairs(a) do
+                    if v~=b[i] then return false end
+                end
+                return true
+            end
+        end
+    elseif leftjson then
+        if ajtype==jtype.null and b==NULL then
+            return true
+        elseif bIsJTypeAtom(ajtype) then
+            if ajtype==jtype(type(b)) then
+                return a.data==b
+            elseif ajtype==jtype.boolean then
+                if a.data then
+                    return bIsTrue(b)
+                else
+                    return not bIsTrue(b)
+                end
+            elseif atype==jtype.string then
+                return a.data==tostring(b)
+            else
+                return a.data==tonumber(b)
+            end
+        else
+            return false
+        end
+    elseif rightjson then
+        if bjtype==jtype.null and a==NULL then
+            return true
+        elseif bIsJTypeAtom(bjtype) then
+            if bjtype==jtype(type(a)) then
+                return b.data==a
+            elseif bjtype==jtype.boolean then
+                if b.data then
+                    return bIsTrue(a)
+                else
+                    return not bIsTrue(a)
+                end
+            elseif btype==jtype.string then
+                return b.data==tostring(a)
+            else
+                return b.data==tonumber(a)
+            end
+        else
+            return false
+        end
+    else
+        return false
+    end
+end
 
 
 __JSON_class__.__concat=function(a,b)end
@@ -1444,19 +1550,25 @@ __JSON_parse_value__=function(self,arg,start,stop,targettype)
         while (j<stop) and not foundstop do
 
             j=j+1
-            lstart,lstop,lrv=__JSON_parse_value__(rv,arg,j,stop)
-            llen=llen+1
-            __JSON_array_insert__raw__(rv,lrv)
-            j=lstop+1
             lstart,lstop,c = __parse_move_to_next_non_WSP(arg,j,stop)
-            if c=="," then
-                -- continue
-                j=lstart
-            elseif c=="]" then
+            j=lstart
+            if c=="]" then
                 foundstop=true
-                j=lstart
-            else
-                error("JSON parsing error, object ends incorrectly : ||"..string.sub(arg,lstart,lstop).."||")
+            else 
+                lstart,lstop,lrv=__JSON_parse_value__(rv,arg,j,stop)
+                llen=llen+1
+                __JSON_array_insert__raw__(rv,lrv)
+                j=lstop+1
+                lstart,lstop,c = __parse_move_to_next_non_WSP(arg,j,stop)
+                if c=="," then
+                    -- continue
+                    j=lstart
+                elseif c=="]" then
+                    foundstop=true
+                    j=lstart
+                else
+                    error("JSON parsing error, object ends incorrectly : ||"..string.sub(arg,lstart,lstop).."||")
+                end
             end
 
         end
@@ -1475,15 +1587,15 @@ __JSON_parse_value__=function(self,arg,start,stop,targettype)
 
         i=start
         if c=="f" then
-            j=start+5
+            j=start+4
             lcmpword="false"
             rv=__JSON_new_false__(self)
         elseif c=="t" then
-            j=start+4
+            j=start+3
             lcmpword="true"
             rv=__JSON_new_true__(self)
         else
-            j=start+4
+            j=start+3
             lcmpword="null"
             rv=__JSON_new_null__(self)
         end
@@ -1494,7 +1606,7 @@ __JSON_parse_value__=function(self,arg,start,stop,targettype)
                 -- look ahead to make sure it ended correctly
                 s=string.sub(arg,j+1,j+1)
                 assert( wds.bIn(s,",","}","]") or bIsWSP(s) 
-                    , "Error JSON: parsing error, object ends incorrectly : ||"..string.sub(arg,lstart,lstop).."||")
+                    , "Error JSON: parsing error, object ends incorrectly : ending character="..s..", ||"..string.sub(arg,lstart,lstop).."||")
             end
 
             return i,j,rv
@@ -1538,6 +1650,11 @@ __JSON_parse_value__=function(self,arg,start,stop,targettype)
         rv=__JSON_new_number__raw__(lrv,self)
         return i,j,rv
 
+    end
+
+    -- in the case of empty arrays and objects (indicated by ] or }), return rv as nil
+    if c=="]" or c=="}" then
+        return start,stop,nil
     end
 
     error("JSON value parsing error, uknown: ||"..string.sub(arg,start,stop).."||")

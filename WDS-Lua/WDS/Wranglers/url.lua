@@ -80,6 +80,26 @@ function(url,dlm)
     return table.concat(__data,dlm)
 end
 
+pcall_get=AddToModuleHelp{
+    pcall_get=[==[--[[--
+            A pcall wrapper for lcurl.easy which returns the input url.
+            Returns true if successful, nil otherwise.
+            The second argument, rv, is a by-reference for the return value, placed in rv[1].
+--]]--]==]
+-- @function get
+} ..
+function(url,rv,dlm)
+    dlm=(dlm or "\n")
+    local rc,lrv=pcall(get,url,dlm)
+    if rc then
+        rv[1]=lrv
+        return true
+    else
+        rv[1]=lrv
+        return nil
+    end
+end
+
 
 return wds.EnvLock(_M)
 
