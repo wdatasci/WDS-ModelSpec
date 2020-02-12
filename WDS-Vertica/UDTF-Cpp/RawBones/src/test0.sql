@@ -1,3 +1,4 @@
+drop table if exists x cascade;
 
 create local temporary table x
 on commit preserve rows as

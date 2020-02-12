@@ -1,3 +1,4 @@
+drop table if exists x cascade;
 
 create local temporary table x
 on commit preserve rows as
@@ -24,6 +25,8 @@ from (select * from x order by a,b) a
 
 
 insert into x values(1,5,233); commit;
+
+\echo Supposed to fail with more than one row with a=1
 
 select * from x order by a,b;
 

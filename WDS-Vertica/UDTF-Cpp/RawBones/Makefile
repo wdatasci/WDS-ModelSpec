@@ -1,11 +1,16 @@
 #modified from the Vertica SDK examples
 
+## Set an external credentials script (with permissions 0700)
+VERTICA_USER_CREDENTIALS_SH?=~/vertica_user_credentials.sh
+## Path to vsql to avoid use of aliased versions
+VSQL=/opt/vertica/bin/vsql
+
 ## Set to the location of the SDK installation
 SDK_HOME?=/opt/vertica/sdk
 SDK_JAR?=/opt/vertica/
 
 CXX?=g++
-CXXFLAGS:=$(CXXFLAGS) -I $(SDK_HOME)/include -I HelperLibraries -g -Wall -Wno-unused-value -shared -fPIC -std=gnu++11
+CXXFLAGS:=$(CXXFLAGS) -I $(SDK_HOME)/include -I HelperLibraries -g -Wall -Wno-unused-value -shared -fPIC -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0
 CXXFLAGS:=$(CXXFLAGS) -O3
 
 ## Set to the desired destination directory for .so output files
@@ -53,20 +58,24 @@ $(BUILD)/install_ddl.sql:	$(BUILD) $(BUILD)/$(lUDTF).so src/comment.sql FORCE
 	echo "drop library if exists $(lUDTF) cascade;" >> $(BUILD)/install_ddl.sql
 	echo "\\set libfile '\\'$(BUILD)/$(lUDTF).so\\'';" >> $(BUILD)/install_ddl.sql
 	echo "create library $(lUDTF) as :libfile;" >> $(BUILD)/install_ddl.sql
+	echo "grant all on library $(lUDTF) to dbadmin;" >> $(BUILD)/install_ddl.sql
+	echo "grant usage on library $(lUDTF) to public;" >> $(BUILD)/install_ddl.sql
 	echo "create transform function $(lUDTF) as language 'C++' name 'lUDTFFactory' library $(lUDTF) fenced;" >> $(BUILD)/install_ddl.sql
+	echo "grant all extend on all functions in schema public to dbadmin;" >> $(BUILD)/install_ddl.sql
+	echo "grant execute on all functions in schema public to public;" >> $(BUILD)/install_ddl.sql
 	cat src/comment.sql >> $(BUILD)/install_ddl.sql
 
 
 install:	$(BUILD)/install_ddl.sql
-	vsql -v ON_ERROR_STOP=on -w $(VPASSWORD) -f $(BUILD)/install_ddl.sql
+	source $(VERTICA_USER_CREDENTIALS_SH); $(VSQL) -h $${VServerName} -U $${VUID} -w $${VPassWD} -p $${VPort} -d $${VDatabase} -v ON_ERROR_STOP=on -f $(BUILD)/install_ddl.sql
 
 uninstall:	$(BUILD)/uninstall_ddl.sql
-	vsql -v ON_ERROR_STOP=on -w $(VPASSWORD) -f $(BUILD)/uninstall_ddl.sql
+	source $(VERTICA_USER_CREDENTIALS_SH); $(VSQL) -h $${VServerName} -U $${VUID} -w $${VPassWD} -p $${VPort} -d $${VDatabase} -v ON_ERROR_STOP=on -f $(BUILD)/uninstall_ddl.sql
 
 test:	
 	for q in src/*test*.sql; \
 		do \
-		vsql -v ON_ERROR_STOP=on -w $(VPASSWORD) -f $$q ; \
+		source $(VERTICA_USER_CREDENTIALS_SH); $(VSQL) -h $${VServerName} -U $${VUID} -w $${VPassWD} -p $${VPort} -d $${VDatabase} -v ON_ERROR_STOP=on -f $$q ; \
 		done
 
 clean:
