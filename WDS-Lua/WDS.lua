@@ -391,7 +391,11 @@ function (obj,opts,ldepth)
     for k,f in pairs(obj) do
         if bIsHiddenFieldName(k) then
             if hidden then
-                table.insert(rv,{__type__="hidden",k=k,v=k})
+                if bIn(type(f),"string","number","function","boolean") then
+                    table.insert(rv,{__type__="hidden",k=k,v=tostring(f)})
+                else
+                    table.insert(rv,{__type__="hidden",k=k,v=k})
+                end
             else
                 -- continue
             end
@@ -1393,7 +1397,7 @@ AddToEnv_Raw=AddToModuleHelp{
     AddToEnv_Raw=[==[--[[--
             Takes a table and adds key/value pairs to a target table/environment using rawset.
 --]]--]==]
--- @function AddToEnv
+-- @function AddToEnv_Raw
 , info=info} ..
 function(env,obj)
     if type(obj)~="table" or type(env)~="table" then
@@ -1401,6 +1405,22 @@ function(env,obj)
     end
     for k,v in pairs(obj) do
         rawset(env,k,v)
+    end
+    return env
+end
+
+AddToEnv_Raw_ByName=AddToModuleHelp{
+    AddToEnv_Raw_ByName=[==[--[[--
+            Takes a table and adds key/value pairs to a target table/environment using rawset.
+--]]--]==]
+-- @function AddToEnv_Raw_ByName
+, info=info} ..
+function(env,obj,names)
+    if type(env)~="table" or type(obj)~="table" or type(names)~="table" then
+        error('Input to AddToEnv must be a single target table/env and a single source table.')
+    end
+    for i,k in ipairs(obj) do
+        rawset(env,k,rawget(obj,v))
     end
     return env
 end

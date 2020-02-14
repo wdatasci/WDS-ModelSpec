@@ -632,8 +632,8 @@ int Couchbase_CAPI_query_wjson(lua_State *L){
                     strncpy(buf,row,nrow);
                     buf[nrow]='\0';
                     lua_pushfstring(L,"%s",buf);
-                lua_call(L,1,1);
-                lua_seti(L,rv_index,nrows);
+                    lua_call(L,1,1);
+                    lua_seti(L,rv_index,nrows);
                     buf=__lua_Alloc(NULL,buf,0,0);
                     if (buf!=NULL) longjmp(row_callback_env,-101);
                 }
