@@ -105,11 +105,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\WDSMatrix.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\src\WDSMatrix.cpp" />
     <ClCompile Include="$(armadillo)\src\wrapper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\include\WDS\Comp\Matrix.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

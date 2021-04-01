@@ -21,6 +21,8 @@ extern "C" __declspec(dllexport) LPXLOPER12  WINAPI
 WDS_Test_Matrix_Inv(LPXLOPER12 arg0)
 {
 
+	using namespace WDS::Comp::Matrix;
+
 	int i, j, nrows, ncols;
 
 	static OPER12 result;

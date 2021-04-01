@@ -14,16 +14,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\WDSMatrix.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\src\WDSMatrix.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(armadillo)\src\wrapper.cpp">
       <Filter>src_armadillo</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\include\WDS\Comp\Matrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
