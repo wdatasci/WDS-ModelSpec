@@ -1,10 +1,10 @@
 
 #include <iostream>
-#include "WDSMatrix.h"
+#include "WDS/Comp/Matrix.h"
 
 #include <variant>
 
-using namespace WDSMatrix;
+using namespace WDS::Comp::Matrix;
 
 //int main(array<System::String ^> ^args)
 int main() //array<System::String> args)

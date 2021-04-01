@@ -19,6 +19,8 @@ extern "C" __declspec(dllexport) LPXLOPER12  WINAPI
 WDS_Comp_Matrix_RowNormed(LPXLOPER12 arg0)
 {
 
+	using namespace WDS::Comp::Matrix;
+
 	int i, j, nrows, ncols;
 
 	static OPER12 result;

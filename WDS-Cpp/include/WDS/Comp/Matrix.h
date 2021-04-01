@@ -141,15 +141,15 @@ namespace WDS::Comp::Matrix {
 
 	};
 
-	typedef _FieldDecorator<Field<std::string> sMatrix;
-	typedef _FieldDecorator<Field<std::wstring> wMatrix;
+	typedef _FieldDecorator<field<std::string>> sMatrix;
+	typedef _FieldDecorator<field<std::wstring>> wMatrix;
 	
     
-    // "cMatrix" is short for something like XLW
-    class cMatrix : public mat {
+    // "dMatrix" is short for something like XLW
+    class dMatrix: public mat::Mat<double> {
 	public:
 		//exposing inherited stuff
-		using mat::Mat;
+		using Mat;
 		//without the "using" line above, constructors would have to be replicated:
 		//dMatrix(size_t nrows, size_t ncols) : arma::mat(nrows, ncols) { this->zeros();  };
 		//dMatrix(const dMatrix& arg0) : arma::mat(arg0) {};
@@ -206,31 +206,31 @@ namespace WDS::Comp::Matrix {
 		size_t nrows() { return (size_t) ((mat*) this)->n_rows; }
 		size_t ncols() { return (size_t) ((mat*) this)->n_cols; }
 
-		~dMatrixAlt(){};
+		~dMatrix(){};
 	};
 
 
 }
     
-    class dMatrixAlt : public mat {
+    class dMatrixAlt : public mat::Mat<double> {
 	public:
 		//exposing inherited stuff
-		using mat::Mat;
+		using Mat;
 		//without the "using" line above, constructors would have to be replicated:
 		//dMatrix(size_t nrows, size_t ncols) : arma::mat(nrows, ncols) { this->zeros();  };
 		//dMatrix(const dMatrix& arg0) : arma::mat(arg0) {};
 
-		using mat::Mat::operator%=;
-		using mat::Mat::operator();
-		using mat::Mat::operator*=;
-		using mat::Mat::operator++;
-		using mat::Mat::operator+=;
-		using mat::Mat::operator--;
-		using mat::Mat::operator-=;
-		using mat::Mat::operator/=;
-		using mat::Mat::operator<<;
-		using mat::Mat::operator=;
-		using mat::Mat::operator[];
+		using Mat::operator%=;
+		using Mat::operator();
+		using Mat::operator*=;
+		using Mat::operator++;
+		using Mat::operator+=;
+		using Mat::operator--;
+		using Mat::operator-=;
+		using Mat::operator/=;
+		using Mat::operator<<;
+		using Mat::operator=;
+		using Mat::operator[];
 		/*
 		using mat::Mat::clear;
 		using mat::Mat::diag;
