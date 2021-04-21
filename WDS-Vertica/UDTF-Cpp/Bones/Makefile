@@ -46,6 +46,9 @@ JAR ?= $(JAVA_HOME)/$(JAR_PATH)
 
 lUDTF ?= $(notdir $(PWD))
 
+## The WDS-Vertica location
+WDS_VERTICA:=$(PWD)/../..
+
 BUILD_FINAL_SOURCES = $(BUILD)/tmp/$(lUDTF).cpp
 
 all:	$(BUILD) $(BUILD_TMPDIR) $(lUDTF)
@@ -58,8 +61,8 @@ $(BUILD) $(BUILD_TMPDIR):
 
 $(lUDTF): $(BUILD) $(BUILD)/$(lUDTF).so
 
-$(BUILD)/tmp/$(lUDTF).cpp:	$(BUILD)/tmp src/$(lUDTF)_spec.xml src/*.xsl src/$(lUDTF)_guts.cpp
-	xsltproc -o $(BUILD)/tmp/$(lUDTF).cpp src/UDTFSpec2Cpp.xsl src/$(lUDTF)_spec.xml
+$(BUILD)/tmp/$(lUDTF).cpp:	$(BUILD)/tmp src/$(lUDTF)_spec.xml src/$(lUDTF)_guts.cpp $(WDS_VERTICA)/XSLT/UDTFSpec2Cpp.xsl
+	xsltproc -o $(BUILD)/tmp/$(lUDTF).cpp $(WDS_VERTICA)/XSLT/UDTFSpec2Cpp.xsl src/$(lUDTF)_spec.xml
 
 $(BUILD)/$(lUDTF).so: src/*.cpp $(BUILD_FINAL_SOURCES) $(SDK_HOME)/include/Vertica.cpp $(SDK_HOME)/include/BuildInfo.h 
 	$(CXX) $(CXXFLAGS) -o $@ $(BUILD_FINAL_SOURCES) $(SDK_HOME)/include/Vertica.cpp 
