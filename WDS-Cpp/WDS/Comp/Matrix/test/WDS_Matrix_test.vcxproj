@@ -93,15 +93,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="WDS_Matrix_Static.vcxproj">
-      <Project>{65e6f4a0-4769-4ce1-a7d4-c9007bff5c84}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="src\WDS_Matrix_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\WDS\Comp\Matrix.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Static\WDS_Matrix_Static.vcxproj">
+      <Project>{65e6f4a0-4769-4ce1-a7d4-c9007bff5c84}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

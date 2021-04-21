@@ -1,8 +1,11 @@
 
 #include <iostream>
-#include "WDS/Comp/Matrix.h"
+using namespace std;
+
 
 #include <variant>
+
+#include "WDS/Comp/Matrix.h"
 
 using namespace WDS::Comp::Matrix;
 
@@ -185,7 +188,7 @@ int main() //array<System::String> args)
 	sMat(0, 0) = 3;
 	sMat(0, 1) = L"what";
 
-	rv = sMat(0, 0).index();
+	size_t rc = sMat(0, 0).index();
 
 	cout << "sMat" << endl;
 	cout << std::get<0>(sMat(0,0)) << endl;

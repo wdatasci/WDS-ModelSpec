@@ -32,7 +32,13 @@ Example projects include:
 <ul>
 <li>RawBones</li> A simple UDTF build directory for function which creates a contiguous 
 sequence for each subject.  This is often used to create a <i>bones</i> structure for 
-joining multiple month-based datasets that may have gaps.
+joining multiple month-based datasets that may have gaps.  RawBones is also an example of 
+a polymorphic call.
+<li>Bones</li> A generalizable version of RawBones that serves as a prototype for other 
+custom functions.  In this example, a configuration XML is used to define the inputs, 
+outputs, and other parameters.  XSL transformations provide the generized wrappers for 
+the guts of the function.  Put simply, define the columns you want and the guts of the 
+function and let the XSL take care of the pedantic ugly parts.
 </ul>
 
 # UNDER CONSTRUCTION

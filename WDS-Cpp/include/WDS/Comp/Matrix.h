@@ -6,6 +6,7 @@
 //The core matrix classes are extended here, primarily to add syntactical sugar so that hard chunks of code are interchangeable between C++, C#, Java, and potentially others.
 
 #include <armadillo>
+using namespace std;
 
 namespace WDS::Comp::Matrix {
 
@@ -16,7 +17,7 @@ namespace WDS::Comp::Matrix {
 
 	//for C++ overloading to get syntactical sugar for A[i,j]
 	//we need a class version of an index
-	typedef std::ptrdiff_t _mI;
+	typedef ptrdiff_t _mI;
 	struct mIndex  { 
 		_mI value;
 		mIndex(_mI arg0) :value(arg0) {}
@@ -120,18 +121,18 @@ namespace WDS::Comp::Matrix {
 
 	template <class T> struct _FieldDecorator : public T {
 
-		using T::Field;
-		using T::Field::operator=;
-		using T::Field::operator%=;
-		using T::Field::operator();
-		using T::Field::operator*=;
-		using T::Field::operator++;
-		using T::Field::operator+=;
-		using T::Field::operator--;
-		using T::Field::operator-=;
-		using T::Field::operator/=;
-		using T::Field::operator<<;
-		using T::Field::operator[];
+		using T::field;
+		using T::field::operator=;
+		using T::field::operator%=;
+		using T::field::operator();
+		using T::field::operator*=;
+		using T::field::operator++;
+		using T::field::operator+=;
+		using T::field::operator--;
+		using T::field::operator-=;
+		using T::field::operator/=;
+		using T::field::operator<<;
+		using T::field::operator[];
 		
 		double &operator[](mDoubleIndex arg0) { return (*this)(arg0.i, arg0.j); }
 		double &operator[](mIndex arg0) { return (*this)(arg0.value); }
@@ -141,15 +142,90 @@ namespace WDS::Comp::Matrix {
 
 	};
 
-	typedef _FieldDecorator<field<std::string>> sMatrix;
-	typedef _FieldDecorator<field<std::wstring>> wMatrix;
+    // matrix-like objects for strings or wstrings
+	typedef _FieldDecorator<field<string>> sMatrix;
+	typedef _FieldDecorator<field<wstring>> wMatrix;
 	
     
-    // "dMatrix" is short for something like XLW
-    class dMatrix: public mat::Mat<double> {
+    // "cMatrix" is short for something like XLW's CellMatrix, which can effectively be 
+    // a matrix of variants. Here, it is an armadillo field of std::variant's for a
+    // double, wstring, or status.
+
+    class cMatrix_cell {
+        private:
+			enum cMatrix_type {
+				cMatrix_typeError = -1
+				, cMatrix_typeEmpty = 0
+				, cMatrix_typeNum = 1
+				, cMatrix_typeStr = 2
+			};
+            cMatrix_type cmtype;
+            double ddata;
+            wstring wdata;
+
+        public:
+            cMatrix_cell() {
+                this->cmtype=cMatrix_typeEmpty;
+                this->ddata=0.0;
+                this->wdata=L"";
+            }
+            cMatrix_cell(double arg){
+                this->cmtype=cMatrix_typeNum;
+                this->ddata=arg;
+                this->wdata=L"";
+            }
+            cMatrix_cell(wstring arg){
+                this->cmtype=cMatrix_typeStr;
+                this->ddata=0.0;
+                this->wdata=arg;
+            }
+            cMatrix_cell(int arg){
+                this->cmtype=(cMatrix_type)arg;
+                this->ddata=0.0;
+                this->wdata=arg;
+            }
+
+
+			~cMatrix_cell() {}
+	};
+
+	/* not ready for prime-time
+    class cMatrix : public field<cMatrix_cell> {
+        public:
+            //exposing inherited stuff
+            using field<cMatrix_cell>;
+            //without the "using" line above, constructors would have to be replicated:
+            //dMatrix(size_t nrows, size_t ncols) : arma::mat(nrows, ncols) { this->zeros();  };
+            //dMatrix(const dMatrix& arg0) : arma::mat(arg0) {};
+
+            using field<cMatrix_type,double,std::wstring>::Mat::operator%=;
+            using field<cMatrix_type,double,std::wstring>::Mat::operator();
+            using field<cMatrix_type,double,std::wstring>::Mat::operator*=;
+            using field<cMatrix_type,double,std::wstring>::Mat::operator++;
+            using field<cMatrix_type,double,std::wstring>::Mat::operator+=;
+            using field<cMatrix_type,double,std::wstring>::Mat::operator--;
+            using field<cMatrix_type,double,std::wstring>::Mat::operator-=;
+            using field<cMatrix_type,double,std::wstring>::Mat::operator/=;
+            using field<cMatrix_type,double,std::wstring>::Mat::operator<<;
+            using field<cMatrix_type,double,std::wstring>::Mat::operator=;
+            using field<cMatrix_type,double,std::wstring>::Mat::operator[];
+
+
+            double &operator[](mDoubleIndex arg0) { return (*this)(arg0.i, arg0.j); }
+            double &operator[](mIndex arg0) { return (*this)(arg0.value); }
+
+            size_t nrows() { return (size_t) ((mat*) this)->n_rows; }
+            size_t ncols() { return (size_t) ((mat*) this)->n_cols; }
+
+            ~cMatrix(){};
+    };
+	*/
+
+
+    class dMatrixAlt : public mat {
 	public:
 		//exposing inherited stuff
-		using Mat;
+		using mat::Mat;
 		//without the "using" line above, constructors would have to be replicated:
 		//dMatrix(size_t nrows, size_t ncols) : arma::mat(nrows, ncols) { this->zeros();  };
 		//dMatrix(const dMatrix& arg0) : arma::mat(arg0) {};
@@ -165,72 +241,6 @@ namespace WDS::Comp::Matrix {
 		using mat::Mat::operator<<;
 		using mat::Mat::operator=;
 		using mat::Mat::operator[];
-		/*
-		using mat::Mat::clear;
-		using mat::Mat::diag;
-		using mat::Mat::empty;
-		using mat::Mat::has_inf;
-		using mat::Mat::has_nan;
-		using mat::Mat::is_col;
-		using mat::Mat::is_colvec;
-		using mat::Mat::is_empty;
-		using mat::Mat::is_finite;
-		using mat::Mat::is_row;
-		using mat::Mat::is_rowvec;
-		using mat::Mat::is_sorted;
-		using mat::Mat::is_square;
-		using mat::Mat::is_symmetric;
-		using mat::Mat::is_vec;
-		using mat::Mat::load;
-		using mat::Mat::fill;
-		using mat::Mat::min;
-		using mat::Mat::max;
-		using mat::Mat::n_cols;
-		using mat::Mat::n_elem;
-		using mat::Mat::n_rows;
-		using mat::Mat::randn;
-		using mat::Mat::randu;
-		using mat::Mat::row;
-		using mat::Mat::rows;
-		using mat::Mat::save;
-		using mat::Mat::size;
-		using mat::Mat::transform;
-		using mat::Mat::vec_state;
-		using mat::Mat::zeros;
-		*/
-
-		
-		double &operator[](mDoubleIndex arg0) { return (*this)(arg0.i, arg0.j); }
-		double &operator[](mIndex arg0) { return (*this)(arg0.value); }
-
-		size_t nrows() { return (size_t) ((mat*) this)->n_rows; }
-		size_t ncols() { return (size_t) ((mat*) this)->n_cols; }
-
-		~dMatrix(){};
-	};
-
-
-}
-    
-    class dMatrixAlt : public mat::Mat<double> {
-	public:
-		//exposing inherited stuff
-		using Mat;
-		//without the "using" line above, constructors would have to be replicated:
-		//dMatrix(size_t nrows, size_t ncols) : arma::mat(nrows, ncols) { this->zeros();  };
-		//dMatrix(const dMatrix& arg0) : arma::mat(arg0) {};
-
-		using Mat::operator%=;
-		using Mat::operator();
-		using Mat::operator*=;
-		using Mat::operator++;
-		using Mat::operator+=;
-		using Mat::operator--;
-		using Mat::operator-=;
-		using Mat::operator/=;
-		using Mat::operator<<;
-		using Mat::operator=;
-		using Mat::operator[];
 		/*
 		using mat::Mat::clear;
 		using mat::Mat::diag;

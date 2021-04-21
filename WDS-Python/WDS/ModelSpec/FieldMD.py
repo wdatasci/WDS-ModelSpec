@@ -66,21 +66,27 @@ WrdCheckRE1=re.compile("[^\d\-.,\s]+")
 #cleaners for DTypCheck
 def CleanStr(slf,tv,v,isLengthDiscoverable,toReturn=False): 
     if tv is str:
+        v=v.rstrip()
         if isLengthDiscoverable:
-            lv=len(v)
-            if lv>slf.length: slf.length=lv
+            if v!=slf.NULLStr:
+                lv=len(v)
+                if lv>slf.length: slf.length=lv
         return v
     elif tv is bytes:
         sv=v.decode()
+        sv=sv.rstrip()
         if isLengthDiscoverable:
-            lv=len(sv)
-            if lv>slf.length: slf.length=lv
+            if v!=slf.NULLStr:
+                lv=len(sv)
+                if lv>slf.length: slf.length=lv
         return sv
     else:
         sv=str(v)
+        sv=sv.rstrip()
         if isLengthDiscoverable:
-            lv=len(sv)
-            if lv>slf.length: slf.length=lv
+            if v!=slf.NULLStr:
+                lv=len(sv)
+                if lv>slf.length: slf.length=lv
         return sv
 
 def CleanBln(slf,tv,v,toReturn=False):
@@ -246,8 +252,11 @@ class FieldMD(object):
                 DTyp=eDTyp.Int,
                 isDTypDiscoverable=True,
                 isDateEpochExcel=False,
+                isLengthDiscoverable=True,
                 length=0,
                 isNULLable=True,
+                NULLStr='NULL',
+                toCastAtLoad=False,
                 isPrimaryKey=False,
                 isExcluded=False,
                 default=None
@@ -260,9 +269,12 @@ class FieldMD(object):
             if (a!=name) and (self.aliases.count(a)==0): self.aliases.append(a)
         self.DTyp=DTyp
         self.isDTypDiscoverable=isDTypDiscoverable
+        self.isLengthDiscoverable=isLengthDiscoverable
         self.length=length
         self.isDateEpochExcel=isDateEpochExcel
         self.isNULLable=isNULLable
+        self.NULLStr=NULLStr
+        self.toCastAtLoad=toCastAtLoad
         self.isPrimaryKey=isPrimaryKey
         self.isExcluded=isExcluded
         #self.scan_details=scan_details
@@ -281,14 +293,23 @@ class FieldMD(object):
             rv+='\n'+indnt+sindnt+']\n'
         rv+=indnt + ",DTyp="+str(self.DTyp)+'\n'
         rv+=indnt + ",isDTypDiscoverable="+str(self.isDTypDiscoverable)+'\n'
+        rv+=indnt + ",isLengthDiscoverable="+str(self.isLengthDiscoverable)+'\n'
         rv+=indnt + ",length="+str(self.length)+'\n'
         rv+=indnt + ",isNULLable="+str(self.isNULLable)+'\n'
+        rv+=indnt + ",NULLStr='"+str(self.NULLStr)+"'"+'\n'
+        rv+=indnt + ",toCastAtLoad="+str(self.toCastAtLoad)+'\n'
         rv+=indnt + ",isPrimaryKey="+str(self.isPrimaryKey)+'\n'
         rv+=indnt + ",isExcluded="+str(self.isExcluded)+'\n'
-        if self.DTyp in (eDTyp.Str,eDTyp.VLS):
-            rv+=indnt + (",default='%s'" % self.default)+'\n'
+        #if self.DTyp in (eDTyp.Str,eDTyp.VLS):
+            #rv+=indnt + (",default='%s'" % self.default)+'\n'
+        #else:
+        if self.default is None:
+            rv+=indnt + ",default=None"+'\n'
         else:
-            rv+=indnt + ",default="+str(self.default)+'\n'
+            if self.DTyp is eDTyp.Str or self.DTyp is eDTyp.VLS:
+                rv+=indnt + ",default='"+str(self.default)+"'"+'\n'
+            else:
+                rv+=indnt + ",default="+str(self.default)+'\n'
         rv+=indnt + ")\n"
         return rv
 
@@ -296,7 +317,7 @@ class FieldMD(object):
     def mDTypCheck(self,v
             ,isReturnRequested=False
             ,isDTypDiscoverable=None
-            ,isLengthDiscoverable=True
+            ,isLengthDiscoverable=None
             ,isDateEpochExcel=False
             ):
         '''mDTypCheck takes a value for the field and checks it against
@@ -337,6 +358,7 @@ class FieldMD(object):
         '''
         if self.DTyp is eDTyp.Byt: raise Exception('mDTypCheck for Byt TODO')
         if isDTypDiscoverable is None: isDTypDiscoverable=self.isDTypDiscoverable
+        if isLengthDiscoverable is None: isLengthDiscoverable=self.isLengthDiscoverable
         if (not isReturnRequested) and (not isDTypDiscoverable): return
         tv=type(v)
         if isReturnRequested and not isDTypDiscoverable:
@@ -357,12 +379,11 @@ class FieldMD(object):
             else:
                 raise Exception('in mDTypCheck, uncaught case for '+str(self.DTyp)+' for v='+str(v))
 
-        if not isDTypDiscoverable: 
-            if (self.DTyp in (eDTyp.Str, eDTyp.VLS)) and isLengthDiscoverable:
-                try:
-                    lv=CleanStr(self,tv,v,isLengthDiscoverable,toReturn=False)
-                except:
-                    pass
+        if (not isDTypDiscoverable) and isLengthDiscoverable and (self.DTyp in (eDTyp.Str, eDTyp.VLS)): 
+            try:
+                lv=CleanStr(self,tv,v,isLengthDiscoverable,toReturn=False)
+            except:
+                pass
             return
 
         #nothing gets changed if empty or Byt
@@ -377,7 +398,7 @@ class FieldMD(object):
         if self.DTyp in (eDTyp.Str, eDTyp.VLS):
             try:
                 lv=CleanStr(self,tv,v,isLengthDiscoverable,toReturn=False)
-                if isReturnRequested: return lv
+                if isReturnRequested: return lv.rstrip()
                 return
             except:
                 pass
@@ -392,13 +413,13 @@ class FieldMD(object):
         if tv is str:
             if WrdCheckRE1.findall(v):
                 self.DTyp=eDTyp.Str
-                if isReturnRequested: return v
+                if isReturnRequested: return v.rstrip()
                 return
         if tv is bytes:
             lv=v.decode()
             if WrdCheckRE1.findall(lv):
                 self.DTyp=eDTyp.Str
-                if isReturnRequested: return lv
+                if isReturnRequested: return lv.rstrip()
                 return
 
 
@@ -437,7 +458,7 @@ class FieldMD(object):
                                 else:
                                     lv=str(v)
                                 self.DTyp=Str
-                                if isReturnRequested: return lv
+                                if isReturnRequested: return lv.rstrip()
                                 return
         elif self.DTyp is eDTyp.Dbl:
                     try:
@@ -462,7 +483,7 @@ class FieldMD(object):
                                 else:
                                     lv=str(v)
                                 self.DTyp=Str
-                                if isReturnRequested: return lv
+                                if isReturnRequested: return lv.rstrip()
                                 return
         elif self.DTyp is eDTyp.Dte:
                         try:
@@ -482,7 +503,7 @@ class FieldMD(object):
                                 else:
                                     lv=str(v)
                                 self.DTyp=Str
-                                if isReturnRequested: return lv
+                                if isReturnRequested: return lv.rstrip()
                                 return
         elif self.DTyp is eDTyp.DTm:
                         try:
@@ -495,7 +516,7 @@ class FieldMD(object):
                                 else:
                                     lv=str(v)
                                 self.DTyp=Str
-                                if isReturnRequested: return lv
+                                if isReturnRequested: return lv.rstrip()
                                 return
         else:
             self.DTyp=eDTyp.Str
@@ -503,7 +524,9 @@ class FieldMD(object):
                 lv=v.decode()
             else:
                 lv=str(v)
-            self.length=max(self.length,len(lv))
+            lv=lv.rstrip()
+            if lv!=self.NULLStr:
+                self.length=max(self.length,len(lv))
             if isReturnRequested: return lv
             return
 
@@ -553,7 +576,7 @@ class FieldMDs(dict):
                 if ( (value.DTyp in (eDTyp.Byt,eDTyp.VLS,eDTyp.Str,eDTyp.Bln))
                     or (fld.DTyp in (eDTyp.Byt,eDTyp.VLS,eDTyp.Str,eDTyp.Bln))):
                     fld.DTyp=max(value.DTyp,fld.DTyp)
-                    fld.length=max(fld.DTyp,value.DTyp)
+                    fld.length=max(value.length,fld.length)
                 elif ( (value.DTyp in (eDTyp.Dte,eDTyp.DTM))
                     or (fld.DTyp in (eDTyp.Dbl.Dte,eDTyp.DTM)) ):
                     fld.DTyp=max(value.DTyp,fld.DTyp)
@@ -564,10 +587,13 @@ class FieldMDs(dict):
                     fld.length=0
                 else:
                     fld.DTyp=value.DTyp
-                    fld.length=value.DTyp
+                    fld.length=value.length
             fld.isDTypDiscoverable= value.isDTypDiscoverable and fld.isDTypDiscoverable
+            fld.isLengthDiscoverable= value.isLengthDiscoverable and fld.isLengthDiscoverable
             fld.isDateEpochExcel= value.isDateEpochExcel or fld.isDateEpochExcel
             fld.isNULLable=  value.isNULLable or fld.isNULLable
+            fld.NULLStr=  value.NULLStr or fld.NULLStr
+            fld.toCastAtLoad= value.toCastAtLoad or fld.toCastAtLoad
             fld.isPrimaryKey= value.isPrimaryKey
             fld.isExcluded= value.isExcluded or fld.isExcluded
             fld.default= value.default if value.default else fld.default
@@ -624,49 +650,68 @@ class FieldMDs(dict):
         if toJustDrop: return q
         q+="create table if not exists %s.%s (\n" % ( schema, lTable )
 
+        anyCasts=False
+        ddlq=""
+        castq=""
+
         header_seen={}
         for fi,fldname in enumerate(header):
             if fi > 0:
-                q+="\n, "
+                ddlq+="\n, "
+                castq+="\n, "
+            lnm=""
             if fldname in header_seen:
                 header_seen[fldname]+=1
-                q+="%s%d " % (fldname,header_seen[fldname])
+                lnm="%s%d" % (fldname,header_seen[fldname])
             else:
                 header_seen[fldname]=1
-                q+="%s " % fldname
+                lnm="%s" % fldname
             fld=self[fldname]
+            ddlq+=lnm+' '
+            if fld.toCastAtLoad:
+                anyCasts=True
+                castq+=lnm+'_FILLER FILLER varchar\n, '
+                castq+=lnm+' as NULLIF(RTRIM('+lnm+'_FILLER),'+"'"+fld.NULLStr+"') "
+            else:
+                castq+=lnm
             if fld.DTyp is eDTyp.Dbl:
-                q+="float "
+                ddlq+="float "
             elif fld.DTyp is eDTyp.Int:
-                q+="int "
+                ddlq+="int "
             elif fld.DTyp is eDTyp.Lng:
-                q+="bigint "
+                ddlq+="bigint "
             elif fld.DTyp is eDTyp.Dte:
-                q+="date "
+                ddlq+="date "
             elif fld.DTyp is eDTyp.DTm:
-                q+="datetime "
+                ddlq+="datetime "
             elif fld.DTyp is eDTyp.Str:
-                q+="char(%d) " % fld.length
+                ddlq+="char(%d) " % max(1,fld.length)
             elif fld.DTyp is eDTyp.VLS:
-                q+="varchar(%d) " % fld.length
+                ddlq+="varchar(%d) " % max(1,fld.length)
             if (fld.default is None) or (fld.default in('NULL','None')):
-                q+=" default NULL"
+                ddlq+=" default NULL"
             else:
                 if type(fld.default) is str:
-                    q+=" default '%s' " % fld.default
+                    ddlq+=" default '%s' " % fld.default
                 elif type(fld.default) is bytes:
-                    q+=" default '%s' " % fld.default.decode()
+                    ddlq+=" default '%s' " % fld.default.decode()
                 elif type(fld.default) is datetime.date:
-                    q+=" default '%s' " % fld.default.isoformat()
+                    ddlq+=" default '%s' " % fld.default.isoformat()
                 elif type(fld.default) is datetime.datetime:
-                    q+=" default '%s' " % fld.default.isoformat()
+                    ddlq+=" default '%s' " % fld.default.isoformat()
                 else:
-                    q+=" default %s " % str(fld.default)
+                    ddlq+=" default %s " % str(fld.default)
+        q+=ddlq
         #q+="\n) engine=%s default charset=latin1; \n" % engine
         q+="\n); \n" 
         if fn:
             q+="\n\n" 
-            q+="copy %s.%s from '%s' \n" % ( schema, lTable, fn )
+            q+="copy %s.%s" % ( schema, lTable )
+            if anyCasts:
+                q+='(\n'
+                q+=castq
+                q+='\n) '
+            q+="from '%s' \n" % ( fn )
             q+="   parser fcsvparser(header=true) "
             q+="   delimiter ',' enclosed by '"+'"'+"' abort on error record terminator '\\r\\n' "
             q+="   rejected data '%s.rejected' " % fn
