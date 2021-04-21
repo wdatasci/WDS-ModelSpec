@@ -1,0 +1,145 @@
+/* a disection of RawBones.cpp to illustrate the packetizing of information 
+
+the original code will be prefixed with //orig....
+
+packetizable information will be tagged as AAAAA
+
+*/
+
+/* originally based on the Vertica example TopKPerPartition with params */
+
+///////// general begin
+#include "Vertica.h"
+#include <string>
+
+
+using namespace Vertica;
+using namespace std;
+
+///////// general end
+
+
+///////// localized constants that might be replaced with parameters
+
+//orig.... const char __NewName[]="RowIndex";
+const char __AAAAA[]="AAAAA";
+
+///////// main class
+
+//orig.... orig class lUDTFCore : public TransformFunction
+class AAAAA : public TransformFunction
+{
+    ///////// localized constants that might be replaced with parameters
+	vint BlockMaxLength=10;
+	//orig.... bool EndPointInclusive=false;
+	bool AAAAA=false;
+	//orig.... vint BeginAt=0;
+	vint AAAAA=0;
+	//orig.... string NewName=__NewName;
+	string AAAAA=__AAAAA;
+
+    //////// general
+	virtual void setup(ServerInterface &srvInterface, const SizedColumnTypes &argTypes)
+	{
+		ParamReader paramReader = srvInterface.getParamReader();            
+		if (paramReader.getNumCols()>0) {
+            ////// customizable, the parameter reader block.  Note how the form is repetitive.
+			try { BlockMaxLength = paramReader.getIntRef("BlockMaxLength");} catch(...) { }
+			try { EndPointInclusive = paramReader.getBoolRef("EndPointInclusive");} catch(...) { }
+			try { BeginAt = paramReader.getIntRef("BeginAt");} catch(...) { }
+			try { NewName = paramReader.getStringRef("NewName").str();} catch(...) { }
+		}
+	}    
+
+    //////// general
+	virtual void processPartition(ServerInterface &srvInterface, 
+			PartitionReader &inputReader, 
+			PartitionWriter &outputWriter)
+	{
+		try {
+
+
+            //////// in general, a reading block
+			vint row=0;
+			vint NRowMax;
+			vint offset=0;
+			do {
+				if (row>0) vt_report_error(0, "Partition by blocks for list_range can have at most 1 row", "");
+				NRowMax = inputReader.getIntRef(1);  
+				if (inputReader.getNumCols()>2) 
+					offset=inputReader.getIntRef(2);
+				row++;
+			} while (inputReader.next());
+
+            //////// in general, a guts block
+			vint i,ii;
+			if (EndPointInclusive) NRowMax+=1;
+			if (NRowMax>BlockMaxLength) NRowMax=BlockMaxLength;
+
+            //////// in general, an output block
+			for (ii=BeginAt;ii<NRowMax;ii++) {
+				outputWriter.copyFromInput(0,inputReader,0);
+				outputWriter.setInt(1, offset+ii);
+				outputWriter.next();
+			}
+
+        ////// general wrapping up
+		} catch(exception& e) {
+			// Standard exception. Quit.
+			vt_report_error(0, "Exception while processing partition: [%s]", e.what());
+		}
+	}
+};
+
+
+/////// general factor function 
+//orig.... class lUDTFFactory : public TransformFunctionFactory
+class AAAAAFactory : public TransformFunctionFactory
+{
+    ////// a generalizable SQL signature
+	virtual void getPrototype(ServerInterface &srvInterface, ColumnTypes &argTypes, ColumnTypes &returnType)
+	{
+		argTypes.addAny();
+		returnType.addAny();
+	}
+
+    ////// a generalizable SQL signature
+	virtual void getReturnType(ServerInterface &srvInterface, 
+			const SizedColumnTypes &inputTypes, 
+			SizedColumnTypes &outputTypes)
+	{
+		string NewName=__NewName;
+		ParamReader paramReader = srvInterface.getParamReader();            
+		if (paramReader.getNumCols()>0) {
+			try { NewName = paramReader.getStringRef("NewName").str();} catch(...) { }
+		}
+
+		size_t i=0;
+		outputTypes.addArg(inputTypes.getColumnType(i), inputTypes.getColumnName(i));
+		i++;
+		outputTypes.addArg(inputTypes.getColumnType(i), NewName);
+		i++;
+	}
+
+    ////// a generalizable SQL parameter signature
+	virtual void getParameterType(ServerInterface &srvInterface,
+			SizedColumnTypes &parameterTypes)
+	{
+		parameterTypes.addInt("BlockMaxLength");
+		parameterTypes.addBool("EndPointInclusive");
+		parameterTypes.addInt("BeginAt");
+		parameterTypes.addVarchar(32,"NewName");
+	}
+
+
+    ////// required part, but of a constant form
+	virtual TransformFunction *createTransformFunction(ServerInterface &srvInterface){ 
+		return vt_createFuncObject<lUDTFCore>(srvInterface.allocator); 
+	}
+
+};
+
+
+////// register the factory
+//orig.... RegisterFactory(lUDTFFactory);
+RegisterFactory(AAAAFactory);

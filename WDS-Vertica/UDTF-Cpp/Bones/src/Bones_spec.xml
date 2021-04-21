@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<UDxs>
+    <UDTF Name="Bones">
+        <Info>
+            <SQL>
+                <Vertica Schema="public"/>
+            </SQL>
+            <Cpp/>
+            <Java/>
+        </Info>
+        <Parameters>
+            <Column Use="P"  Name="InputBlockMaxLength" DTyp="Int" Default="1"/>
+            <Column Use="P"  Name="BlockMaxLength" DTyp="Int" Default="NULL"/>
+            <Column Use="P"  Name="EndPointInclusive" DTyp="Bln" Default="false"/>
+            <!--Column Use="P"  Name="BeginAt" DTyp="Int" Default="0"/-->
+            <!--Column Use="P" Name="NewName" DTyp="VLS" Length="32" Defaunt="RowIndex"/-->
+        </Parameters>
+        <Columns>
+            <Column Use="IO" Name="ID" DTyp="Str" Length="32"  Special="BlockID" Static="Y" />
+            <Column Use="I"  Name="N" DTyp="Int" Static="Y"/>
+            <Column Use="I"  Name="Offset" DTyp="Int" Static="Y"/>
+            <Column Use="O"  Name="RowIndex" DTyp="Int"/>
+        </Columns>
+    </UDTF>
+</UDxs>
+

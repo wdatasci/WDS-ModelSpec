@@ -14,7 +14,6 @@ DBG=
 !endif
 
 build:	
-	copy $(SolutionDir)\src\WDSMatrix.h $(SolutionDir)\..\..\..\include
 	copy $(SolutionDir)\Build\x64\$(Configuration)\WDS_Matrix_CLR.dll $(SolutionDir)\..\..\..\lib\WDS_Matrix_CLR$(DBG).dll
 	copy $(SolutionDir)\Build\x64\$(Configuration)\WDS_Matrix_CLR.pdb $(SolutionDir)\..\..\..\lib\WDS_Matrix_CLR$(DBG).pdb
 	copy $(SolutionDir)\Build\x64\$(Configuration)\WDS_Matrix_Static.lib $(SolutionDir)\..\..\..\lib\WDS_Matrix_Static$(DBG).lib

@@ -42,7 +42,11 @@ JAVAC ?= $(JAVA_HOME)/$(JAVAC_PATH)
 JAR ?= $(JAVA_HOME)/$(JAR_PATH)
 
 
+## this build is for a UDTF, parallel constructs will be used for other UDxs before a generalized format is ready.
+
 lUDTF ?= $(notdir $(PWD))
+
+BUILD_FINAL_SOURCES = $(BUILD)/tmp/$(lUDTF).cpp
 
 all:	$(BUILD) $(BUILD_TMPDIR) $(lUDTF)
 
@@ -52,11 +56,13 @@ dirs:	$(BUILD) $(BUILD_TMPDIR)
 $(BUILD) $(BUILD_TMPDIR):	
 	-- mkdir -p $@
 
-
 $(lUDTF): $(BUILD) $(BUILD)/$(lUDTF).so
 
-$(BUILD)/$(lUDTF).so: src/*.cpp $(SDK_HOME)/include/Vertica.cpp $(SDK_HOME)/include/BuildInfo.h 
-	$(CXX) $(CXXFLAGS) -o $@ src/*.cpp $(SDK_HOME)/include/Vertica.cpp 
+$(BUILD)/tmp/$(lUDTF).cpp:	$(BUILD)/tmp src/$(lUDTF)_spec.xml src/*.xsl src/$(lUDTF)_guts.cpp
+	xsltproc -o $(BUILD)/tmp/$(lUDTF).cpp src/UDTFSpec2Cpp.xsl src/$(lUDTF)_spec.xml
+
+$(BUILD)/$(lUDTF).so: src/*.cpp $(BUILD_FINAL_SOURCES) $(SDK_HOME)/include/Vertica.cpp $(SDK_HOME)/include/BuildInfo.h 
+	$(CXX) $(CXXFLAGS) -o $@ $(BUILD_FINAL_SOURCES) $(SDK_HOME)/include/Vertica.cpp 
 
 
 $(BUILD)/uninstall_ddl.sql:	$(BUILD) FORCE
@@ -72,7 +78,7 @@ $(BUILD)/install_ddl.sql:	$(BUILD) $(BUILD)/$(lUDTF).so src/comment.sql FORCE
 	echo "create library $(lUDTF) as :libfile;" >> $(BUILD)/install_ddl.sql
 	echo "grant all on library $(lUDTF) to dbadmin;" >> $(BUILD)/install_ddl.sql
 	echo "grant usage on library $(lUDTF) to public;" >> $(BUILD)/install_ddl.sql
-	echo "create transform function $(lUDTF) as language 'C++' name 'lUDTFFactory' library $(lUDTF) fenced;" >> $(BUILD)/install_ddl.sql
+	echo "create transform function $(lUDTF) as language 'C++' name '$(lUDTF)_Factory' library $(lUDTF) fenced;" >> $(BUILD)/install_ddl.sql
 	echo "grant all extend on all functions in schema public to dbadmin;" >> $(BUILD)/install_ddl.sql
 	echo "grant execute on all functions in schema public to public;" >> $(BUILD)/install_ddl.sql
 	cat src/comment.sql >> $(BUILD)/install_ddl.sql
@@ -82,12 +88,12 @@ install:	$(BUILD)/install_ddl.sql
 	. $(VERTICA_USER_CREDENTIALS_SH); $(VSQL) -h $${VServerName} -U $${VUID} -w $${VPassWD} -p $${VPort} -d $${VDatabase} -v ON_ERROR_STOP=on -f $(BUILD)/install_ddl.sql
 
 uninstall:	$(BUILD)/uninstall_ddl.sql
-	source $(VERTICA_USER_CREDENTIALS_SH); $(VSQL) -h $${VServerName} -U $${VUID} -w $${VPassWD} -p $${VPort} -d $${VDatabase} -v ON_ERROR_STOP=on -f $(BUILD)/uninstall_ddl.sql
+	. $(VERTICA_USER_CREDENTIALS_SH); $(VSQL) -h $${VServerName} -U $${VUID} -w $${VPassWD} -p $${VPort} -d $${VDatabase} -v ON_ERROR_STOP=on -f $(BUILD)/uninstall_ddl.sql
 
 test:	
 	for q in src/*test*.sql; \
 		do \
-		source $(VERTICA_USER_CREDENTIALS_SH); $(VSQL) -h $${VServerName} -U $${VUID} -w $${VPassWD} -p $${VPort} -d $${VDatabase} -v ON_ERROR_STOP=on -f $$q ; \
+		. $(VERTICA_USER_CREDENTIALS_SH); $(VSQL) -e -h $${VServerName} -U $${VUID} -w $${VPassWD} -p $${VPort} -d $${VDatabase} -v ON_ERROR_STOP=on -f $$q ; \
 		done
 
 clean:
