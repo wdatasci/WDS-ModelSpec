@@ -1,3 +1,4 @@
+-- to mirror Excel usage
 
 create or replace function public.PMT(i float, nper integer, pv float, fv float, ptyp integer) return float
 as begin return cast(

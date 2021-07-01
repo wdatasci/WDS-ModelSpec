@@ -16,7 +16,7 @@
             <!--Column Use="P" Name="NewName" DTyp="VLS" Length="32" Defaunt="RowIndex"/-->
         </Parameters>
         <Columns>
-            <Column Use="IO" Name="ID" DTyp="Str" Length="32"  Special="BlockID" Static="Y" />
+            <Column Use="IO" Name="ID" DTyp="Int" BlockID="Y" Static="Y" />
             <Column Use="I"  Name="N" DTyp="Int" Static="Y"/>
             <Column Use="I"  Name="Offset" DTyp="Int" Static="Y"/>
             <Column Use="O"  Name="RowIndex" DTyp="Int"/>

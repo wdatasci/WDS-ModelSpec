@@ -3,6 +3,9 @@ Supporting Vertica utilities.
 
 Vertica is a columnar-based database with several very helpful constructs.
 
+# SQL
+SQL general queries and snippets.
+
 # UDF-SQL
 SQL based UDFs. Each sql file contains supporting code, some examples include:
 <ul>

@@ -21,29 +21,39 @@ namespace WDS::Comp::Matrix {
 	struct mIndex  { 
 		_mI value;
 		mIndex(_mI arg0) :value(arg0) {}
-		//mIndex(const _mI& arg0) :value(arg0) {}
 		mIndex(size_t arg0) :value((_mI) arg0) {}
-		//mIndex(const size_t& arg0) :value((_mI) arg0) {}
 		mIndex(int arg0) :value((_mI) arg0) {}
-		//mIndex(const int& arg0) :value((_mI) arg0) {}
 		mIndex(long arg0) :value((_mI) arg0) {}
-		//mIndex(const long& arg0) :value((_mI) arg0) {}
 
 		_mI operator=(mIndex& arg0) { return arg0.value; }
 		mIndex operator=(_mI& arg0) { value = arg0; return *this; }
-		mIndex operator=(int arg0) { value = (_mI) arg0; return *this; }
-		bool operator<(int arg0) { return (value < (_mI) arg0); }
-		bool operator<=(int arg0) { return (value <= (_mI) arg0); }
-		bool operator>(int arg0) { return (value > (_mI) arg0); }
-		bool operator>=(int arg0) { return (value >= (_mI) arg0); }
-		bool operator==(int arg0) { return (value == (_mI) arg0); }
-		//mIndex operator=(int& arg0) { value = (_mI) arg0; return *this; }
-		//mIndex operator=(const int& arg0) { value = (_mI) arg0; return *this; }
+		mIndex operator=(size_t arg0) { value = (_mI)arg0; return *this; }
+		mIndex operator=(int arg0) { value = (_mI)arg0; return *this; }
 		mIndex operator=(long arg0) { value = (_mI) arg0; return *this; }
-		//mIndex operator=(long& arg0) { value = (_mI) arg0; return *this; }
-		//mIndex operator=(const long& arg0) { value = (_mI) arg0; return *this; }
+
+		bool operator<(size_t arg0) { return (value < (_mI)arg0); }
+		bool operator<=(size_t arg0) { return (value <= (_mI)arg0); }
+		bool operator>(size_t arg0) { return (value > (_mI)arg0); }
+		bool operator>=(size_t arg0) { return (value >= (_mI)arg0); }
+		bool operator==(size_t arg0) { return (value == (_mI)arg0); }
+
+		bool operator<(int arg0) { return (value < (_mI)arg0); }
+		bool operator<=(int arg0) { return (value <= (_mI)arg0); }
+		bool operator>(int arg0) { return (value > (_mI)arg0); }
+		bool operator>=(int arg0) { return (value >= (_mI)arg0); }
+		bool operator==(int arg0) { return (value == (_mI)arg0); }
+
+		bool operator<(long value) { return (this->value < (ptrdiff_t)value); }
+		bool operator<=(long value) { return (this->value <= (ptrdiff_t)value); }
+		bool operator>(long value) { return (this->value > (ptrdiff_t)value); }
+		bool operator>=(long value) { return (this->value >= (ptrdiff_t)value); }
+		bool operator==(long value) { return (this->value == (ptrdiff_t)value); }
 
 		//conversion
+		int as_int() { return (int)value; }
+		int as_size_t() { return (size_t)value; }
+		int ast() { return (size_t)value; }
+		operator size_t() { return (size_t) value; }
 		operator int() { return (int) value; }
 		operator long() { return (long) value; }
 		operator float() { return (float) value; }
@@ -90,10 +100,16 @@ namespace WDS::Comp::Matrix {
 	//There are multiple on-line references for "decorators", but most of them are just class inheritance.
 	//This template technique seems to keep it simple enough.
 
-	template <class T> struct _MatrixDecorator : public T {
+	template <class T,class U> struct _MatrixDecorator : public T {
 
 		using T::Mat;
-		using T::Mat::operator=;
+		using T::Mat::submat;
+		//using T::Mat::operator*;
+		//using T::Mat::operator-;
+		//using T::Mat::operator+;
+		//using T::Mat::operator/;
+		//using T::Mat::operator%;
+		//using T::Mat::operator=;
 		using T::Mat::operator%=;
 		using T::Mat::operator();
 		using T::Mat::operator*=;
@@ -105,19 +121,33 @@ namespace WDS::Comp::Matrix {
 		using T::Mat::operator<<;
 		using T::Mat::operator[];
 		
-		double &operator[](mDoubleIndex arg0) { return (*this)(arg0.i, arg0.j); }
-		double &operator[](mIndex arg0) { return (*this)(arg0.value); }
+		U &operator[](mDoubleIndex arg0) { return (*this)(arg0.i, arg0.j); }
+		U &operator[](mIndex arg0) { return (*this)(arg0.value); }
 
 		size_t nrows() { return (size_t) ((T*) this)->n_rows; }
 		size_t ncols() { return (size_t) ((T*) this)->n_cols; }
 
-		static _MatrixDecorator<T> eye(int arg0, int arg1) { return arma::eye<mat>(arg0, arg1); }
-		static _MatrixDecorator<T> zeros(int arg0, int arg1) { return arma::zeros<mat>(arg0, arg1); }
+		static _MatrixDecorator<T,U> eye(int arg0, int arg1) { return arma::eye<T>(arg0, arg1); }
+		static _MatrixDecorator<T,U> zeros(int arg0, int arg1) { return arma::zeros<T>(arg0, arg1); }
 
 	};
 
-	typedef _MatrixDecorator<mat> dMatrix;
-	typedef _MatrixDecorator<imat> iMatrix;
+	typedef _MatrixDecorator<mat,double> dMatrix;
+	typedef _MatrixDecorator<imat,s64> iMatrix;
+
+
+	inline dMatrix operator*(dMatrix& A, dMatrix& B) {
+		dMatrix oResult = A;
+		oResult *= B;
+		return oResult;
+	}
+
+
+	inline dMatrix operator+(dMatrix& A, dMatrix& B) {
+		dMatrix oResult = A;
+		oResult += B;
+		return oResult;
+	}
 
 	template <class T> struct _FieldDecorator : public T {
 
@@ -146,7 +176,6 @@ namespace WDS::Comp::Matrix {
 	typedef _FieldDecorator<field<string>> sMatrix;
 	typedef _FieldDecorator<field<wstring>> wMatrix;
 	
-    
     // "cMatrix" is short for something like XLW's CellMatrix, which can effectively be 
     // a matrix of variants. Here, it is an armadillo field of std::variant's for a
     // double, wstring, or status.
@@ -285,5 +314,7 @@ namespace WDS::Comp::Matrix {
 		~dMatrixAlt(){};
 	};
 
+	dMatrix RowNorm(dMatrix& Input);
+	void RowNormInPlace(dMatrix& Input);
 
 }

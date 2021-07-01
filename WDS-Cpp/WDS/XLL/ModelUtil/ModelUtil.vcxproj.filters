@@ -54,6 +54,9 @@
     <ClCompile Include="WrappedArtificials.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="MatrixUtil.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src-ExcelSDK\targetver.h">
