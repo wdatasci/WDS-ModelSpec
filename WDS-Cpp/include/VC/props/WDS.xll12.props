@@ -14,6 +14,10 @@
     <IncludePath>.\src-xll12;$(xll12_INCLUDE);.\src-ExcelSDK;$(Excel2013XLLSDK_INCLUDE);$(IncludePath)</IncludePath>
     <LibraryPath>$(xll12_LIBDIR);$(Excel2013XLLSDK_LIBDIR);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <UseIntelMKL>No</UseIntelMKL>
+    <UseIntelDAAL>false</UseIntelDAAL>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
       <!--
@@ -30,6 +34,10 @@
       <AdditionalDependencies>xlcall32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>
+      </UseLibraryDependencyInputs>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
     <BuildMacro Include="xll12_ROOT">

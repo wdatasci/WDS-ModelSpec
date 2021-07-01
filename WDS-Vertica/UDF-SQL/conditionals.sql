@@ -41,6 +41,16 @@ as begin
 return cast(case when (hyp) then thn else null end as int);
 end;
 
+create or replace function public.ifPosElseNull(thn float) return float
+as begin
+return cast(case when (thn is not null and thn > 0.0) then thn else null end as float);
+end;
+
+create or replace function public.ifPosElseNull(thn int) return int
+as begin
+return cast(case when (thn is not null and thn > 0) then thn else null end as int);
+end;
+
 
 create or replace function public.isPos(arg float) return boolean 
 as begin return cast(case when arg is null then false else (arg>0.0) end as boolean); end;

@@ -4,7 +4,7 @@
 
 
 #include "ensure.h"
-#define NOMINMAX
+//#define NOMINMAX //defined in ensure.h for _WIN32
 #define VC_EXTRALEAN
 #include "XLCALL.H"
 #include "auto.h"

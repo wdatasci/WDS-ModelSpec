@@ -62,3 +62,5 @@ WDS-Cpp/lib/WDS_Matrix_CLR-dbg.pdb
 *.pdb
 *.lib
 *.so
+WDS-Cpp/WDS/XLL/EXCEL.psess
+*.vspx

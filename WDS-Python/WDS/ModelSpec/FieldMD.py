@@ -671,7 +671,12 @@ class FieldMDs(dict):
             if fld.toCastAtLoad:
                 anyCasts=True
                 castq+=lnm+'_FILLER FILLER varchar\n, '
-                castq+=lnm+' as NULLIF(RTRIM('+lnm+'_FILLER),'+"'"+fld.NULLStr+"') "
+                if fld.DTyp is eDTyp.Str or fld.DTyp is eDTyp.VLS:
+                    castq+=lnm+' as NULLIF(RTRIM('+lnm+'_FILLER),'+"'"+fld.NULLStr+"') "
+                elif fld.DTyp is eDTyp.Int or fld.DTyp is eDTyp.Lng:
+                    castq+=lnm+' as CAST(NULLIF(LTRIM(RTRIM('+lnm+'_FILLER)),'+"'"+fld.NULLStr+"') AS DECIMAL(32,0))::INTEGER "
+                else:
+                    castq+=lnm+' as NULLIF(LTRIM(RTRIM('+lnm+'_FILLER)),'+"'"+fld.NULLStr+"') "
             else:
                 castq+=lnm
             if fld.DTyp is eDTyp.Dbl:
@@ -711,6 +716,8 @@ class FieldMDs(dict):
                 q+='(\n'
                 q+=castq
                 q+='\n) '
+            else:
+                q+=' '
             q+="from '%s' \n" % ( fn )
             q+="   parser fcsvparser(header=true) "
             q+="   delimiter ',' enclosed by '"+'"'+"' abort on error record terminator '\\r\\n' "
