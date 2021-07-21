@@ -1,33 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<DnaLibrary Name="WDS-ModelUtil-XLL-Cs" RuntimeVersion="v4.0" xmlns="http://schemas.excel-dna.net/addin/2018/05/dnalibrary">
-  <ExternalLibrary Path="WDS-ModelUtil-XLL-Cs.dll" ExplicitExports="true" ExplicitRegistration="true" LoadFromBytes="true" Pack="true" />
+<DnaLibrary Name="WDS-ModelUtil-XLL-Cs" RuntimeVersion="v4.0">
+    <!--xmlns="http://schemas.excel-dna.net/addin/2018/05/dnalibrary"-->
 
-  <Reference Path="ExcelDna.Registration.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-  <Reference Path="ExcelDna.Utilities.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-  <Reference Path="ExcelDna.IntelliSense.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
+  <ExternalLibrary Path="WDS-ModelUtil-XLL-Cs.dll" ExplicitExports="true" ExplicitRegistration="true" LoadFromBytes="false" Pack="true" IncludePdb="true"/>
+
+  <Reference Path="ExcelDna.Registration.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+  <Reference Path="ExcelDna.Utilities.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+  <Reference Path="ExcelDna.IntelliSense.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+  <Reference Path="System.Memory.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+  <Reference Path="System.Runtime.CompilerServices.Unsafe.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+  <Reference Path="Microsoft.CSharp.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+  <!--
+  -->
 
 
-    <Reference Path="ClearScript.Core.dll" LoadFromBytes="true" ExplicitExports="true" Pack="true" />
-    <Reference Path="ClearScript.V8.dll" LoadFromBytes="true" ExplicitExports="true" Pack="true" />
+    <Reference Path="ClearScript.Core.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+    <Reference Path="ClearScript.V8.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
 
     <!--
-    <Reference Path="ClearScript.Windows.Core.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    <Reference Path="ClearScript.Windows.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
+    <Reference Path="ClearScript.Windows.Core.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+    <Reference Path="ClearScript.Windows.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
 
-    <Reference Path="ClearScriptV8.win-x64.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    <Reference Path="ClearScriptV8.win-x86.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
+    <Reference Path="ClearScriptV8.win-x64.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+    <Reference Path="ClearScriptV8.win-x86.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
     -->
 
-    <!--
-    <Reference Path="Microsoft.Bcl.AsyncInterfaces.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    <Reference Path="System.Buffers.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    <Reference Path="System.Memory.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    <Reference Path="System.Numerics.Vectors.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    <Reference Path="System.Runtime.CompilerServices.Unsafe.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    <Reference Path="System.Text.Encodings.Web.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    <Reference Path="System.Text.Json.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    <Reference Path="System.Threading.Tasks.Extensions.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    <Reference Path="System.ValueTuple.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true" />
-    -->
+    <Reference Path="Microsoft.Bcl.AsyncInterfaces.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+    
+    <Reference Path="System.Buffers.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+    <Reference Path="System.Numerics.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+  <Reference Path="System.Numerics.Vectors.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+  <Reference Path="System.Text.Encodings.Web.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+    <Reference Path="System.Text.Json.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+    <Reference Path="System.Threading.Tasks.Extensions.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+    <Reference Path="System.ValueTuple.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
+  <!--
+  -->
+
 
 </DnaLibrary>
