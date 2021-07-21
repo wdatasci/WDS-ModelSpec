@@ -109,7 +109,7 @@ namespace WDS::Comp::Matrix {
 		//using T::Mat::operator+;
 		//using T::Mat::operator/;
 		//using T::Mat::operator%;
-		//using T::Mat::operator=;
+		using T::Mat::operator=;
 		using T::Mat::operator%=;
 		using T::Mat::operator();
 		using T::Mat::operator*=;
@@ -153,15 +153,15 @@ namespace WDS::Comp::Matrix {
 
 		using T::field;
 		using T::field::operator=;
-		using T::field::operator%=;
+		//using T::field::operator%=;
 		using T::field::operator();
-		using T::field::operator*=;
-		using T::field::operator++;
-		using T::field::operator+=;
-		using T::field::operator--;
-		using T::field::operator-=;
-		using T::field::operator/=;
-		using T::field::operator<<;
+		//using T::field::operator*=;
+		//using T::field::operator++;
+		//using T::field::operator+=;
+		//using T::field::operator--;
+		//using T::field::operator-=;
+		//using T::field::operator/=;
+		//using T::field::operator<<;
 		using T::field::operator[];
 		
 		double &operator[](mDoubleIndex arg0) { return (*this)(arg0.i, arg0.j); }
@@ -176,6 +176,15 @@ namespace WDS::Comp::Matrix {
 	typedef _FieldDecorator<field<string>> sMatrix;
 	typedef _FieldDecorator<field<wstring>> wMatrix;
 	
+	inline wMatrix operator+(wMatrix& A, wstring& B) {
+		wMatrix oResult(A.nrows(), A.ncols());
+		for (int i=0;i<A.nrows();i++)
+			for (int j = 0; j < A.ncols(); j++) {
+				oResult.at(i, j) = A.at(i, j).append(B);
+			}
+		return oResult;
+	}
+
     // "cMatrix" is short for something like XLW's CellMatrix, which can effectively be 
     // a matrix of variants. Here, it is an armadillo field of std::variant's for a
     // double, wstring, or status.

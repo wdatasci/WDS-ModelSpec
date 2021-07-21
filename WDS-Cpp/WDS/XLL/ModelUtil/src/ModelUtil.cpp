@@ -2486,7 +2486,7 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg, LPXLOPER12 inputrowlimit, LPXLOPER12 outpu
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or row-normalization");
+		result = new OPER12(L"Error, in coercion or SimpeFirsts");
 	}
 
 	lFreeIfNecessary(cmArg, bWasArgCoerced);
@@ -2497,4 +2497,260 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg, LPXLOPER12 inputrowlimit, LPXLOPER12 outpu
 
 }
 
+
+
+static AddIn XLL_WDS_Util_SimpleSort(
+	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_Util_SimpleSort", 4), L"WDS.Util.SimpleSort")
+	.Arg(XLL_LPXLOPER, L"Arg", L"is an column")
+	.Arg(XLL_LPXLOPER, L"inputrowlimit", L"is an optional maximum number of rows to consider.")
+	.Arg(XLL_LPXLOPER, L"outputrowlimit", L"is an optional maximum number of rows to return.")
+	.Arg(XLL_LPXLOPER, L"bReturnJustIndices", L"is an optional flag to return just the sort indices.")
+	.Arg(XLL_LPXLOPER, L"inputcolumn", L"is an optional column of a matrix input on which to operate (1-Based).")
+	.Arg(XLL_LPXLOPER, L"bReturnJustUnique", L"is an optional flag to return just the unique values (by string rep).")
+	.Arg(XLL_LPXLOPER, L"bReverseOrder", L"is an optional flag to reverse the sort order.")
+	.Category(L"WDS.Util")
+	.FunctionHelp(L"Returns a sorted column.")
+);
+extern "C" __declspec(dllexport) LPXLOPER12  WINAPI
+WDS_Util_SimpleSort(LPXLOPER12 Arg
+	, LPXLOPER12 inputrowlimit
+	, LPXLOPER12 outputrowlimit
+	, LPXLOPER12 bReturnJustIndices
+	, LPXLOPER12 inputcolumn
+	, LPXLOPER12 bReturnJustUnique
+	, LPXLOPER12 bReverseOrder
+) {
+
+	using namespace WDS::Comp::Matrix;
+
+	int i, iM1, j, k, kP1, nrows, ncols;
+	int firsti, lasti, comp1, comp2;
+	LPOPER12 result = nullptr;
+	require_usual_suspect_LPXLOPER(Arg);
+	allow_missings_only_LPXLOPER_or_exit(inputrowlimit);
+	allow_missings_only_LPXLOPER_or_exit(outputrowlimit);
+	allow_missings_only_LPXLOPER_or_exit(bReturnJustIndices);
+	allow_missings_only_LPXLOPER_or_exit(inputcolumn);
+
+	LPXLOPER12 cmArg = nullptr;
+	bool bWasArgCoerced = false;
+	require_usual_suspect_LPXLOPER(Arg);
+	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
+		lFreeIfNecessary(cmArg, bWasArgCoerced);
+		result = new OPER12(L"Error, in coercion in Util.SimpleFirsts");
+		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+		return result;
+	}
+
+
+	nrows = cmArg->val.array.rows;
+	ncols = cmArg->val.array.columns;
+
+	if (!useless_LPXLOPER(inputrowlimit)) {
+		int tempint = (int)LPOPER_to_long(inputrowlimit, 0, 0);
+		if (tempint < nrows) nrows = tempint;
+	}
+
+	int outrows = nrows;
+	if (!useless_LPXLOPER(outputrowlimit)) {
+		int tempint = (int)LPOPER_to_long(outputrowlimit, 0, 0);
+		if (tempint < outrows) outrows = tempint;
+	}
+
+	if (nrows <= 1) {
+		lFreeIfNecessary(cmArg, bWasArgCoerced);
+		return Arg;
+	}
+
+	try {
+
+		bool lbReturnJustIndices = false;
+		if (!useless_LPXLOPER(bReturnJustIndices)) {
+			lbReturnJustIndices = LPOPER_to_bool(bReturnJustIndices, 0, 0);
+		}
+
+		bool lbReturnJustUnique = false;
+		if (!useless_LPXLOPER(bReturnJustUnique)) {
+			lbReturnJustUnique = LPOPER_to_bool(bReturnJustUnique, 0, 0);
+		}
+
+		bool lbReverseOrder = false;
+		if (!useless_LPXLOPER(bReverseOrder)) {
+			lbReverseOrder = LPOPER_to_bool(bReverseOrder, 0, 0);
+		}
+
+
+		int xcol = 0;
+		if (!useless_LPXLOPER(inputcolumn)) {
+			xcol = (int)LPOPER_to_long(inputcolumn, 0, 0) - 1;
+			ensure(xcol >= 0 && xcol < cmArg->val.array.columns);
+		}
+
+
+		wMatrix wWords(nrows, 1);
+		dMatrix dWords(nrows, 1);
+		iMatrix ind(nrows, 3, fill::zeros);
+		LPXLOPER12 thisrow = nullptr;
+
+		j = -1;
+		int outcount = 0;
+		for (i = 0, iM1 = -1; i < nrows; iM1 = i, i++) {
+			wWords(i, 0) = LPOPER_to_wstring(cmArg, i, xcol);
+			thisrow = &(cmArg->val.array.lparray[i*ncols + xcol]);
+			ind(i, 0) = thisrow->xltype;
+			switch (thisrow->xltype)
+			{
+			case xltypeInt:
+			case xltypeNum:
+				dWords(i, 0) = thisrow->val.num;
+				break;
+			case xltypeBool:
+				dWords(i, 0) = (thisrow->val.xbool) ? 1 : 0;
+				break;
+			case xltypeStr:
+			case xltypeErr:
+			case xltypeMissing:
+			case xltypeMulti:
+			case xltypeSRef:
+			case xltypeRef:
+				break;
+			default:
+				break;
+			}
+			if (i == 0) {
+				outcount = 1;
+				ind(i, 1) = -1;
+				ind(i, 2) = -1;
+				firsti = 0;
+				lasti = 0;
+			}
+			else if (i == 1) {
+				k = wWords(0, 0).compare(wWords(1, 0));
+				if (lbReturnJustUnique && k == 0) {
+					ind(i, 1) = -2;
+				}
+				else {
+					outcount += 1;
+					if ((!lbReverseOrder && k > 0) || (lbReverseOrder && k < 0)) { //less than only element
+						firsti = 1;
+						ind(1, 1) = -1;
+						ind(1, 2) = 0;
+						ind(0, 1) = 1;
+						ind(0, 2) = -1;
+						lasti = 0;
+					}
+					else { //greater than or equal to only element
+						firsti = 0;
+						ind(0, 1) = -1;
+						ind(0, 2) = 1;
+						ind(1, 1) = 0;
+						ind(1, 2) = -1;
+						lasti = 1;
+					}
+				}
+			}
+			else {
+				k = firsti;
+				kP1 = ind(k, 2);
+				bool found = false;
+				comp1 = wWords[k].compare(wWords[i]);
+				if (lbReturnJustUnique && comp1 == 0) {
+					ind(i, 1) = -2;
+				}
+				else {
+					if ((!lbReverseOrder && comp1 >= 0) || (lbReverseOrder && comp1 <= 0)) {
+						outcount += 1;
+						firsti = i;
+						ind(i, 1) = -1;
+						ind(i, 2) = k;
+						ind(k, 1) = i;
+						found = true;
+					}
+					else {
+						k = kP1;
+						kP1 = ind(k, 2);
+						for (j = 0; (k >= 0) && !found && j < i; j++) { //only have to check against all existing elements
+							comp1 = wWords[k].compare(wWords[i]);
+							if (lbReturnJustUnique && comp1 == 0) {
+								ind(i, 1) = -2;
+								found = true;
+								break;
+							}
+							else {
+								if ((!lbReverseOrder && comp1 >= 0) || (lbReverseOrder && comp1 <= 0)) {
+									outcount += 1;
+									ind(i, 1) = ind(k, 1);
+									ind(ind(k, 1), 2) = i;
+									ind(i, 2) = k;
+									ind(k, 1) = i;
+									found = true;
+									break;
+								}
+								else {
+									k = kP1;
+									if (k >= 0) kP1 = ind(k, 2);
+								}
+								if (k < 0) break;
+							}
+						}
+					}
+					if (!found) {
+						outcount += 1;
+						ind(lasti, 2) = i;
+						ind(i, 1) = lasti;
+						ind(i, 2) = -1;
+						lasti = i;
+					}
+				}
+			}
+		}
+
+		result = new OPER12(outcount, 1);
+		k = firsti;
+		if (lbReturnJustIndices) {
+			for (i = 0; i < outcount; i++) {
+				(*result)(i, 0) = k + 1;
+				k = ind(k, 2);
+			}
+		}
+		else {
+			for (i = 0; i < outcount; i++) {
+				switch (ind(k, 0))
+				{
+				case xltypeInt:
+				case xltypeNum:
+					(*result)(i, 0) = dWords(k, 0);
+					break;
+				case xltypeBool:
+					(*result)(i, 0) = (dWords(k, 0) != 0) ? true : false;
+					break;
+				case xltypeStr:
+					(*result)(i, 0) = wWords(k, 0);
+				case xltypeErr:
+				case xltypeMissing:
+				case xltypeMulti:
+				case xltypeSRef:
+				case xltypeRef:
+					break;
+				default:
+					break;
+				}
+				k = ind(k, 2);
+			}
+		}
+
+	}
+	catch (exception& e) {
+		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		std::string ew = e.what();
+		result = new OPER12(L"Error, in SimpleSort: " + std::wstring(ew.begin(), ew.end()));
+	}
+
+	lFreeIfNecessary(cmArg, bWasArgCoerced);
+
+	if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+
+	return result;
+
+}
 
