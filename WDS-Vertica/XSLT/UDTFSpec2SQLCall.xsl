@@ -99,9 +99,14 @@ segmented by hash(<xsl:value-of select="$BlockID"/>) all nodes
         <xsl:variable name="ProjectName" select="@Name"/>
         <!--Pull local parameters BEGIN-->
 
+drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> cascade;
+drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> cascade;
+drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib cascade;
+
 \set libfile '\'<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>.so\'';
 create library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib as :libfile;
 grant all on library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib to dbadmin;
+grant usage on schema <xsl:value-of select="$Schema"/> to public;
 grant usage on library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib to public;
 create transform function <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> as language 'C++' name '<xsl:value-of select="$ProjectName"/>_Factory' library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib fenced;
 grant all extend on all functions in schema public to dbadmin;

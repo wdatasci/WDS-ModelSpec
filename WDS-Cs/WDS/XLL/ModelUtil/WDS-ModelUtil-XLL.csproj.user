@@ -4,12 +4,15 @@
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE</StartProgram>
     <StartArguments>/x Build\bin\Debug\WDS-ModelUtil-XLL-packed.xll WDS-ModelUtil-XLL-Cs-Test.xlsm</StartArguments>
-    <StartWorkingDirectory>$(SolutionDir)</StartWorkingDirectory>
+    <StartWorkingDirectory>$(SolutionDir)\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE</StartProgram>
-    <StartArguments>/x Build\bin\Release\WDS-ModelUtil-XLL-packed.xll WDS-ModelUtil-XLL-Cs-Test.xlsm</StartArguments>
-    <StartWorkingDirectory>$(SolutionDir)</StartWorkingDirectory>
+    <StartArguments>/x WDS-ModelUtil-XLL-packed.xll WDS-ModelUtil-XLL-Cs-Test.xlsm</StartArguments>
+    <StartWorkingDirectory>$(SolutionDir)\</StartWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ProjectView>ShowAllFiles</ProjectView>
   </PropertyGroup>
 </Project>

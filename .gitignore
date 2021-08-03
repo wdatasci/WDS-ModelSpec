@@ -64,3 +64,4 @@ WDS-Cpp/lib/WDS_Matrix_CLR-dbg.pdb
 *.so
 WDS-Cpp/WDS/XLL/EXCEL.psess
 *.vspx
+WDS-Cs/WDS/XLL/WDS-ModelUtil-XLL-packed.xll

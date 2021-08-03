@@ -643,6 +643,8 @@ class FieldMDs(dict):
             , table="test"
             , fn=None
             , engine="Vertica"
+            , copy_word="copy"
+            , from_word="from"
             , toJustDrop=False
             ):
         lTable=table.replace("-","_")
@@ -711,14 +713,14 @@ class FieldMDs(dict):
         q+="\n); \n" 
         if fn:
             q+="\n\n" 
-            q+="copy %s.%s" % ( schema, lTable )
+            q+=copy_word + " %s.%s" % ( schema, lTable )
             if anyCasts:
                 q+='(\n'
                 q+=castq
                 q+='\n) '
             else:
                 q+=' '
-            q+="from '%s' \n" % ( fn )
+            q+=from_word + " '%s' \n" % ( fn )
             q+="   parser fcsvparser(header=true) "
             q+="   delimiter ',' enclosed by '"+'"'+"' abort on error record terminator '\\r\\n' "
             q+="   rejected data '%s.rejected' " % fn
