@@ -1,0 +1,51 @@
+#!/usr/bin/tcsh
+
+echo script=$0
+set project_script_rev=$0
+set project_dir=${project_script_rev:h}
+echo project_script_dir=${project_dir}
+
+set target=$1
+set target_name=${target:t}
+set target_dir=${target:h}
+echo target=$target
+echo target_name=$target_name
+
+foreach x (`find ${target_dir}/${target_name} -mindepth 1 -type d -printf "%P\n" `)
+    echo x=$x
+    if ( ! -d ${project_dir}/proto/${x} ) then
+        echo "Make ${project_dir}/proto/${x} (Y|N)?"
+        set resp=$<
+        test  "$resp" = "Y" && echo mkdir ${project_dir}/proto/${x} || echo "not mkdir-ing ${project_dir}/proto/${x}"
+    else
+        echo "not mkdir-ing ${project_dir}/proto/${x}"
+    endif
+    if ( -d ${project_dir}/proto/${x} ) then
+    foreach y (`find ${target_dir}/${target_name}/${x} -maxdepth 1 -mindepth 1 -not -type d -printf "%P\n" `)
+        echo y=$y
+        set newy=`echo "${y}" | sed -e "s/${target_name}/Prototype/g;s/${target_name}/prototype/g;s/${target_name}/ProtoType/g;s/${target_name}/proto/g"`
+        if ( -d ${project_dir}/proto/${x} && ! -f ${project_dir}/proto/${x}/${newy} ) then
+            cat ${target_dir}/${target_name}/${x}/${y} | sed -e "s/${target_name}/Prototype/g;s/${target_name}/prototype/g;s/${target_name}/ProtoType/g;s/${target_name}/proto/g" >!  ${project_dir}/proto/${x}/${newy}
+            vi ${project_dir}/proto/${x}/${newy}
+            echo "Keep ${project_dir}/proto/${x}/${newy} (Y|N)?"
+            set resp=$<
+            test "$resp" = "Y" || rm -i ${project_dir}/proto/${x}/${newy}
+        else 
+            echo "not making ${project_dir}/proto/${x}/${newy}"
+        endif
+    end
+    endif
+end
+
+exit 0
+
+foreach x (`find ${project_dir}/proto -mindepth 1 -type d -printf "%P\n" `)
+    if ( ! -d ${target}/${x} ) then
+        mkdir ${target}/${x}
+    endif
+    foreach y (`find ${project_dir}/proto/${x} -mindepth 1 -not -type d -printf "%P\n" `)
+        cat ${project_dir}/proto/${y} | sed -e "s/Prototype/${target_name}/g;s/prototype/${target_name}/g;s/ProtoType/${target_name}/g;s/proto/${target_name}/g" >! ${target}/${y}
+    end
+end
+
+

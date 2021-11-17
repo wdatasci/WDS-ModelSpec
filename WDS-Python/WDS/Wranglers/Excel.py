@@ -12,6 +12,7 @@ import collections
 
 import time
 import os.path as osp
+import copy
 import glob
 import fnmatch
 import re
@@ -19,12 +20,16 @@ import re
 import math
 from datetime import date
 
-#using xlrd for reading, but will use xlsxwriter instead of xlwt
+#old, for some reason xlrd in python3.8 will not read xlsm, duh
+##using xlrd for reading, but will use xlsxwriter instead of xlwt
 import xlrd
+#new-er openpyxl might have a problem with loading too much into memory
+from openpyxl import load_workbook as xl
 import csv
 
 
 import WDS.Wranglers.dir_walk
+import WDS.Util.MonthID as mMonthID
 
 
 def ExcelLayout(fn):
@@ -72,42 +77,59 @@ def Excel2CSV(fn
             , isPreviewNameOnly=False
             ):
     if not osp.isdir(targetdir):
-        osp.makedirs(targetdir,mode=777,exist_ok=True)
+        os.makedirs(targetdir,mode=777,exist_ok=True)
+        #osp.makedirs(targetdir,mode=777,exist_ok=True)
     fnh,fnt = osp.split(fn)
     fntr,fnte = osp.splitext(fnt)
-    w=xlrd.open_workbook(fn)
-    for s in w._sheet_list:
-        newfn=s.name
+    #old
+    #w=xlrd.open_workbook(fn)
+    w=xl(filename=fn,data_only=True) #read_only=True,data_only=True)
+    w_base_date=w.epoch
+    for sname in w.sheetnames:
+        newfn=copy.copy(sname)
+        s=w[sname]
         if targetbasename:
             newfn=targetbasename+"."+SheetPrefix+"."+newfn+".csv"
         else:
             newfn=fntr+"."+SheetPrefix+"."+newfn+".csv"
         if NameTransform:
             newfn=NameTransform(newfn,fn)
-        l_nrows=nrows if nrows is not None else s.nrows
-        l_ncols=ncols if ncols is not None else s.ncols
+        #old
+        #l_nrows=nrows if nrows is not None else s.nrows
+        #l_ncols=ncols if ncols is not None else s.ncols
+        l_nrows=nrows if nrows is not None else s.max_row
+        l_ncols=ncols if ncols is not None else s.max_column
         if isPreviewNameOnly:
-            print("Original:",fn," Sheet:",s.name)
+            print("Original:",fn," Sheet:",sname)
             print("  Extract To:",newfn)
         else:
             fid=open(osp.join(targetdir,newfn),'w')
             dw=csv.DictWriter(fid, dialect=csv.excel, fieldnames=list(range(l_ncols)))
-            for i in range(l_nrows):
+            for i in range(1,l_nrows+1):
                 lrow=collections.OrderedDict()
-                for j in range(l_ncols):
-                    if (s.cell(i,j).ctype==1): 
-                        lrow[j]=s.cell(i,j).value.strip()
-                    elif (s.cell(i,j).ctype==2): 
-                        if (math.fabs(math.trunc(s.cell(i,j).value)-s.cell(i,j).value)<1e-8):
-                            lrow[j]=int(s.cell(i,j).value)
+                for j in range(1,l_ncols+1):
+                    jM1=j-1
+                    #if (s.cell(i,j).ctype==1): 
+                    if (s.cell(i,j).data_type=='s'): 
+                        lrow[jM1]=s.cell(i,j).value.strip()
+                    elif (s.cell(i,j).data_type=='d' or s.cell(i,j).is_date): 
+                        dte=mMonthID.CleanDate(s.cell(i,j).value)
+                        lrow[jM1]=mMonthID.Date2isoformat(dte)
+                        if 0:
+                            if (math.fabs(math.trunc(s.cell(i,j).value)-s.cell(i,j).value)<1e-8):
+                                y,m,d,hh,mm,ss=xlrd.xldate.xldate_as_tuple(s.cell(i,j).value,w.datemode)
+                                lrow[jM1]=str(date(y,m,d)).strip()
+                            else:
+                                lrow[jM1]=str(xlrd.xldate.xldate_as_datetime(s.cell(i,j).value,w.datemode)).strip()
+                    elif (s.cell(i,j).data_type=='b'): 
+                        lrow[jM1]=s.cell(i,j).value
+                    elif (s.cell(i,j).data_type=='n'): 
+                        if s.cell(i,j).value is None:
+                            lrow[jM1]=None
+                        elif (math.fabs(math.trunc(s.cell(i,j).value)-s.cell(i,j).value)<1e-8):
+                            lrow[jM1]=int(s.cell(i,j).value)
                         else:
-                            lrow[j]=s.cell(i,j).value
-                    elif (s.cell(i,j).ctype==3): 
-                        if (math.fabs(math.trunc(s.cell(i,j).value)-s.cell(i,j).value)<1e-8):
-                            y,m,d,hh,mm,ss=xlrd.xldate.xldate_as_tuple(s.cell(i,j).value,w.datemode)
-                            lrow[j]=str(date(y,m,d)).strip()
-                        else:
-                            lrow[j]=str(xlrd.xldate.xldate_as_datetime(s.cell(i,j).value,w.datemode)).strip()
+                            lrow[jM1]=s.cell(i,j).value
                 dw.writerow(lrow)
             fid.close()
 

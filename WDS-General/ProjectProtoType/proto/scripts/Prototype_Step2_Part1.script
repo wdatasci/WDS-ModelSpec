@@ -1,0 +1,22 @@
+#!/usr/bin/tcsh -e
+
+source ./Prototype_config.script
+
+
+#$VSQL  --help
+#$VSQL -c '\?'
+
+#$VSQLwLog -c "create schema ${lSchema};"
+
+
+#$VSQL -c '\?'
+#$VSQL -c '\dn'
+
+cat >! ${gtmpsql} <<EOF
+
+EOF
+
+
+${VSQL} -f ${gtmpsql} -o ${gtmpsql_out}
+
+

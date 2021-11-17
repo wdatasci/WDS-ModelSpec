@@ -49,7 +49,7 @@ DateUsefulMax=datetime.date(2100,1,1)
 Y2KThreshold=70 # for flipping yy years to 1900+yy or 2000+yy
 
 def CleanDate(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
-    if tv is None: tv=type(v)
+    if tv is None: return v
     if tv is datetime.date: return v
     if tv is datetime.datetime: return v.date()
     try:
@@ -131,6 +131,13 @@ def CleanDate(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
     except Exception as e:
         raise Exception('Error in CleanDate: '+e.args[0]+'\n'+str(traceback.format_tb(e.__traceback__)))
 
+
+def Date2isoformat(v):
+    if type(v) is datetime.date:
+        return v.isoformat()
+    if type(v) is datetime.datetime:
+        return v.date().isoformat()
+    return None
 
 def MonthID(v):
     try:

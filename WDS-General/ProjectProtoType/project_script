@@ -1,0 +1,27 @@
+#!/usr/bin/tcsh
+
+echo script=$0
+set project_script=$0
+set project_dir=${project_script:h}
+echo project_script_dir=${project_dir}
+
+set target=$1
+set target_name=${target:t}
+echo target=$target
+echo project_name=$target_name
+
+if ( ! -d ${target} ) then
+    mkdir ${target}
+endif
+
+foreach x (`find ${project_dir}/proto -mindepth 1 -type d -printf "%P\n" `)
+    if ( ! -d ${target}/${x} ) then
+        mkdir ${target}/${x}
+    endif
+    foreach y (`find ${project_dir}/proto/${x} -mindepth 1 -not -type d -printf "%P\n" `)
+        set newy=`echo "${y}" | sed -e "s/Prototype/${target_name}/g;s/prototype/${target_name}/g;s/ProtoType/${target_name}/g;s/proto/${target_name}/g"`
+        cat ${project_dir}/proto/${x}/${y} | sed -e "s/Prototype/${target_name}/g;s/prototype/${target_name}/g;s/ProtoType/${target_name}/g;s/proto/${target_name}/g" >!  ${target}/${x}/${newy}
+    end
+end
+
+

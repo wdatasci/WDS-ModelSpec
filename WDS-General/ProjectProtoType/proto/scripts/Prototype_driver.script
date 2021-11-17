@@ -1,0 +1,23 @@
+#!/usr/bin/tcsh -e
+
+source ./Prototype_config.script
+
+
+./Prototype_config.script
+
+
+
+setenv PUDB " --pudb "
+setenv PUDB "  "
+
+#comment out steps as necessary
+
+#./Prototype_Step0.script >! logs/gPrototype_Step0.log
+#./Prototype_Step1_ExtractCSV.py
+# python3 Prototype_Step1_Prep1.py -p ../data/raw --BaseFieldMDs-file=gtmp/lFieldMDs.py --BaseFieldMDs-base-class=lFieldMDs ${PUDB} #>! logs/gPrototype_Step1_Prep1.log
+
+#./Prototype_Step2_Part1.script
+
+
+exit 0
+
