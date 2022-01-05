@@ -11,10 +11,20 @@ import glob
 import fnmatch
 import re
 import string
-from enum import Enum
+from enum import IntEnum
 import datetime
 
 from WDS.Util.MonthID import *
+
+
+#constant-ish objects for this module
+
+NbrCheckRE1=re.compile("[0-9.]+")
+WrdCheckRE1=re.compile("[^\d\-.,\s]+")
+QNameREHelper1=re.compile("[^0-9A-Za-z]")
+QNameREHelper_alt="_"
+QNameREHelper2=re.compile(QNameREHelper_alt+"+")
+
 
 
 def CheckFile(d,f, lastrow=1):
@@ -48,7 +58,7 @@ def CheckFile(d,f, lastrow=1):
     return rv
 
 
-class eDTyp(Enum):
+class eDTyp(IntEnum):
     Unk = 0
     Dbl = 1
     Lng = 2
@@ -59,9 +69,6 @@ class eDTyp(Enum):
     VLS = 7
     Byt = 8
     Bln = 9
-
-NbrCheckRE1=re.compile("[0-9.]+")
-WrdCheckRE1=re.compile("[^\d\-.,\s]+")
 
 #cleaners for DTypCheck
 def CleanStr(slf,tv,v,isLengthDiscoverable,toReturn=False): 
@@ -180,6 +187,18 @@ def CleanDTm(slf,tv,v,toReturn=False,isDateEpochExcel=False):
     if tv is datetime.datetime: return v
     if tv is datetime.date: return datetime.datetime(v.year,v.month,v.day,0,0,0)
     lv=None
+    
+    try:
+        lv=CleanDateTime(v,tv=tv,isDateEpochExcel=isDateEpochExcel)
+    except Exception as e:
+        raise Exception('Error in CleanDTm: '+e.args[0]+'\n'+e.__traceback__)
+    
+    if lv is None:
+        if slf.isNULLable:
+            return None
+        else:
+            raise Exception('in mDTypCheck for Dte, year is less than '+str(DateUsefulMin))
+    
     try:
         if tv in (int,float):
             if isDateEpochExcel:
@@ -209,18 +228,25 @@ def CleanDTm(slf,tv,v,toReturn=False,isDateEpochExcel=False):
                 except:
                     lv=None
             else:
-                found=False
-                for f in (DateFormatRE1, DateFormatRE2):
-                    prs=f.findall(lv)
-                    if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]): 
-                        try:
-                            lv=datetime.date(int(prs[0][0]),int(prs[0][2]),int(prs[0][4]))
-                            found=True
-                            break
-                        except:
-                            pass
-                if not found:
-                    lv=None
+                prs=DateFormatRE3_2.findall(lv)
+                if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]) and (prs[0][7]==prs[0][9]): 
+                    try:
+                        lv=datetime.datetime(int(prs[0][4]),int(prs[0][0]),int(prs[0][2]),int(prs[0][6]),int(prs[0][8]),inv(prs[0][10]))
+                    except:
+                        lv=None
+                else:
+                    found=False
+                    for f in (DateFormatRE1, DateFormatRE2):
+                        prs=f.findall(lv)
+                        if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]): 
+                            try:
+                                lv=datetime.date(int(prs[0][0]),int(prs[0][2]),int(prs[0][4]))
+                                found=True
+                                break
+                            except:
+                                pass
+                    if not found:
+                        lv=None
     except:
         if toReturn==False:
             raise Exception('in mDTypCheck for Dte, year is less than '+str(DateUsefulMin))
@@ -243,6 +269,18 @@ def CleanDTm(slf,tv,v,toReturn=False,isDateEpochExcel=False):
     else:
         return lv
 
+def CleanName(s,alt="_",extra_cleaner=None):
+    global QNameREHelper_alt, QNameREHelper1, QNameREHelper2
+    if alt!=QNameREHelper_alt:
+        QNameREHelper_alt=copy(alt)
+        QNameREHelper2=re.compile(QNameREHelper_alt+"+")
+    lv=QNameREHelper1.sub(QNameREHelper_alt,s)
+    #print("s=",s," lv=",lv)
+    lv=QNameREHelper2.sub("",lv)
+    if extra_cleaner is not None:
+        lv=extra_cleaner(lv)
+    return lv
+
 
 class FieldMD(object):
     
@@ -258,8 +296,10 @@ class FieldMD(object):
                 NULLStr='NULL',
                 toCastAtLoad=False,
                 isPrimaryKey=False,
+                isSortIndex=False,
                 isExcluded=False,
-                default=None
+                default=None,
+                sources=[]
                 #, scan_details=False,
                 ):
         self.name=name
@@ -276,20 +316,24 @@ class FieldMD(object):
         self.NULLStr=NULLStr
         self.toCastAtLoad=toCastAtLoad
         self.isPrimaryKey=isPrimaryKey
+        self.isSortIndex=isSortIndex
         self.isExcluded=isExcluded
         #self.scan_details=scan_details
         self.default=default
+        self.sources=[]
+        for a in sources: 
+            if self.sources.count(a)==0: self.sources.append(a)
 
-    def mPrint(self,indnt='    ',sindnt='    ',toPrintNameAsAlias=False):
+    def mPrint(self,indnt='    ',sindnt='    ',toPrintNameAsAlias=False,toSort=False):
         rv="FieldMD(name='%s'\n" % self.name
         if (len(self.aliases)==0) and (toPrintNameAsAlias==False):
             rv+=indnt + ",aliases=[]\n"
         else:
             rv+=indnt + ",aliases=["
-            if toPrintNameAsAlias: rv+=("'%s'\n%s%s,'%s'" % (self.name,indnt,sindnt,self.name))
+            if toPrintNameAsAlias: rv+=('"%s"\n%s%s,"%s"' % (self.name,indnt,sindnt,self.name))
             for i,v in enumerate(self.aliases):
                 if (i>0) or toPrintNameAsAlias: rv+='\n'+indnt+sindnt+","
-                rv+=("'%s'" % v)
+                rv+=('"%s"' % v)
             rv+='\n'+indnt+sindnt+']\n'
         rv+=indnt + ",DTyp="+str(self.DTyp)+'\n'
         rv+=indnt + ",isDTypDiscoverable="+str(self.isDTypDiscoverable)+'\n'
@@ -299,6 +343,7 @@ class FieldMD(object):
         rv+=indnt + ",NULLStr='"+str(self.NULLStr)+"'"+'\n'
         rv+=indnt + ",toCastAtLoad="+str(self.toCastAtLoad)+'\n'
         rv+=indnt + ",isPrimaryKey="+str(self.isPrimaryKey)+'\n'
+        rv+=indnt + ",isSortIndex="+str(self.isSortIndex)+'\n'
         rv+=indnt + ",isExcluded="+str(self.isExcluded)+'\n'
         #if self.DTyp in (eDTyp.Str,eDTyp.VLS):
             #rv+=indnt + (",default='%s'" % self.default)+'\n'
@@ -310,6 +355,14 @@ class FieldMD(object):
                 rv+=indnt + ",default='"+str(self.default)+"'"+'\n'
             else:
                 rv+=indnt + ",default="+str(self.default)+'\n'
+        if (len(self.sources)==0) and (toPrintNameAsAlias==False):
+            rv+=indnt + ",sources=[]\n"
+        else:
+            rv+=indnt + ",sources=["
+            for i,v in enumerate(self.sources):
+                if (i>0): rv+='\n'+indnt+sindnt+","
+                rv+=("'%s'" % v)
+            rv+='\n'+indnt+sindnt+']\n'
         rv+=indnt + ")\n"
         return rv
 
@@ -402,6 +455,8 @@ class FieldMD(object):
                 return
             except:
                 pass
+
+        #print("v=",v," tv=",tv)
         #if type matches DTyp nothing changes for Int/Lng, Dbl, Bln, Dte, DTm
         if (tv is int) and (self.DTyp in (eDTyp.Int, eDTyp.Long)): return v
         if (tv is float) and (self.DTyp is eDTyp.Dbl): return v
@@ -576,14 +631,21 @@ class FieldMDs(dict):
                 if ( (value.DTyp in (eDTyp.Byt,eDTyp.VLS,eDTyp.Str,eDTyp.Bln))
                     or (fld.DTyp in (eDTyp.Byt,eDTyp.VLS,eDTyp.Str,eDTyp.Bln))):
                     fld.DTyp=max(value.DTyp,fld.DTyp)
+                    #if value.DTyp>fld.DTyp:
+                        #fld.DTyp=value.DTyp
                     fld.length=max(value.length,fld.length)
-                elif ( (value.DTyp in (eDTyp.Dte,eDTyp.DTM))
-                    or (fld.DTyp in (eDTyp.Dbl.Dte,eDTyp.DTM)) ):
+                elif ( (value.DTyp in (eDTyp.Dte,eDTyp.DTm))
+                    or (fld.DTyp in (eDTyp.Dbl.Dte,eDTyp.DTm)) ):
                     fld.DTyp=max(value.DTyp,fld.DTyp)
+                    #fld.DTyp=max(value.DTyp,fld.DTyp)
+                    #if value.DTyp>fld.DTyp:
+                        #fld.DTyp=value.DTyp
                     fld.length=0
                 elif ( (value.DTyp in (eDTyp.Dbl,eDTyp.Lng,eDTyp.Int))
                     or (fld.DTyp in (eDTyp.Dbl,eDTyp.Lng,eDTyp.Int)) ):
                     fld.DTyp=min(value.DTyp,fld.DTyp)
+                    #if value.DTyp<fld.DTyp:
+                        #fld.DTyp=value.DTyp
                     fld.length=0
                 else:
                     fld.DTyp=value.DTyp
@@ -595,8 +657,11 @@ class FieldMDs(dict):
             fld.NULLStr=  value.NULLStr or fld.NULLStr
             fld.toCastAtLoad= value.toCastAtLoad or fld.toCastAtLoad
             fld.isPrimaryKey= value.isPrimaryKey
+            fld.isSortIndex= value.isSortIndex
             fld.isExcluded= value.isExcluded or fld.isExcluded
             fld.default= value.default if value.default else fld.default
+            for a in value.sources: 
+                if fld.aliases.count(a)==0: fld.sources.append(a)
         else:
             dict.__setitem__(self,key,value)
 
@@ -677,6 +742,10 @@ class FieldMDs(dict):
                     castq+=lnm+' as NULLIF(RTRIM('+lnm+'_FILLER),'+"'"+fld.NULLStr+"') "
                 elif fld.DTyp is eDTyp.Int or fld.DTyp is eDTyp.Lng:
                     castq+=lnm+' as CAST(NULLIF(LTRIM(RTRIM('+lnm+'_FILLER)),'+"'"+fld.NULLStr+"') AS DECIMAL(32,0))::INTEGER "
+                elif fld.DTyp is eDTyp.Dte:
+                    castq+=lnm+' as CAST(NULLIF(LTRIM(RTRIM('+lnm+'_FILLER)),'+"'"+fld.NULLStr+"') AS DATE)::DATE "
+                elif fld.DTyp is eDTyp.DTm:
+                    castq+=lnm+' as CAST(NULLIF(LTRIM(RTRIM('+lnm+'_FILLER)),'+"'"+fld.NULLStr+"') AS DATETIME)::DATETIME "
                 else:
                     castq+=lnm+' as NULLIF(LTRIM(RTRIM('+lnm+'_FILLER)),'+"'"+fld.NULLStr+"') "
             else:
@@ -752,7 +821,7 @@ def clean_flatfile(
     #c=csv.reader(fd,delimiter=dlm,quoting=csv.QUOTE_MINIMAL)
     c=csv.reader(fd,dialect=csv.excel)
     #w=csv.writer(fdo,delimiter=dlm,quoting=csv.QUOTE_MINIMAL)
-    w=csv.writer(fdo,dialect=csv.excel)
+    w=csv.writer(fdo,dialect=csv.excel,quoting=csv.QUOTE_MINIMAL)
 
     #throw away first row of reader
     c.next()

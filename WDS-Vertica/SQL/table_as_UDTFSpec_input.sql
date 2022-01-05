@@ -8,16 +8,19 @@
 \pset fieldsep ' '
 \pset format unaligned
 \pset tuples_only true
+\echo :llSchema
+\echo :llTable
 select concat(concat('<Column Use="I" Name="',column_name),'"'),concat(concat(' DTyp="',
         if(data_type='int','Int'
             ,if(data_type='float','Dbl'
             ,if(data_type='bool','Bln'
             ,if(data_type='date','Dte'
-            ,if(data_type='datetime','Dtm'
+            ,if(data_type='datetime','DTm'
+            ,if(data_type='timestamp','DTm'
             ,if(left(data_type,4)='char',concat('Str" Length="',data_type_length)
             ,if(left(data_type,7)='varchar',concat('VLS" Length="',data_type_length)
             ,data_type
-        ))))))))
+        )))))))))
             , '" />')
         from v_catalog.columns where table_schema=:llSchema and table_name=:llTable order by ordinal_position;
 

@@ -246,7 +246,64 @@ void ymdFromDateADT(DateADT& arg, vint& y, vint& m, vint& d) {
         y=vint_null;
         m=vint_null;
         d=vint_null;
+	return;
     }
+    int iarg=(int) arg;
+    //correct for 1900 or 2100....
+    if (iarg<=iWDSRefDate19000228) iarg-=1;
+    if (iarg>iWDSRefDate21000228) iarg+=1;
+    int dc=iarg - iWDSRefDate2000;
+    int dcm=dc % 1461;
+    if (dcm<0) dcm+=1461; //usa as a proper modulus function
+    int lpc=(dc-dcm)/1461; //leap year count
+    int lpcday0=lpc*1461;
+    int lpcday=dc-lpcday0;
+    int day0=0;
+    int lpcy=0;
+    if (lpcday<60) {
+        y=lpc*4+iWDSRefYear;
+        if (lpcday<31) {
+            m=1;
+            d=lpcday;
+        } else {
+            m=2;
+            d=lpcday-31;
+        }
+        d+=1;
+        return;
+    } else {
+        lpcday0+=1;
+        lpcy=(dc-lpcday0)/365;
+        y=lpc*4+lpcy+iWDSRefYear;
+        dcm-=1;
+        lpcday-=1;
+        day0=lpcday-lpcy*365;
+        if (day0<31 ) { m=1;  d=day0; } 
+        else if (day0<59 ) { m=2;  d=day0-31 ; }
+        else if (day0<90 ) { m=3;  d=day0-59 ; }
+        else if (day0<120) { m=4;  d=day0-90 ; }
+        else if (day0<151) { m=5;  d=day0-120; }
+        else if (day0<180) { m=6;  d=day0-151; }
+        else if (day0<212) { m=7;  d=day0-180; }
+        else if (day0<243) { m=8;  d=day0-212; }
+        else if (day0<273) { m=9;  d=day0-243; }
+        else if (day0<304) { m=10; d=day0-273; }
+        else if (day0<334) { m=11; d=day0-304; }
+        else               { m=12; d=day0-334; }
+        d+=1;
+        return;
+    }
+    return;
+}
+
+void ymdFromTimestamp(Timestamp& argTimestamp, vint& y, vint& m, vint& d) {
+    if (argTimestamp==vfloat_null) {
+        y=vint_null;
+        m=vint_null;
+        d=vint_null;
+	return;
+    }
+    DateADT arg=getDateFromUnixTime(getUnixTimeFromTimestamp(argTimestamp));
     int iarg=(int) arg;
     //correct for 1900 or 2100....
     if (iarg<=iWDSRefDate19000228) iarg-=1;

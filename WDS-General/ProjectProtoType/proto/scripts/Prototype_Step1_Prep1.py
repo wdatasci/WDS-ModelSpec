@@ -7,8 +7,21 @@ import gtmp.lProject_config as lProject
 
 from WDS.Wranglers.dir_walk import *
 from WDS.Wranglers.Excel import *
+import WDS.ModelSpec.FieldMD as mFieldMD
 from WDS.ModelSpec.FieldMD import *
 
+import re
+
+
+def lFileNameCleaner(s):
+    if s.endswith(".csv"):
+        lv=s.replace(".Prep1.csv","")
+        lv=s.replace(".csv","")
+    lv=lv.replace("_xlsm_","_")
+    lv=lv.replace("_xlsb_","_")
+    lv=lv.replace("_xlsx_","_")
+    lv=lv.replace("_xls_","_")
+    return lv
 
 
 
@@ -16,7 +29,8 @@ from WDS.ModelSpec.FieldMD import *
 # previously extracted.  Not all have to be loaded.
 
 def ProcessSet11(d, f, dold, dnew, setn=11, lastrow=1000000, BaseFieldMDs=None):
-    fid=open(osp.join(d,f),'r')
+    fp=osp.join(d,f)
+    fid=open(fp,'r')
     csv_fid=csv.reader(fid)
     newrowlist=[]
     newheadernames=[]
@@ -90,11 +104,13 @@ def ProcessSet11(d, f, dold, dnew, setn=11, lastrow=1000000, BaseFieldMDs=None):
                         newheader[j]=fldname
                         break
             if not found:
-                if WrdCheckRE1.findall(v):
-                    BaseFieldMDs[v]=FieldMD(name=v)
+                if mFieldMD.WrdCheckRE1.findall(v):
+                    newname=mFieldMD.CleanName(v)
+                    newheader[j]=newname
+                    BaseFieldMDs[newname]=mFieldMD.FieldMD(name=newname,aliases=[v],sources=[fp])
                 else:
                     newheader[j]="Col"+str(j)
-                    BaseFieldMDs[newheader[j]]=FieldMD(name=newheader[j])
+                    BaseFieldMDs[newheader[j]]=mFieldMD.FieldMD(name=CleanName(newheader[j]))
 
         #print(BaseFieldMDs)
         for row in newrowlist:
@@ -112,10 +128,10 @@ def ProcessSet11(d, f, dold, dnew, setn=11, lastrow=1000000, BaseFieldMDs=None):
                     print("d/f=",osp.join(d,f))
                     print("jj=",jj,"j=",j)
                     print("columnindex=",columnindex)
-                    print("newrowlist=",newrowlist)
+                    #print("newrowlist=",newrowlist)
                     print("final_ncols=",final_ncols)
                     print("newheader=",newheader)
-                    print("row=",row)
+                    #print("row=",row)
                     print("len(row)=",len(row))
                     print(d,f,dnew)
                     traceback.print_exc(file=sys.stdout)
@@ -123,11 +139,11 @@ def ProcessSet11(d, f, dold, dnew, setn=11, lastrow=1000000, BaseFieldMDs=None):
                     print(traceback.format_tb(e.__traceback__))
                     print(newheader)
                     print(j,jj)
-                    os.exit()
+                    sys.exit()
 
     print(newheader)
-    fn=f.replace(".csv",".Prep1.csv")
-    fid=open(osp.join(dnew,fn),'w')
+    fn=lFileNameCleaner(f)
+    fid=open(osp.join(dnew,fn+".Prep1.csv"),'w')
     toAppendFileDate=True
     if toAppendFileDate:
         try:
@@ -137,9 +153,9 @@ def ProcessSet11(d, f, dold, dnew, setn=11, lastrow=1000000, BaseFieldMDs=None):
             newheader.append("FileDate")
             newheader.append("FileMonthID")
             newheader.append("FileLastBusDay")
-            if 'FileDate' not in BaseFieldMDs: BaseFieldMDs['FileDate']=FieldMD(name='FileDate',DTyp=eDTyp.Dte)
-            if 'FileMonthID' not in BaseFieldMDs: BaseFieldMDs['FileMonthID']=FieldMD(name='FileMonthID',DTyp=eDTyp.Int)
-            if 'FileLastBusDay' not in BaseFieldMDs: BaseFieldMDs['FileLastBusDay']=FieldMD(name='FileLastBusDay',DTyp=eDTyp.Dte)
+            if 'FileDate' not in BaseFieldMDs: BaseFieldMDs['FileDate']=mFieldMD.FieldMD(name='FileDate',DTyp=eDTyp.Dte)
+            if 'FileMonthID' not in BaseFieldMDs: BaseFieldMDs['FileMonthID']=mFieldMD.FieldMD(name='FileMonthID',DTyp=eDTyp.Int)
+            if 'FileLastBusDay' not in BaseFieldMDs: BaseFieldMDs['FileLastBusDay']=mFieldMD.FieldMD(name='FileLastBusDay',DTyp=eDTyp.Dte)
         except:
             toAppendFileDate=False
 
@@ -162,20 +178,20 @@ def ProcessSet11(d, f, dold, dnew, setn=11, lastrow=1000000, BaseFieldMDs=None):
             csv_fid.writerow(newrow)
     fid.close()
 
-    fn=f.replace(".csv",".Prep1.Load.sql")
-    fid=open(osp.join(dnew,fn),'w')
+    fnsql=fn+".Prep1.Load.sql"
+    fid=open(osp.join(dnew,fnsql),'w')
     print("header=",newheader)
     print("schema=",lProject.lSchema)
     print("table=",f.replace(".csv",""))
     #pudb.set_trace()
     fid.write(BaseFieldMDs.mCreateTable(header=newheader
             , schema=lProject.lSchema
-            , table=f.replace(".csv","")
-            , fn=osp.join(osp.abspath(dnew).replace("/mnt/d/","/"),f.replace(".csv",".Prep1.csv"))
+            , table=fn
+            , fn=osp.join(osp.abspath(dnew).replace("/mnt/c/","/").replace("/mnt/d/","/"),f.replace(".csv",".Prep1.csv"))
             #, toJustDrop=True
             ) )
     fid.close()
-    os.system(lProject.VSQL+' -f '+osp.join(osp.abspath(dnew).replace("/mnt/d/","/"),f.replace(".csv",".Prep1.Load.sql")))
+    os.system(lProject.VSQL+' -f '+osp.join(osp.abspath(dnew).replace("/mnt/c/","/").replace("/mnt/d/","/"),fnsql))
 
 
 
@@ -202,7 +218,8 @@ if __name__=="__main__":
                             )
         _parser.add_argument("--nrows" 
                             , help="maximum number of rows to process"
-                            , default=None
+                            , default=10000000
+                            , type=int
                             )
         _parser.add_argument("--ncols" 
                             , help="maximum number of columns to process"
@@ -317,7 +334,7 @@ if __name__=="__main__":
                 for d,f in list1:
                     print("d=",d,"f=",f)
                     #CheckFile(d,f,lastrow=20)
-                    ProcessSet11(d,f,args.path_of_source_directory,args.path_of_target_directory,setn=1,lastrow=20,BaseFieldMDs=BaseFieldMDs)
+                    ProcessSet11(d,f,args.path_of_source_directory,args.path_of_target_directory,setn=1,lastrow=args.nrows,BaseFieldMDs=BaseFieldMDs)
                     BaseFieldMDs.mPrint(toPrintNameAsAlias=True
                             ,toPrintHeader=True
                             ,fid=args.new_BaseFieldMDs_file

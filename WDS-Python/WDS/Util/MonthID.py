@@ -30,6 +30,7 @@ import string
 from enum import Enum
 
 import datetime
+import dateutil.parser
 
 import math
 
@@ -38,6 +39,7 @@ DateFormatRE1_2=re.compile("([12][90][0-9]{2})([-/_.]?)([01]?[0-9])")  #iso yyyy
 DateFormatRE2=re.compile("([01]?[0-9])([-/_.]?)([0-3][0-9])([-/_.]?)([12][90][0-9]{2})")  #US Y2K
 DateFormatRE2_2=re.compile("([01]?[0-9])([-/_.]?)([0-3]?[0-9])([-/_.]?)([12][90])?([0-9]{2})")  #US m?m-d?d-yy?yy
 DateFormatRE3=re.compile("([12][90][0-9]{2})([-/.]?)([01][0-9])([-/.]?)([0-3][0-9])([tT\s])([012][0-9])(:?)([0-6][0-9])(:?)([0-6][0-9])(.[0-9]{3})([Z+-]?.+)") # iso datetime
+DateFormatRE3_2=re.compile("([01]?[0-9])([-/_.]?)([0-3]?[0-9])([-/_.]?)([12][90])?([0-9]{2})([tT\s])([012][0-9])(:?)([0-6][0-9])(:?)([0-6][0-9])(.[0-9]{3})([Z+-]?.+)") #US m?m-d?d-yy?yy 00:00:00
 
 DateEpoch=datetime.date(1970,1,1)
 DateEpochExcel=datetime.date(1899,12,30) #one extra day since Excel counts 1900 as a leap year
@@ -48,8 +50,99 @@ DateUsefulMax=datetime.date(2100,1,1)
 
 Y2KThreshold=70 # for flipping yy years to 1900+yy or 2000+yy
 
+def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
+    if tv is None: 
+        tv=type(v)
+    if tv is datetime.datetime: return v
+    try:
+        if tv in (int,float):
+            # check unix time
+            try:
+                lv=datetime.fromtimestamp(v,tz=timezone.utc)
+                if lv.year<1900 or lv.year>2100:
+                    raise('Bad date '+str(v))
+                return lv
+            except Exception as e:
+                pass
+
+            # if value is comming in as YYYYMM or YYYYMMDD
+            if 190000<v and v<210000:
+                y=int(v/100)
+                m=int(v-y*100)
+                if day>0:
+                    return datetime.datetime(y,m,day,0,0,0)
+                else:
+                    if m<12:
+                        return datetime.datetime(y,m+1,1,0,0,0)+datetime.timedelta(day)
+                    else:
+                        return datetime.date(y+1,1,1,0,0,0)+datetime.timedelta(day)
+            elif 19000000<v and v<21000000:
+                y=int(v/10000)
+                m=int((v-y*10000)/100)
+                m=int(v-y*10000-m*100)
+                return datetime.datetime(y+1,1,1)+datetime.timedelta(day)
+            elif -1200<v and v<1213:  # a MonthID
+                y=math.floor((lv-1)/12)
+                m=int(lv-12*y)
+                y+=2000
+                if day>0:
+                    lv=datetime.datetime(y,m,day,0,0,0)
+                else:
+                    if m<12:
+                        lv=datetime.datetime(y,m+1,1,0,0,0)+datetime.timedelta(day)
+                    else:
+                        lv=datetime.date(y+1,1,1,0,0,0)+datetime.timedelta(day)
+                if toWARN: print('Friendly Warning, assumed '+str(v)+' was a MonthID in CleanDate')
+                return lv
+            raise("???? in cleandate")
+        elif tv in (str,bytes):
+            lv=v if tv is str else v.decode()
+            try:
+                lv=dateutil.parser.parse(lv)
+                if type(lv) is datetime: return lv
+            except Exception as e:
+                pass
+            prs=DateFormatRE3.findall(lv)
+            if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]) and (prs[0][7]==prs[0][9]): 
+                try:
+                    lv=datetime.datetime(int(prs[0][0]),int(prs[0][2]),int(prs[0][4]),int(prs[0][6]),int(prs[0][8]),inv(prs[0][10]))
+                except:
+                    lv=None
+            else:
+                prs=DateFormatRE3_2.findall(lv)
+                if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]) and (prs[0][7]==prs[0][9]): 
+                    try:
+                        lv=datetime.datetime(int(prs[0][4]),int(prs[0][0]),int(prs[0][2]),int(prs[0][6]),int(prs[0][8]),inv(prs[0][10]))
+                    except:
+                        lv=None
+                else:
+                    found=False
+                    prs=f.findall(DateFormatRE1)
+                    if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]): 
+                        try:
+                            lv=datetime.datetime(int(prs[0][0]),int(prs[0][2]),int(prs[0][4]),0,0,0)
+                            found=True
+                        except Exception as e:
+                            lv=None
+                    if not found:
+                        prs=f.findall(DateFormatRE2)
+                        if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]): 
+                            try:
+                                lv=datetime.datetime(int(prs[4][0]),int(prs[0][0]),int(prs[0][2]),0,0,0)
+                                found=True
+                            except Exception as e:
+                                lv=None
+                    if not found:
+                        lv=None
+    except Exception as e:
+        raise Exception('Error in CleanDateTime: '+e.args[0]+'\n'+str(traceback.format_tb(e.__traceback__)))
+    except:
+        raise Exception('cannot convert '+str(v))
+
+
 def CleanDate(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
-    if tv is None: return v
+    if tv is None: 
+        tv=type(v)
     if tv is datetime.date: return v
     if tv is datetime.datetime: return v.date()
     try:
@@ -127,6 +220,21 @@ def CleanDate(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                     prs[0][4]=int(prs[0][4])
                 lv=datetime.date(prs[0][4]+prs[0][5],prs[0][0],int(prs[0][2]))
                 return lv
+            #check the m?m-d?d-yy2yy 00:00:00 format
+            prs=DateFormatRE3_2.findall(lv)
+            if (len(prs)==1) and (len(prs[0])==6) and (prs[0][1]==prs[0][3]): 
+                prs[0]=list(prs[0])
+                prs[0][0]=int(prs[0][0])
+                prs[0][5]=int(prs[0][5])
+                if prs[0][4]=='':
+                    if prs[0][5]<Y2KThreshold:
+                        prs[0][4]=2000
+                    else:
+                        prs[0][4]=1900
+                else:
+                    prs[0][4]=int(prs[0][4])
+                lv=datetime.date(prs[0][4]+prs[0][5],prs[0][0],int(prs[0][2]))
+                return lv
         raise Exception('cannot convert '+str(v))
     except Exception as e:
         raise Exception('Error in CleanDate: '+e.args[0]+'\n'+str(traceback.format_tb(e.__traceback__)))
@@ -136,7 +244,7 @@ def Date2isoformat(v):
     if type(v) is datetime.date:
         return v.isoformat()
     if type(v) is datetime.datetime:
-        return v.date().isoformat()
+        return v.isoformat()
     return None
 
 def MonthID(v):

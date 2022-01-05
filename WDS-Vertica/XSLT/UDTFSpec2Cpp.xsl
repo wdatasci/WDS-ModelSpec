@@ -162,6 +162,14 @@ enum <xsl:value-of select="@Name"/>_EnumBase {
             }
             return 0;
             }
+        static <xsl:value-of select="../../@Name"/>_EnumBase mGet_<xsl:value-of select="../../@Name"/>From<xsl:value-of select="@Name"/>(int arg) {
+            switch (arg) {<xsl:for-each select="../../@*[name(.)=$tmpName]">
+                case <xsl:value-of select="@*[name(.)=$tmpName]"/>: return <xsl:value-of select="@Name"/></xsl:for-each>
+                //default: throw("Error in <xsl:value-of select="$tmpName"/> for mGet_<xsl:value-of select="../../@Name"/>"); 
+                default: vt_report_error(0,"Error in <xsl:value-of select="$tmpName"/> for mGet_<xsl:value-of select="../../@Name"/>"); 
+            }
+	        return <xsl:value-of select="../../EnumValue[1]/@Name"/>;//should not hit
+            }
         int <xsl:value-of select="@Name"/>() { return mGet_<xsl:value-of select="@Name"/>(data); }
 
         static <xsl:value-of select="../../@Name"/>_EnumBase mFrom_<xsl:value-of select="@Name"/>(int arg) {
@@ -243,6 +251,11 @@ enum <xsl:value-of select="@Name"/>_EnumBase {
                 default: vt_report_error(0,"Error in <xsl:value-of select="$tmpName"/> for <xsl:value-of select="../../@Name"/>"); 
             }
                 vt_report_error(0,"Error in <xsl:value-of select="$tmpName"/> for <xsl:value-of select="../../@Name"/>"); 
+            }
+        static <xsl:value-of select="../../@Name"/>_EnumBase mGet_<xsl:value-of select="../../@Name"/>From<xsl:value-of select="@Name"/>(string arg) {
+            <xsl:for-each select="../../EnumValue">
+	        if (arg=="<xsl:value-of select="@*[name(.)=$tmpName]"/>") { return <xsl:value-of select="@Name"/>;}</xsl:for-each>
+		vt_report_error(0,"Error in <xsl:value-of select="$tmpName"/> for mGet_<xsl:value-of select="../../@Name"/>From<xsl:value-of select="$tmpName"/>"); 
             }
         string <xsl:value-of select="@Name"/>() { return mGet_<xsl:value-of select="@Name"/>(data); }
         </xsl:when></xsl:choose> 
@@ -339,10 +352,44 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
         try {
 
 
+	    // this C++ macro is defined here only because of the XSLT preprocessin
 
-            vint row=0;
+#define PUSH_BACK_ON_WINDOW_SET_COPY_OF_ROW(sourcerow) \
+<xsl:for-each select="./Columns/Column[@Use='IO' or @Use='I']"><xsl:if test="not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">
+<xsl:value-of select="@Name"/>.push_back(<xsl:value-of select="@Name"/>[sourcerow]); \
+</xsl:if></xsl:for-each>row_to_output.push_back(true);\
+row_index_last.push_back(last_row);\
+last_row+=1;\
+row_to_output.push_back(true);\
+row_index_next.push_back(vint_null);
+
+#define INSERT_IN_WINDOW_SET_COPY_OF_ROW_BEFORE(sourcerow) \
+<xsl:for-each select="./Columns/Column[@Use='IO' or @Use='I']"><xsl:if test="not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">
+<xsl:value-of select="@Name"/>.push_back(<xsl:value-of select="@Name"/>[sourcerow]); \
+</xsl:if></xsl:for-each>row_to_output.push_back(true);\
+last_row+=1;\
+row_index_last.push_back(row_index_last[sourcerow]);\
+row_index_next[row_index_last[sourcerow]]=last_row;\
+row_index_next.push_back(sourcerow);\
+row_index_last[sourcerow]=last_row;
+
+#define INSERT_IN_WINDOW_SET_COPY_OF_ROW_AFTER(sourcerow) \
+<xsl:for-each select="./Columns/Column[@Use='IO' or @Use='I']"><xsl:if test="not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">
+<xsl:value-of select="@Name"/>.push_back(<xsl:value-of select="@Name"/>[sourcerow]); \
+</xsl:if></xsl:for-each>row_to_output.push_back(true);\
+last_row+=1;\
+row_index_last.push_back(sourcerow);\
+row_index_next.push_back(row_index_next[sourcerow]);\
+row_index_last[row_index_next[sourcerow]]=last_row;\
+row_index_next[sourcerow]=last_row;
+
+            vint row=0, rowM1=-1;
             vint first_row=0;
             vint last_row=-1;
+
+	    vector&lt;bool&gt; row_to_output;
+	    vector&lt;vint&gt; row_index_last; 
+	    vector&lt;vint&gt; row_index_next; 
 
             // hold initializing output non-statics until number of  rows is known
 
@@ -358,7 +405,7 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
                         DateADT <xsl:value-of select="@Name"/>=<xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>;
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        TimeADT <xsl:value-of select="@Name"/>=<xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>;
+                        Timestamp <xsl:value-of select="@Name"/>=<xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>;
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         vbool <xsl:value-of select="@Name"/>=<xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vbool_null</xsl:otherwise></xsl:choose>;
@@ -378,7 +425,7 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
                         vector&lt;DateADT&gt; <xsl:value-of select="@Name"/>; //(last_row-first_row, <xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>);
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        vector&lt;TimeADT&gt; <xsl:value-of select="@Name"/>; //(last_row-first_row, <xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>);
+                        vector&lt;Timestamp&gt; <xsl:value-of select="@Name"/>; //(last_row-first_row, <xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>);
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         vector&lt;vbool&gt; <xsl:value-of select="@Name"/>; //(last_row-first_row, <xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vbool_null</xsl:otherwise></xsl:choose>);
@@ -416,7 +463,7 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
                         catch(...) { <xsl:value-of select="@Name"/>=vint_null; }
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        try { <xsl:value-of select="@Name"/> = inputReader.getTimeRef(<xsl:value-of select="position()-1"/>);}
+                        try { <xsl:value-of select="@Name"/> = inputReader.getTimestampRef(<xsl:value-of select="position()-1"/>);}
                         catch(...) { <xsl:value-of select="@Name"/>=vint_null; }
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
@@ -429,7 +476,16 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
                     </xsl:when>
                 </xsl:choose></xsl:if></xsl:for-each>
 
-                }
+			row_index_last.push_back(vint_null);
+			row_index_next.push_back(vint_null);
+
+		} else {
+
+			row_index_next[rowM1]=row;
+			row_index_last.push_back(rowM1);
+			row_index_next.push_back(vint_null);
+
+		}
 
                 <xsl:for-each select="./Columns/Column[@Use='IO' or @Use='I']">
                 <xsl:if test="not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:choose>
@@ -456,9 +512,9 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
                         { 
-                            TimeADT tmp_TimeADT;
-                            try { tmp_TimeADT  = inputReader.getTimeRef(<xsl:value-of select="position()-1"/>);} catch(...) { tmp_TimeADT=vint_null; }
-                            <xsl:value-of select="@Name"/>.push_back(tmp_TimeADT);
+                            Timestamp tmp_Timestamp;
+                            try { tmp_Timestamp  = inputReader.getTimeRef(<xsl:value-of select="position()-1"/>);} catch(...) { tmp_Timestamp=vfloat_null; }
+                            <xsl:value-of select="@Name"/>.push_back(tmp_Timestamp);
                         }
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
@@ -477,7 +533,9 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
                     </xsl:when>
                 </xsl:choose></xsl:if></xsl:for-each>
 
+		row_to_output.push_back(true);
                 row++;
+		rowM1++;
             } while (inputReader.next());
 
             ////// catch inputReader erros
@@ -502,7 +560,7 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
                         DateADT <xsl:value-of select="@Name"/>=<xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>;
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        TimeADT <xsl:value-of select="@Name"/>=<xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>;
+                        Timestamp <xsl:value-of select="@Name"/>=<xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vfloat_null</xsl:otherwise></xsl:choose>;
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         vbool <xsl:value-of select="@Name"/>=<xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vbool_null</xsl:otherwise></xsl:choose>;
@@ -522,7 +580,7 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
                         vector&lt;DateADT&gt; <xsl:value-of select="@Name"/>(last_row-first_row, <xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>);
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        vector&lt;TimeADT&gt; <xsl:value-of select="@Name"/>(last_row-first_row, <xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>);
+                        vector&lt;Timestamp&gt; <xsl:value-of select="@Name"/>(last_row-first_row, <xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vfloat_null</xsl:otherwise></xsl:choose>);
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         vector&lt;vbool&gt; <xsl:value-of select="@Name"/>(last_row-first_row, <xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vbool_null</xsl:otherwise></xsl:choose>);
@@ -557,7 +615,7 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
                         outputWriter.setDate(<xsl:value-of select="position()-1"/>, <xsl:value-of select="@Name"/>);
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        outputWriter.setTime(<xsl:value-of select="position()-1"/>, <xsl:value-of select="@Name"/>);
+                        outputWriter.setTimestamp(<xsl:value-of select="position()-1"/>, <xsl:value-of select="@Name"/>);
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         outputWriter.setBool(<xsl:value-of select="position()-1"/>, <xsl:value-of select="@Name"/>);
@@ -583,7 +641,7 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
                         outputWriter.setDate(<xsl:value-of select="position()-1"/>, <xsl:value-of select="@Name"/>[row]);
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        outputWriter.setTime(<xsl:value-of select="position()-1"/>, <xsl:value-of select="@Name"/>[row]);
+                        outputWriter.setTimestamp(<xsl:value-of select="position()-1"/>, <xsl:value-of select="@Name"/>[row]);
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         outputWriter.setBool(<xsl:value-of select="position()-1"/>, <xsl:value-of select="@Name"/>[row]);
@@ -655,7 +713,7 @@ class <xsl:value-of select="$ProjectName"/>_Factory : public TransformFunctionFa
                         argTypes.addDate(); // <xsl:value-of select="@Name"/>
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        argTypes.addTime(); // <xsl:value-of select="@Name"/>
+                        argTypes.addTimestamp(); // <xsl:value-of select="@Name"/>
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         argTypes.addBool(); // <xsl:value-of select="@Name"/>
@@ -679,7 +737,7 @@ class <xsl:value-of select="$ProjectName"/>_Factory : public TransformFunctionFa
                         returnType.addDate(); // <xsl:value-of select="@Name"/>
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        returnType.addTime(); // <xsl:value-of select="@Name"/>
+                        returnType.addTimestamp(); // <xsl:value-of select="@Name"/>
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         returnType.addBool(); // <xsl:value-of select="@Name"/>
@@ -718,7 +776,7 @@ class <xsl:value-of select="$ProjectName"/>_Factory : public TransformFunctionFa
                         outputTypes.addDate("<xsl:value-of select="@Name"/>");
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        outputTypes.addTime("<xsl:value-of select="@Name"/>");
+                        outputTypes.addTimestamp(6,"<xsl:value-of select="@Name"/>");
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         outputTypes.addBool("<xsl:value-of select="@Name"/>");
@@ -746,7 +804,7 @@ class <xsl:value-of select="$ProjectName"/>_Factory : public TransformFunctionFa
 </xsl:when><xsl:when test="@DTyp='Dte'">
             parameterTypes.addDate("<xsl:value-of select="@Name"/>");
 </xsl:when><xsl:when test="@DTyp='DTm'">
-            parameterTypes.addTime("<xsl:value-of select="@Name"/>");
+            parameterTypes.addTimestamp("<xsl:value-of select="@Name"/>");
 </xsl:when><xsl:when test="@DTyp='Bln'">
             parameterTypes.addBool("<xsl:value-of select="@Name"/>");
 </xsl:when><xsl:when test="@DTyp='Str'">

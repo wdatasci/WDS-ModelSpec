@@ -97,7 +97,7 @@ def Excel2CSV(fn
         #old
         #l_nrows=nrows if nrows is not None else s.nrows
         #l_ncols=ncols if ncols is not None else s.ncols
-        l_nrows=nrows if nrows is not None else s.max_row
+        l_nrows=min(s.max_row,nrows if nrows is not None else s.max_row)
         l_ncols=ncols if ncols is not None else s.max_column
         if isPreviewNameOnly:
             print("Original:",fn," Sheet:",sname)
@@ -109,18 +109,23 @@ def Excel2CSV(fn
                 lrow=collections.OrderedDict()
                 for j in range(1,l_ncols+1):
                     jM1=j-1
-                    #if (s.cell(i,j).ctype==1): 
+                    #print("s.cell(i,j).ctype=",s.cell(i,j).data_type," s.cell(i,j).value=",s.cell(i,j).value)
                     if (s.cell(i,j).data_type=='s'): 
                         lrow[jM1]=s.cell(i,j).value.strip()
-                    elif (s.cell(i,j).data_type=='d' or s.cell(i,j).is_date): 
-                        dte=mMonthID.CleanDate(s.cell(i,j).value)
-                        lrow[jM1]=mMonthID.Date2isoformat(dte)
-                        if 0:
-                            if (math.fabs(math.trunc(s.cell(i,j).value)-s.cell(i,j).value)<1e-8):
-                                y,m,d,hh,mm,ss=xlrd.xldate.xldate_as_tuple(s.cell(i,j).value,w.datemode)
-                                lrow[jM1]=str(date(y,m,d)).strip()
-                            else:
-                                lrow[jM1]=str(xlrd.xldate.xldate_as_datetime(s.cell(i,j).value,w.datemode)).strip()
+                    elif (s.cell(i,j).data_type=='d'): # or s.cell(i,j).is_date): 
+                        try:
+                            dtm=mMonthID.CleanDateTime(s.cell(i,j).value)
+                            lrow[jM1]=mMonthID.Date2isoformat(dtm)
+                        except Exception as e:
+                            try:
+                                dte=mMonthID.CleanDate(s.cell(i,j).value)
+                                lrow[jM1]=mMonthID.Date2isoformat(dte)
+                            except Exception as e:
+                                if (math.fabs(math.trunc(s.cell(i,j).value)-s.cell(i,j).value)<1e-8):
+                                    y,m,d,hh,mm,ss=xlrd.xldate.xldate_as_tuple(s.cell(i,j).value,w.datemode)
+                                    lrow[jM1]=str(date(y,m,d)).strip()
+                                else:
+                                    lrow[jM1]=str(xlrd.xldate.xldate_as_datetime(s.cell(i,j).value,w.datemode)).strip()
                     elif (s.cell(i,j).data_type=='b'): 
                         lrow[jM1]=s.cell(i,j).value
                     elif (s.cell(i,j).data_type=='n'): 

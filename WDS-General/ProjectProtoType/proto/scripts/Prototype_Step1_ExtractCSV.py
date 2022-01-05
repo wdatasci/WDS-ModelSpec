@@ -50,7 +50,8 @@ if __name__=="__main__":
                             )
         _parser.add_argument("--nrows" 
                             , help="maximum number of rows to process"
-                            , default=None
+                            , default=10000000
+                            , type=int
                             )
         _parser.add_argument("--ncols" 
                             , help="maximum number of columns to process"
@@ -129,6 +130,7 @@ if __name__=="__main__":
                         , targetbasename=targetbasename
                         , NameTransform=lNameTransform
                         , isPreviewNameOnly=args.isListOnly
+                        , nrows=args.nrows
                         )
 
 
