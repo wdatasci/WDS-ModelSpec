@@ -80,6 +80,9 @@
     <ClInclude Include="src\XLM.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\MatrixUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src-ExcelSDK\README.md">

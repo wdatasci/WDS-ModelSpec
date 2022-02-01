@@ -13,7 +13,7 @@ DBG=-dbg
 DBG=
 !endif
 
-build:	
+build:	dirs
 	copy $(SolutionDir)\Build\x64\$(Configuration)\WDS_Matrix_CLR.dll $(SolutionDir)\..\..\..\lib\WDS_Matrix_CLR$(DBG).dll
 	copy $(SolutionDir)\Build\x64\$(Configuration)\WDS_Matrix_CLR.pdb $(SolutionDir)\..\..\..\lib\WDS_Matrix_CLR$(DBG).pdb
 	copy $(SolutionDir)\Build\x64\$(Configuration)\WDS_Matrix_Static.lib $(SolutionDir)\..\..\..\lib\WDS_Matrix_Static$(DBG).lib
@@ -33,8 +33,8 @@ clean_obj:
 	del /F /Q "$(SolutionDir)\WDS_Matrix_Static\Build"
 	del /F /Q "$(SolutionDir)\WDS_Matrix_CLR\obj"
 	del /F /Q "$(SolutionDir)\WDS_Matrix_CLR\Build"
-	del /F /Q "$(SolutionDir)\WDS_Matrix_test\obj"
-	del /F /Q "$(SolutionDir)\WDS_Matrix_test\Build"
+	del /F /Q "$(SolutionDir)\test\obj"
+	del /F /Q "$(SolutionDir)\test\Build"
 	del /F /Q "$(SolutionDir)\Build"
 	del /F /Q "$(SolutionDir)\obj"
 
@@ -44,15 +44,20 @@ clean_lib:
 	del /F /Q "$(SolutionDir)\lib"
 
 clean_test_output:
-	del /F /Q "$(SolutionDir)\WDS_Matrix_test\output\*"
+	del /F /Q "$(SolutionDir)\test\Output\*"
 
 rebuild:clean_all_but_lib dirs build
 
 rebuild_doc:dirs build
 
 #dirs:"$(SolutionDir)\lib" "$(SolutionDir)\lib\VBA" "$(SolutionDir)\WDS-JniPMML-Doc\docfx_pdf" "$(SolutionDir)\test\output"
+	#copy $(SolutionDir)\Build\x64\$(Configuration)\WDS_Matrix_CLR.dll $(SolutionDir)\..\..\..\lib\WDS_Matrix_CLR$(DBG).dll
+
+
 dirs:	
-	echo "empty dirs target"
+	--mkdir $(SolutionDir)\..\..\..\lib
+	--mkdir $(SolutionDir)\lib
+	--mkdir -p $(SolutionDir)\test\Output
 
 "$(SolutionDir)\lib\VBA":	
 	mkdir "$(SolutionDir)\lib\VBA"

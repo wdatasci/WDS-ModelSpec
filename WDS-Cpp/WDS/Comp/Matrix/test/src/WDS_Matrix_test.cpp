@@ -185,7 +185,7 @@ int main() //array<System::String> args)
 
 	arma::field<std::variant<double,std::wstring>> sMat(1, 2);
 
-	sMat(0, 0) = 3;
+	sMat(0, 0) = 3.0;
 	sMat(0, 1) = L"what";
 
 	size_t rc = sMat(0, 0).index();

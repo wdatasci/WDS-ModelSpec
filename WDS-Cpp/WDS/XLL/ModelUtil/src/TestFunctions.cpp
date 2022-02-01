@@ -23,7 +23,7 @@ WDS_Test_Matrix_Inv(LPXLOPER12 Arg0)
 
 	LPOPER12 result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(Arg0);
-	LPXLOPER12 cmArg0;
+	LPXLOPER12 cmArg0=nullptr;
 	bool bWasArg0Coerced = false;
 
 	try {

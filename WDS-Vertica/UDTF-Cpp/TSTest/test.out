@@ -1,0 +1,137 @@
+xsltproc --stringparam runtemplate UDTF_SQLCall -o /WDS/dev/lib/github/WDataSci/WDS-ModelSpec/master/WDS-Vertica/UDTF-Cpp/TSTest/build/call.sql ../../../WDS-Vertica/XSLT/UDTFSpec2SQLCall.xsl src/TSTest_spec.xml
+for q in src/*test*.sql; \
+	do \
+	. ~/vertica_user_credentials.sh; /opt/vertica/bin/vsql -e -h ${VServerName} -U ${VUID} -w ${VPassWD} -p ${VPort} -d ${VDatabase} -v ON_ERROR_STOP=on -f $q ; \
+	done
+/* example of calling a Vertica UDTF function */
+
+
+/* create a temporary table with an ID and something to create a "Bones" table for time series work */
+
+
+drop table if exists x cascade;
+DROP TABLE
+create local temporary table x
+on commit preserve rows as
+select -10 as ID,'hey1'::char(20) as JunkStr, 0 as LengthIndex, 10 as StartingIndex
+order by ID, StartingIndex
+;
+CREATE TABLE
+commit;
+COMMIT
+insert into x values(20,'huh',5,20);
+ OUTPUT 
+--------
+      1
+(1 row)
+
+commit;
+COMMIT
+insert into x values(30,'what',8,30);
+ OUTPUT 
+--------
+      1
+(1 row)
+
+commit;
+COMMIT
+/// Test input data
+select * from x order by ID, StartingIndex, LengthIndex;
+ ID  |       JunkStr        | LengthIndex | StartingIndex 
+-----+----------------------+-------------+---------------
+ -10 | hey1                 |           0 |            10
+  20 | huh                  |           5 |            20
+  30 | what                 |           8 |            30
+(3 rows)
+
+/// Bones output
+create local temporary table xx
+on commit preserve rows as 
+select public.Bones(ID, LengthIndex, StartingIndex using parameters EndPointInclusive=true ) over (partition by ID order by StartingIndex)
+from (
+	select *
+	from x
+	order by ID, StartingIndex
+) a
+;
+CREATE TABLE
+select * from xx;
+ ID  | RowIndex 
+-----+----------
+ -10 |       10
+  20 |       20
+  20 |       21
+  20 |       22
+  20 |       23
+  20 |       24
+  20 |       25
+  30 |       30
+  30 |       31
+  30 |       32
+  30 |       33
+  30 |       34
+  30 |       35
+  30 |       36
+  30 |       37
+  30 |       38
+(16 rows)
+
+/// Embedded in a series of queries
+/// Note: Row with -10 as ID has 0 for LengthIndex and so will not return a row.
+create local temporary table xxx
+on commit preserve rows as 
+select 
+	ID
+	, ID::char(10) as IDStr
+	, RowIndex
+	, RowIndex+10 as MonthID
+	, MonthID2Date(RowIndex+10) as TestDate
+from (
+		select public.Bones(ID, LengthIndex, StartingIndex) over (partition by ID order by StartingIndex)
+		from (
+			select *
+			from x
+			order by ID, StartingIndex
+		) a
+     ) a
+;
+CREATE TABLE
+select * from xxx;
+ ID |   IDStr    | RowIndex | MonthID |  TestDate  
+----+------------+----------+---------+------------
+ 20 | 20         |       20 |      30 | 2002-06-01
+ 20 | 20         |       21 |      31 | 2002-07-01
+ 20 | 20         |       22 |      32 | 2002-08-01
+ 20 | 20         |       23 |      33 | 2002-09-01
+ 20 | 20         |       24 |      34 | 2002-10-01
+ 30 | 30         |       30 |      40 | 2003-04-01
+ 30 | 30         |       31 |      41 | 2003-05-01
+ 30 | 30         |       32 |      42 | 2003-06-01
+ 30 | 30         |       33 |      43 | 2003-07-01
+ 30 | 30         |       34 |      44 | 2003-08-01
+ 30 | 30         |       35 |      45 | 2003-09-01
+ 30 | 30         |       36 |      46 | 2003-10-01
+ 30 | 30         |       37 |      47 | 2003-11-01
+(13 rows)
+
+/// Another call. The guts of TSTest can be general and hit external resources.
+select public.TSTest(ID,IDStr,RowIndex,TestDate) over (partition by ID order by RowIndex)
+from xxx
+order by ID, RowIndex;
+ ID |              IDStr               | RowIndex |  TestDate  |  y   | m  | d | lState | lState_Code 
+----+----------------------------------+----------+------------+------+----+---+--------+-------------
+ 20 | 20                               |       20 | 2002-06-01 | 2002 |  6 | 1 | Z      |           3
+ 20 | 20                               |       21 | 2002-07-01 | 2002 |  7 | 2 | A      |          -1
+ 20 | 20                               |       22 | 2002-08-01 | 2002 |  8 | 1 | Z      |           3
+ 20 | 20                               |       23 | 2002-09-01 | 2002 |  9 | 1 | A      |          -1
+ 20 | 20                               |       24 | 2002-10-01 | 2002 | 10 | 1 | Z      |           3
+ 30 | 30                               |       30 | 2003-04-01 | 2003 |  4 | 1 | Z      |           3
+ 30 | 30                               |       31 | 2003-05-01 | 2003 |  5 | 1 | A      |          -1
+ 30 | 30                               |       32 | 2003-06-01 | 2003 |  6 | 1 | Z      |           3
+ 30 | 30                               |       33 | 2003-07-01 | 2003 |  7 | 2 | A      |          -1
+ 30 | 30                               |       34 | 2003-08-01 | 2003 |  8 | 1 | Z      |           3
+ 30 | 30                               |       35 | 2003-09-01 | 2003 |  9 | 1 | A      |          -1
+ 30 | 30                               |       36 | 2003-10-01 | 2003 | 10 | 1 | Z      |           3
+ 30 | 30                               |       37 | 2003-11-01 | 2003 | 11 | 1 | A      |          -1
+(13 rows)
+

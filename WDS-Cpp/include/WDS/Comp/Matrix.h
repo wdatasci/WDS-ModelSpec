@@ -51,8 +51,8 @@ namespace WDS::Comp::Matrix {
 
 		//conversion
 		int as_int() { return (int)value; }
-		int as_size_t() { return (size_t)value; }
-		int ast() { return (size_t)value; }
+		size_t as_size_t() { return (size_t)value; }
+		size_t ast() { return (size_t)value; }
 		operator size_t() { return (size_t) value; }
 		operator int() { return (int) value; }
 		operator long() { return (long) value; }

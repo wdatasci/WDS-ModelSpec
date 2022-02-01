@@ -22,7 +22,8 @@ namespace WDS_ExcelAddIn_Common
         
         public void AutoOpen()
         {
-            lScriptEngine = new V8ScriptEngine(V8ScriptEngineFlags.EnableDebugging); // WindowsScriptEngineFlags.EnableDebugging); 
+            //lScriptEngine = new V8ScriptEngine(V8ScriptEngineFlags.EnableDebugging); 
+            lScriptEngine = new V8ScriptEngine(V8ScriptEngineFlags.EnableDateTimeConversion); 
             RegisterFunctions();
             ExcelIntegration.RegisterUnhandledExceptionHandler( ex => "!!! EXCEPTION: " + ex.ToString());
      
