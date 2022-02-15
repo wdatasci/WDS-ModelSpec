@@ -1,0 +1,1158 @@
+%Author: Christian Wypasek (CJW)
+%This is a latex style based on the one I used for my PhD dissertation at 
+%Clemson University in 1994.
+
+%It was originally based on modifications to rep12.sty 12-Jan-88.
+%Additions were added for technical reports during my post-doc at NCSU and 
+%later article writing.
+
+\ProvidesPackage{WDSTechnical}
+\newif\ifHOLD \HOLDfalse
+
+
+%make tabs whitespace
+\newcommand\whitetab{\catcode`\^^I=10}
+\whitetab
+
+%ifs required for Options
+\newif\ifindex          \indexfalse
+
+\newif\iflandscape      \landscapefalse
+\newif\ifdraft          \draftfalse
+\newif\ifcommentary     \commentarytrue
+
+\newlength\mytextwidth
+\setlength\mytextwidth   {6.5in}
+
+\newlength\mytextheight
+\setlength\mytextheight  {9in}
+
+\newlength\myleftmargin
+\setlength\myleftmargin  {1.25in}
+
+\newlength\mypaperwidth
+\setlength\mypaperwidth  {8.5in}
+
+\newlength\mypaperheight
+\setlength\mypaperheight {11in}
+
+\pagestyle{myheadings}
+
+%My perferred styles -CJW
+%\iflandscape
+%        \pagestyle                {myheadings}
+%        \setlength\hoffset        {0pt}
+%        \setlength\leftmargin     {0pt}
+%        \setlength\oddsidemargin  {0pt}
+%        \setlength\evensidemargin {0pt}
+%        \setlength\mytextheight       {6.5in}
+%        \setlength\mytextwidth        {8.5in}
+%        \addtolength\topmargin    {0pt}
+%\else
+%        \pagestyle                {myheadings}
+%        \setlength\hoffset        {0pt}
+%        \setlength\oddsidemargin  {0pt}
+%        \setlength\evensidemargin {0pt}
+%        \setlength\textwidth \mytextwidth
+%        \setlength\textheight \mytextheight
+%        \addtolength\topmargin    {-.75in}
+%\fi
+
+
+%Options
+\DeclareOption{commentary}{\commentarytrue}
+\DeclareOption{nocommentary}{\commentaryfalse}
+\DeclareOption{index}{\indextrue}
+\DeclareOption{landscape}{\landscapetrue}
+\DeclareOption{draft}{\drafttrue}
+\DeclareOption{spaceholder}{}
+\DeclareOption{tracingon}{%
+    \tracingoutput     10
+    \tracingcommands   10
+    \tracingmacros     10
+    \tracingonline     10
+    \tracingparagraphs 10
+    \tracinglostchars  10
+    \tracingrestores   10
+}
+
+%Simple aliases
+%%>>> \DeclareOption{lm0}{\setlength\myleftmargin{0in}}
+%%>>> \DeclareOption{lm.25}{\setlength\myleftmargin{.25in}}
+%%>>> \DeclareOption{lm.5}{\setlength\myleftmargin{.5in}}
+%%>>> \DeclareOption{lm.75}{\setlength\myleftmargin{.75in}}
+%%>>> \DeclareOption{lm1}{\setlength\myleftmargin{1in}}
+%%>>> 
+%%>>> \DeclareOption{ho-.25}{\setlength\hoffset{-.25in}}
+%%>>> \DeclareOption{ho-.5}{\setlength\hoffset{-.5in}}
+%%>>> \DeclareOption{ho-.75}{\setlength\hoffset{-.75in}}
+%%>>> \DeclareOption{ho-1}{\setlength\hoffset{-1in}}
+%%>>> 
+%%>>> \DeclareOption{vo-.25}{\setlength\voffset{-.25in}}
+%%>>> \DeclareOption{vo-.5}{\setlength\voffset{-.5in}}
+%%>>> \DeclareOption{vo-.75}{\setlength\voffset{-.75in}}
+%%>>> \DeclareOption{vo-1}{\setlength\voffset{-1in}}
+%%>>> 
+%%>>> 
+%%>>> \DeclareOption{h4}{\setlength\mytextheight{4in}}
+%%>>> \DeclareOption{h4.5}{\setlength\mytextheight{4.5in}}
+%%>>> \DeclareOption{h5}{\setlength\mytextheight{5in}}
+%%>>> \DeclareOption{h5.5}{\setlength\mytextheight{5.5in}}
+%%>>> \DeclareOption{h6}{\setlength\mytextheight{6in}}
+%%>>> \DeclareOption{h6.5}{\setlength\mytextheight{6.5in}}
+%%>>> \DeclareOption{h7}{\setlength\mytextheight{7in}}
+%%>>> \DeclareOption{h7.5}{\setlength\mytextheight{7.5in}}
+%%>>> \DeclareOption{h8}{\setlength\mytextheight{8in}}
+%%>>> \DeclareOption{h8.5}{\setlength\mytextheight{8.5in}}
+%%>>> \DeclareOption{h9}{\setlength\mytextheight{9in}}
+%%>>> \DeclareOption{h9.5}{\setlength\mytextheight{9.5in}}
+%%>>> \DeclareOption{h10}{\setlength\mytextheight{10in}}
+%%>>> \DeclareOption{h10.5}{\setlength\mytextheight{10.5in}}
+%%>>> \DeclareOption{h11}{\setlength\mytextheight{11in}}
+%%>>> \DeclareOption{h12}{\setlength\mytextheight{12in}}
+%%>>> \DeclareOption{h13}{\setlength\mytextheight{13in}}
+%%>>> \DeclareOption{h14}{\setlength\mytextheight{14in}}
+%%>>> \DeclareOption{w4}{\setlength\mytextwidth{4in}}
+%%>>> \DeclareOption{w4.5}{\setlength\mytextwidth{4.5in}}
+%%>>> \DeclareOption{w5}{\setlength\mytextwidth{5in}}
+%%>>> \DeclareOption{w5.5}{\setlength\mytextwidth{5.5in}}
+%%>>> \DeclareOption{w6}{\setlength\mytextwidth{6in}}
+%%>>> \DeclareOption{w6.5}{\setlength\mytextwidth{6.5in}}
+%%>>> \DeclareOption{w7}{\setlength\mytextwidth{7in}}
+%%>>> \DeclareOption{w7.5}{\setlength\mytextwidth{7.5in}}
+%%>>> \DeclareOption{w8}{\setlength\mytextwidth{8in}}
+%%>>> \DeclareOption{w8.5}{\setlength\mytextwidth{8.5in}}
+%%>>> \DeclareOption{w9}{\setlength\mytextwidth{9in}}
+%%>>> \DeclareOption{w9.5}{\setlength\mytextwidth{9.5in}}
+%%>>> \DeclareOption{w10}{\setlength\mytextwidth{10in}}
+%%>>> \DeclareOption{w10.5}{\setlength\mytextwidth{10.5in}}
+%%>>> \DeclareOption{w11}{\setlength\mytextwidth{11in}}
+%%>>> \DeclareOption{w12}{\setlength\mytextwidth{12in}}
+%%>>> \DeclareOption{w13}{\setlength\mytextwidth{13in}}
+%%>>> \DeclareOption{w14}{\setlength\mytextwidth{14in}}
+%%>>> 
+%%>>> \DeclareOption{ph4}{\setlength\mypaperheight{4in}}
+%%>>> \DeclareOption{ph4.5}{\setlength\mypaperheight{4.5in}}
+%%>>> \DeclareOption{ph5}{\setlength\mypaperheight{5in}}
+%%>>> \DeclareOption{ph5.5}{\setlength\mypaperheight{5.5in}}
+%%>>> \DeclareOption{ph6}{\setlength\mypaperheight{6in}}
+%%>>> \DeclareOption{ph6.5}{\setlength\mypaperheight{6.5in}}
+%%>>> \DeclareOption{ph7}{\setlength\mypaperheight{7in}}
+%%>>> \DeclareOption{ph7.5}{\setlength\mypaperheight{7.5in}}
+%%>>> \DeclareOption{ph8}{\setlength\mypaperheight{8in}}
+%%>>> \DeclareOption{ph8.5}{\setlength\mypaperheight{8.5in}}
+%%>>> \DeclareOption{ph9}{\setlength\mypaperheight{9in}}
+%%>>> \DeclareOption{ph9.5}{\setlength\mypaperheight{9.5in}}
+%%>>> \DeclareOption{ph10}{\setlength\mypaperheight{10in}}
+%%>>> \DeclareOption{ph10.5}{\setlength\mypaperheight{10.5in}}
+%%>>> \DeclareOption{ph11}{\setlength\mypaperheight{11in}}
+%%>>> \DeclareOption{ph12}{\setlength\mypaperheight{12in}}
+%%>>> \DeclareOption{ph13}{\setlength\mypaperheight{13in}}
+%%>>> \DeclareOption{ph14}{\setlength\mypaperheight{14in}}
+%%>>> \DeclareOption{pw4}{\setlength\mypaperwidth{4in}}
+%%>>> \DeclareOption{pw4.5}{\setlength\mypaperwidth{4.5in}}
+%%>>> \DeclareOption{pw5}{\setlength\mypaperwidth{5in}}
+%%>>> \DeclareOption{pw5.5}{\setlength\mypaperwidth{5.5in}}
+%%>>> \DeclareOption{pw6}{\setlength\mypaperwidth{6in}}
+%%>>> \DeclareOption{pw6.5}{\setlength\mypaperwidth{6.5in}}
+%%>>> \DeclareOption{pw7}{\setlength\mypaperwidth{7in}}
+%%>>> \DeclareOption{pw7.5}{\setlength\mypaperwidth{7.5in}}
+%%>>> \DeclareOption{pw8}{\setlength\mypaperwidth{8in}}
+%%>>> \DeclareOption{pw8.5}{\setlength\mypaperwidth{8.5in}}
+%%>>> \DeclareOption{pw9}{\setlength\mypaperwidth{9in}}
+%%>>> \DeclareOption{pw9.5}{\setlength\mypaperwidth{9.5in}}
+%%>>> \DeclareOption{pw10}{\setlength\mypaperwidth{10in}}
+%%>>> \DeclareOption{pw10.5}{\setlength\mypaperwidth{10.5in}}
+%%>>> \DeclareOption{pw11}{\setlength\mypaperwidth{11in}}
+%%>>> \DeclareOption{pw12}{\setlength\mypaperwidth{12in}}
+%%>>> \DeclareOption{pw13}{\setlength\mypaperwidth{13in}}
+%%>>> \DeclareOption{pw14}{\setlength\mypaperwidth{14in}}
+%%>>> 
+\ProcessOptions
+
+
+
+%Packages to include
+\ifindex \usepackage{imakeidx} \makeindex 
+%adjustments to imakeidx so so that toc link works
+\renewenvironment{theindex}
+    {\imki@maybeaddtotoc
+     \imki@indexlevel{\indexname}\imki@indexheaders
+     \thispagestyle{\imki@firstpagestyle}%
+     \ifnum\imki@columns>\@ne
+       \columnsep \imki@columnsep
+       \ifx\imki@idxprologue\relax
+         \begin{multicols}{\imki@columns}
+       \else
+         \begin{multicols}{\imki@columns}[\imki@idxprologue]
+       \fi
+     \else
+       \imki@idxprologue
+     \fi
+     \global\let\imki@idxprologue\relax
+     \parindent\z@
+     \parskip\z@ \@plus .3\p@\relax
+     \columnseprule \ifKV@imki@columnseprule.4\p@\else\z@\fi
+     \raggedright
+     \let\item\@idxitem
+     \imki@othercode
+      \addcontentsline{toc}{section}{\protect\numberline{}Index}
+     }
+    {\ifnum\imki@columns>\@ne\end{multicols}\fi}
+\fi
+
+\ifdraft \usepackage{draftcopy} \fi
+
+\usepackage{enumitem}
+\usepackage{alltt}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+\usepackage{longtable}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyhead{}
+\fancyfoot{}
+
+\usepackage[utf8]{inputenc}
+\usepackage{moreverb}
+\usepackage{fancyvrb}
+\usepackage{amsmath}
+\usepackage{amssymb}
+%%>>> \usepackage{epsfig}
+%%>>> \usepackage{graphics}
+%%>>> \usepackage{pspicture}
+\usepackage[backref,colorlinks=false,bookmarks=true,bookmarksopen=true,pdfborder=00.1]{hyperref}
+
+%%>>> \def\launch#1#2{\hyperref{run:#1}{}{}{#2}}
+
+%%>>> \setlength\leftmargin{\myleftmargin}
+%%>>> %\setlength\leftmargin{-3in}
+%%>>> \setlength\textwidth\mytextwidth
+%%>>> \setlength\textheight\mytextheight
+%%>>> \setlength\paperheight\mypaperheight
+%%>>> \setlength\paperwidth\mypaperwidth
+%%>>> 
+%Give me some fixed sizes a typesetter can understand
+\newcommand\fivept        {\@setfontsize\fivept \@vpt   \@vipt}
+\newcommand\sixpt         {\@setfontsize\sixpt  \@vipt  \@viipt}
+\newcommand\sevenpt       {\@setfontsize\sevenpt\@viipt \@viiipt}
+\newcommand\eightpt       {\@setfontsize\eightpt\@viiipt\@ixpt}
+\newcommand\ninept        {\@setfontsize\ninept \@ixpt  \@xpt}
+\newcommand\tenpt         {\@setfontsize\tenpt  \@xpt   \@xipt}
+\newcommand\tentwelvept   {\@setfontsize\tenpt  \@xpt   \@xiipt}
+\def\@xiipt               {12}
+\def\@xiiipt              {13}
+\def\@xivpt               {14}
+\def\@xvpt                {15}
+\def\@xvipt               {16}
+\def\@xviipt              {17}
+\def\@xviiipt             {18}
+\def\@xixpt               {19}
+\def\@xxpt                {20}
+\def\@xxipt               {21}
+\def\@xxiipt              {22}
+\def\@xxiiipt             {23}
+\def\@xxivpt              {24}
+\def\@xxvpt               {25}
+\def\@xxvipt              {26}
+\def\@xxviipt             {27}
+\def\@xxviiipt            {28}
+\def\@xxxvipt             {36}
+\newcommand\elevenpt      {\@setfontsize\elevenpt          \@xipt          \@xiipt}
+\newcommand\twelvept      {\@setfontsize\twelvept          \@xiipt         \@xiiipt}
+\newcommand\thirteenpt    {\@setfontsize\thirteenpt        \@xiiipt        \@xivpt}
+\newcommand\fourteenpt    {\@setfontsize\fourteenpt        \@xivpt         \@xvpt}
+\newcommand\fifteenpt     {\@setfontsize\fifteenpt         \@xvpt          \@xvipt}
+\newcommand\sixteenpt     {\@setfontsize\sixteenpt         \@xvipt         \@xviipt}
+\newcommand\seventeenpt   {\@setfontsize\seventeenpt       \@xviipt        \@xviiipt}
+\newcommand\eighteenpt    {\@setfontsize\eighteenpt        \@xviiipt       \@xixpt}
+\newcommand\nineteenpt    {\@setfontsize\nineteenpt        \@xixpt         \@xxpt}
+\newcommand\twentypt      {\@setfontsize\twentypt          \@xxpt          \@xxipt}
+\newcommand\twentyonept   {\@setfontsize\twentyonept       \@xxipt         \@xxiipt}
+\newcommand\twentytwopt   {\@setfontsize\twentytwopt       \@xxiipt        \@xxiiipt}
+\newcommand\twentythreept {\@setfontsize\twentythreept     \@xxiiipt       \@xivpt}
+\newcommand\twentyfourpt  {\@setfontsize\twentyfourpt      \@xxivpt        \@xvpt}
+\newcommand\twentyfivept  {\@setfontsize\twentyfivept      \@xxvpt         \@xxvipt}
+\newcommand\twentysixpt   {\@setfontsize\twentysixpt       \@xxvipt        \@xxviipt}
+\newcommand\twentysevenpt {\@setfontsize\twentysevenpt     \@xxviipt       \@xxviiipt}
+\newcommand\twentyeightpt {\@setfontsize\twentyeightpt     \@xxviiipt      \@xxviiipt}
+\newcommand\thirtysixpt   {\@setfontsize\thirtysixpt       \@xxxvipt       \@xxxvipt}
+
+
+
+%constants
+
+\def\sq{'}
+\def\dqo{``}
+\def\dqc{''}
+\def\tallstrut{\raisebox{0em}[1.1em][0ex]{\strut}}
+\def\strut{\vphantom{pM}}
+\clubpenalty \@M
+\widowpenalty \@M
+
+
+\newdimen\defaultparindent
+
+\defaultparindent .5in 
+
+\parskip .1\baselineskip
+\parskip 6pt plus 3pt minus 6pt
+%\parindent 1.5em 
+\parindent \defaultparindent
+\partopsep 3pt plus 2pt minus 2pt 
+\@lowpenalty 51 
+\@medpenalty 151 
+\@highpenalty 301 
+\@beginparpenalty -\@lowpenalty 
+\@endparpenalty -\@lowpenalty 
+\@itempenalty -\@lowpenalty 
+\@secpenalty \@highpenalty
+
+
+
+%utilitarian
+\def\unix#1{\write18{#1}}
+\def\fleqn{\@fleqntrue}
+\def\restoreeqn{\@fleqnfalse}
+
+
+
+\def\ifeq#1#2{\xdef\testa{#1}\xdef\testb{#2}\ifx\testa\testb}
+
+\def\ifndef#1{%
+  \expandafter\ifx\csname#1\endcsname\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi}
+
+\let\ifundefined\ifndef
+
+
+
+%lua stuff
+
+\def\subfolder{\jobname.build/}
+
+\usepackage{luacode}
+
+
+%token stuff
+
+\newcount\tokcount
+\newcount\wordcount
+\newtoks\emptytoks
+\newtoks\temptoks
+\newtoks\ltemptoks
+\newtoks\lltemptoks
+\newtoks\temptokst
+\newtoks\temptoksu
+
+\def\@gobbleword#1 {}
+
+\def\counttoks#1{%
+        \tokcount=0
+        \temptokst={\the#1}
+        \loop{%
+               \Pop\temptokst(into:)\temptoks
+               \advance\tokcount1
+                \ifeq{\the\emptytoks}{\the\temptokst} \else
+        }\repeat
+}
+
+\def\countwords#1{%
+       \edef\tempstring{#1 }
+       \ifx \@empty#1 \wordcount=0 \else
+        \wordcount=-1
+         \loop{%
+               \edef\tempstring{\expandafter\@gobbleword\tempstring}
+               \advance\wordcount1
+               \ifx \@empty\tempstring \else
+        }\repeat
+        \ifnum \wordcount=0 \advance\wordcount1\fi
+        \fi
+}
+
+%From texnichians guide
+\def\Firsttoks#1(into:)#2{\toksSplitOff#1(head:)\noexpand#2(tail:)\temptokst\relax}
+\def\JustPop#1{%
+\Pop#1%
+(into:)\temptoksu\relax%
+}
+\def\Pop#1(into:)#2{%
+\edef\act{\noexpand\SplitOff\the#1%
+(head:)\noexpand#2(tail:)\noexpand#1}%
+\act%
+}
+\def\SplitOff#1#2(head:)#3(tail:)#4{#3={#1}#4={#2}}
+\newcommand\toksSplitOff{\expandafter\SplitOff\the}
+\def\Prepend#1(to:)#2{\toks0={#1}%
+\edef\act{\noexpand#2={\the\toks0\the#2}}%
+\act}
+\def\PutToks#1(to:)#2{\xdef\act{\noexpand#2={\the#1}}%
+\act}
+\def\Append#1(to:)#2{\toks0={#1}%
+\edef\act{\noexpand#2={\the#2\the\toks0}}%
+\act}
+\def\Appendtoks#1(to:)#2{\toks0={#1}%
+\edef\act{\noexpand#2={\the#2\the#1}}%
+\act}
+
+
+%this has had settingtoc inserted
+
+%\newif\ifsettingtoc \settingtocfalse
+%\newif\ifoutputtingtoc \outputtingtocfalse
+
+%\def\addcontentsline#1#2#3{
+%\settingtoctrue
+%\if@filesw \begingroup
+%\let\label\@gobble \let\index\@gobble \let\glossary\@gobble
+%\def\protect##1{\string\string\string##1\string\space
+%   \space}\@temptokena{\thepage}%
+%\edef\@tempa{\write \@auxout{\string\@writefile{#1}{\protect
+%     \contentsline{#2}{#3}{\the\@temptokena}}}}\@tempa
+%   \if@nobreak \ifvmode\nobreak\fi\fi\endgroup\fi
+%\settingtocfalse}
+
+
+
+%A few extra subsections never hurt
+
+\newcounter{currentlevelroot}
+\setcounter{currentlevelroot}{0}
+\newcounter{currentleveladder}
+\setcounter{currentleveladder}{0}
+\newcounter{tempcurrentlocallevel}
+\newcounter{currentlevel}
+\setcounter{currentlevel}{0}
+\newcounter{currentlevelupone}
+\setcounter{currentlevelupone}{0}
+\newcounter{currentleveluptwo}
+\setcounter{currentleveluptwo}{0}
+\newcounter{currentlevelupthree}
+\setcounter{currentlevelupthree}{0}
+\newcounter{currentlevelupfour}
+\setcounter{currentlevelupfour}{0}
+\newcounter{currentlevelupfive}
+\setcounter{currentlevelupfive}{0}
+\newcounter{currentlevelupsix}
+\setcounter{currentlevelupsix}{0}
+\newcounter{currentlevelupseven}
+\setcounter{currentlevelupseven}{0}
+
+\def\sectiondelta#1{%
+    \advance\c@currentlevel#1
+    \advance\c@currentleveladder#1
+    \ifnum\c@currentlevel>7
+        \setcounter{currentlevel}{7}
+    \fi
+    \ifnum\c@currentlevel<0
+        \setcounter{currentlevel}{0}
+    \fi
+}
+
+\def\sectiondown#1{\sectiondelta{#1}}
+
+\def\sectionup#1{\sectiondelta{-#1}}
+
+\def\recordcurrentlevel{%
+        \c@currentlevelupseven=\c@currentlevelupsix
+        \c@currentlevelupsix=\c@currentlevelupfive
+        \c@currentlevelupfive=\c@currentlevelupfour
+        \c@currentlevelupfour=\c@currentlevelupthree
+        \c@currentlevelupthree=\c@currentleveluptwo
+        \c@currentleveluptwo=\c@currentlevelupone
+        \c@currentlevelupone=\c@currentlevelroot
+        \c@currentlevelroot=\c@currentlevel
+        \c@currentleveladder=0
+        }
+
+\def\restorecurrentlevel{%
+        \setcounter{currentlevel}{\c@currentlevelupone}
+        \setcounter{currentlevelroot}{\c@currentlevelupone}
+        \setcounter{currentleveladder}{0}
+        \setcounter{currentlevelupone}{\c@currentleveluptwo}
+        \setcounter{currentleveluptwo}{\c@currentlevelupthree}
+        \setcounter{currentlevelupthree}{\c@currentlevelupfour}
+        \setcounter{currentlevelupfour}{\c@currentlevelupfive}
+        \setcounter{currentlevelupfive}{\c@currentlevelupsix}
+        \setcounter{currentlevelupsix}{\c@currentlevelupseven}
+        }
+
+
+\def\thecurrentlevelname{%
+        \ifnum\c@currentlevel=0 
+                0%
+        \else \ifnum\c@currentlevel=1 
+                section%
+        \else \ifnum\c@currentlevel=2
+                subsection%
+        \else \ifnum\c@currentlevel=3
+                subsubsection%
+        \else \ifnum\c@currentlevel=4
+                subsubsubsection%
+        \else \ifnum\c@currentlevel=5
+                subsubsubsubsection%
+        \else \ifnum\c@currentlevel=6
+                subsubsubsubsubsection%
+        \else \thesubsubsubsubsubsubsubsection
+                subsubsubsubsubsubsection%
+        \fi\fi\fi\fi\fi\fi\fi
+}
+
+\def\thecurrentlevel{%
+        \ifnum\c@currentlevel=0 
+                0
+        \else \ifnum\c@currentlevel=1 
+                \thesection
+        \else \ifnum\c@currentlevel=2
+                \thesubsection
+        \else \ifnum\c@currentlevel=3
+                \thesubsubsection
+        \else \ifnum\c@currentlevel=4
+                \thesubsubsubsection
+        \else \ifnum\c@currentlevel=5
+                \thesubsubsubsubsection
+        \else \ifnum\c@currentlevel=6
+                \thesubsubsubsubsubsection
+        \else \thesubsubsubsubsubsubsubsection
+        \fi\fi\fi\fi\fi\fi\fi
+}
+
+\renewcommand\theHsection                    {\arabic{section}}
+\renewcommand\theHsubsection                 {\theHsection.\arabic{subsection}}
+\renewcommand\theHsubsubsection              {\theHsubsection.\arabic{subsubsection}}
+\newcommand\theHsubsubsubsection             {\theHsubsubsection.\arabic{subsubsubsection}}
+\newcommand\theHsubsubsubsubsection          {\theHsubsubsubsection.\arabic{subsubsubsubsection}}
+\newcommand\theHsubsubsubsubsubsection       {\theHsubsubsubsubsection.\arabic{subsubsubsubsubsection}}
+\newcommand\theHsubsubsubsubsubsubsection    {\theHsubsubsubsubsubsection.\arabic{subsubsubsubsubsubsection}}
+\newcommand\theHsubsubsubsubsubsubsubsection {\theHsubsubsubsubsubsubsection.\arabic{subsubsubsubsubsubsubsection}}
+
+\providecommand\sectionname                      {section}
+\providecommand\subsectionname                   {subsection}
+\providecommand\subsubsectionname                {subsubsection}
+\providecommand\subsubsubsectionname             {subsubsubsection}
+\providecommand\subsubsubsubsectionname          {subsubsubsubsection}
+\providecommand\subsubsubsubsubsectionname       {subsubsubsubsubsection}
+\providecommand\subsubsubsubsubsubsectionname    {subsubsubsubsubsubsection}
+\providecommand\subsubsubsubsubsubsubsectionname {subsubsubsubsubsubsubsection}
+
+\def\sectionlevel@section                               {1}
+\def\sectionlevel@subsection                            {2}
+\def\sectionlevel@subsubsection                         {3}
+\def\sectionlevel@subsubsubsection                      {4}
+\def\sectionlevel@subsubsubsubsection                   {5}
+\def\sectionlevel@subsubsubsubsubsection                {6}
+\def\sectionlevel@subsubsubsubsubsubsection             {7}
+\def\sectionlevel@subsubsubsubsubsubsubsection          {8}
+\def\toclevel@section                                   {1}
+\def\toclevel@subsection                                {2}
+\def\toclevel@subsubsection                             {3}
+\def\toclevel@subsubsubsection                          {4}
+\def\toclevel@subsubsubsubsection                       {5}
+\def\toclevel@subsubsubsubsubsection                    {6}
+\def\toclevel@subsubsubsubsubsubsection                 {7}
+\def\toclevel@subsubsubsubsubsubsubsection              {8}
+\newcommand\l@subsubsubsection                          {\@dottedtocline{4}{6.2em}{4.1em}}
+\newcommand*\l@subsubsubsubsection                      {\@dottedtocline{5}{7.6em}{4.9em}}
+\newcommand*\l@subsubsubsubsubsection                   {\@dottedtocline{5}{7.6em}{4.9em}}
+\newcommand*\l@subsubsubsubsubsubsection                {\@dottedtocline{5}{7.6em}{4.9em}}
+\newcommand*\l@subsubsubsubsubsubsubsubsection          {\@dottedtocline{5}{7.6em}{4.9em}}
+\newcommand*\l@subsubsubsubsubsubsubsubsubsection       {\@dottedtocline{5}{7.6em}{4.9em}}
+\newcommand*\l@subsubsubsubsubsubsubsubsubsubsubsection {\@dottedtocline{5}{7.6em}{4.9em}}
+
+\setcounter                                   {tocdepth}{3}
+\setcounter                                   {secnumdepth}{8}
+\setcounter                                   {secnumdepth}{3}
+\newcounter                                   {subsubsubsection}[subsubsection]
+\newcounter                                   {subsubsubsubsection}[subsubsubsection]
+\newcounter                                   {subsubsubsubsubsection}[subsubsubsubsection]
+\newcounter                                   {subsubsubsubsubsubsection}[subsubsubsubsubsection]
+\newcounter                                   {subsubsubsubsubsubsubsection}[subsubsubsubsubsubsection]
+
+\renewcommand\thesection                      {\@arabic\c@section}
+\renewcommand\thesubsection                   {\thesection .\@arabic\c@subsection}
+\renewcommand\thesubsubsection                {\thesubsection .\@arabic\c@subsubsection}
+\renewcommand\thesubsubsubsection             {\thesubsubsection .\@arabic\c@subsubsubsection}
+\renewcommand\thesubsubsubsubsection          {\thesubsubsubsection .\@arabic\c@subsubsubsubsection}
+\renewcommand\thesubsubsubsubsubsection       {\thesubsubsubsubsection \@arabic\c@subsubsubsubsubsection}
+\renewcommand\thesubsubsubsubsubsubsection    {\thesubsubsubsubsubsection .\@arabic\c@subsubsubsubsubsubsection}
+\renewcommand\thesubsubsubsubsubsubsubsection {\thesubsubsubsubsubsubsection .\@arabic\c@subsubsubsubsubsubsubsection}
+
+
+\def\sectionmark#1{}
+\def\subsectionmark#1{}
+\def\subsubsectionmark#1{}
+\def\subsubsubsectionmark#1{}
+\def\subsubsubsubsectionmark#1{}
+\def\subsubsubsubsubsectionmark#1{}
+\def\subsubsubsubsubsubsectionmark#1{}
+\def\subsubsubsubsubsubsubsectionmark#1{}
+
+\let\oldsection=\section
+\let\oldsubsection=\subsection
+\let\oldsubsubsection=\subsubsection
+
+\def\sectionhstyle{\normalfont\Large\bfseries}
+\def\subsectionhstyle{\normalfont\large\bfseries}
+\def\subsubsectionhstyle{\normalfont\normalsize\bfseries}
+\def\subsubsubsectionhstyle{\normalfont\normalsize\bfseries}
+\def\subsubsubsubsectionhstyle{\normalfont\normalsize\bfseries}
+\def\subsubsubsubsubsectionhstyle{\normalfont\normalsize\bfseries}
+\def\subsubsubsubsubsubsectionhstyle{\normalfont\normalsize\bfseries}
+\def\subsubsubsubsubsubsubsectionhstyle{\normalfont\normalsize\bfseries}
+
+\newcount\cnsub
+\def\nsub#1{\cnsub=1 \ifnum\cnsub<#1\advance\cnsub1\loop{sub\advance\cnsub1\ifnum\cnsub=8 \cnsub=#1\fi\ifnum\cnsub=#1\else}\repeat\fi}
+
+\def\prependsubtotemptoks#1{\temptoks={section}\cnsub=1 
+                \ifnum\cnsub<#1\advance\cnsub1
+                \loop{\Prepend{sub}(to:)\temptoks
+                       \advance\cnsub1\ifnum\cnsub=8 \cnsub=#1\fi
+                       \ifnum\cnsub=#1\else}\repeat\fi}
+
+\def\asection#1{
+                \temptoks={section}
+                \prependsubtotemptoks#1
+                \edef\sectiontitle{\the\temptoks}
+                \Append{hstyle}(to:)\temptoks
+                \edef\sectiontitlehstyle{\the\temptoks}
+                \edef\sectp{\the\temptoks}
+                \@startsection{\sectiontitle}{#1}{\z@}%
+                                   {-3.5ex \@plus -1ex \@minus -.2ex}%
+                                   {2.3ex \@plus.2ex}%
+                                   {\csname \sectiontitlehstyle \endcsname}}
+
+\def\picklevel#1{
+        \c@currentlevel=\c@currentlevelroot
+        \c@currentleveladder=#1
+        \advance\c@currentlevel\c@currentleveladder
+        \ifnum\c@currentlevel<1 \c@currentlevel=1 \fi
+        \ifnum\c@currentlevel>7 \c@currentlevel=7 \fi
+        }
+  
+\def\nextlevel#1{
+        \advance\c@currentlevel#1
+        \advance\c@currentleveladder#1
+        \ifnum\c@currentlevel<1 \c@currentlevel=1 \fi
+        \ifnum\c@currentlevel>7 \c@currentlevel=7 \fi
+        }
+        
+\xdef\testchar{}
+\renewcommand\section{\futurelet\testchar
+\ifx`\*\testchar 
+\let\next=\oldsection 
+\else 
+\def\next{\picklevel1\edef\templevel{\the\c@currentlevel}\asection\templevel} 
+\fi 
+\next}
+\renewcommand\subsection{\picklevel2\edef\templevel{\the\c@currentlevel}\asection\templevel}
+\renewcommand\subsubsection{\picklevel3\edef\templevel{\the\c@currentlevel}\asection\templevel}
+\newcommand\subsubsubsection{\picklevel4\edef\templevel{\the\c@currentlevel}\asection\templevel}
+\newcommand\subsubsubsubsection{\picklevel5\edef\templevel{\the\c@currentlevel}\asection\templevel}
+\newcommand\subsubsubsubsubsection{\picklevel6\edef\templevel{\the\c@currentlevel}\asection\templevel}
+\newcommand\subsubsubsubsubsubsection{\picklevel7\edef\templevel{\the\c@currentlevel}\asection\templevel}
+\newcommand\subsubsubsubsubsubsubsection{\picklevel8\edef\templevel{\the\c@currentlevel}\asection\templevel}
+
+\newcommand\nextsection{\edef\templevel{\the\c@currentlevel}\asection\templevel}
+\newcommand\nextsubsection{\nextlevel1\edef\templevel{\the\c@currentlevel}\asection\templevel}
+\newcommand\upsection{\nextlevel{-1}\edef\templevel{\the\c@currentlevel}\asection\templevel}
+
+\newcommand\writeout{\immediate\write17}
+
+%%>>> \def\popwordword{}
+%%>>> \def\popwordrem{}
+%%>>> \def\popword{\expandafter\sspopword\popwordrem||.}
+%%>>> 
+%%>>> \gdef\sspopword#1#2||.{\xdef\popwordword{#1}\xdef\popwordrem{#2}}
+%%>>> 
+%%>>> \xdef\tempa{hey}
+%%>>> \xdef\tempb{hey}
+%%>>> \xdef\tempc{hey}
+%%>>> 
+%%>>> %\renewcommand\indexname{\pdfbookmark{Index}{Index}{\bf Index}}
+%%>>> %\def\PutIndexHere{\clearpage\begingroup\catcode`\_=12\printindex\vfill\null\clearpage\endgroup}
+%%>>> %
+%%>>> %\def\theindex{
+%%>>> %    \outputtingcontinuedpagetrue
+%%>>> %    \ifwriteindex \immediate\closeout\@indexfile \fi
+%%>>> %    \columnsep 70pt
+%%>>> %    \twocolumn[
+%%>>> %    \@makeschapterhead{INDEX\@mkboth{INDEX}{INDEX}}]
+%%>>> %    \thispagestyle{empty}
+%%>>> %    \runninghead{Index (continued)}
+%%>>> %    \ps@dissertationnonum
+%%>>> %    \addcontentsline{toc}{prelim}{INDEX} 
+%%>>> %    \parindent 0in
+%%>>> %    \parskip 0pt
+%%>>> %    \lineskiplimit .5\baselineskip
+%%>>> %    \lineskip .5\baselineskip
+%%>>> %    \input \jobname.idx
+%%>>> %    \onecolumn
+%%>>> %    \parindent \defaultparindent
+%%>>> %    \parskip 6pt plus 3pt minus 6pt
+%%>>> %    \normalbaselines
+%%>>> %    \outputtingcontinuedpagefalse
+%%>>> %    \eject
+%%>>> %    }
+%%>>> %
+%%>>> %\def\indexentry#1#2{
+%%>>> %    \parbox[b]{2.5in}{
+%%>>> %         \titlesize 
+%%>>> %         \rightskip 0in plus 2.5in
+%%>>> %         \leftskip .5in 
+%%>>> %         \hspace{-.5in} 
+%%>>> %         \parfillskip -\rightskip
+%%>>> %         \strut #1\hfill\nobreak 
+%%>>> %         \hbox to .75in{\hbox to .15in{} pg.\hfill #2}\strut}
+%%>>> %    \par}
+%%>>> %%I didn't fine tune these
+%%>>> %\def\@idxitem{\par\hangindent 40pt}
+%%>>> %\def\subitem{\par\hangindent 40pt \hspace*{20pt}}
+%%>>> %\def\subsubitem{\par\hangindent 40pt \hspace*{30pt}}
+%%>>> %\def\indexspace{\par \vskip 10pt plus 5pt minus 3pt\relax}
+%%>>> 
+%%>>>         \newtoks\lverbatim@line
+%%>>>         \newtoks\enverbatim@line
+%%>>>         \newtoks\lenverbatim@line
+%%>>>         \begingroup
+%%>>>                 \catcode`\^^I\active
+%%>>>                 \gdef\obeytabs{\catcode`\^^I\active\xdef^^I{\ \ \ \ \ \ \ \ }}
+%%>>>         \endgroup
+%%>>> 
+        \usepackage{xcolor}
+        \definecolor{grey}{cmyk}{0,0,0,0.8}
+        \definecolor{burgundy}{cmyk}{0,1,0.75,0.8}
+        \definecolor{purple}{cmyk}{0.45,0.86,0,0}
+        \definecolor{black}{rgb}{0,0,0}
+        \definecolor{white}{rgb}{1,1,1}
+
+%%>>>         \newif\ifwritegalley \writegalleytrue
+%%>>> 
+%%>>> 	\newtoks\fverblist
+%%>>> 
+%%>>> 	\newcommand\fverbtop{%
+%%>>>                 \ifhmode\par\fi%
+%%>>>                 %\ifhmode\unskip\unskip\par\fi%
+%%>>> 		\noindent\begingroup%
+%%>>> 		\NormalSlash%
+%%>>> 		\codesize\tt%
+%%>>>                 \@bsphack%
+%%>>>                 \@vobeytabs%
+%%>>>                 \let\do\@makeother\dospecials%
+%%>>>                 \catcode`\^^M\active%
+%%>>>                 \catcode`\ \active%
+%%>>>                 \catcode`\^^I=12%
+%%>>> 		\let\verbatim@processline=\fverbatim@processline%
+%%>>>                 \setcounter{thiscodeblockline}{0}%
+%%>>> 		}
+%%>>> 
+%%>>> 	\newcommand\fverblistinit{\fverblist={ {fverbstop} }}
+%%>>> 	\def\addtofverblist#1{\Prepend{ {#1} }(to:)\fverblist\relax}
+%%>>> 
+%%>>> 	\def\fverblistcheck{%
+%%>>> 		\temptokst=\fverblist%
+%%>>> 		\loop{%
+%%>>> 			\Pop\temptokst(into:)\temptoks%
+%%>>>                 	\ifeq{fverbstop}{\the\temptoks}\else%
+%%>>> 			}\repeat%
+%%>>> 		}
+%%>>> 
+%%>>> 	\let\origverbatim@processline=\verbatim@processline
+%%>>> 
+%%>>> 	\def\fverbatim@processline{%
+%%>>> 		\specialcodecasesstart%
+%%>>> 		\obeytabs%
+%%>>> 		\temptokst=\fverblist%
+%%>>> 		\enverbatim@line=\verbatim@line%
+%%>>>                 \lverbatim@line\verbatim@line%
+%%>>>                 \lenverbatim@line\enverbatim@line%
+%%>>> 	}
+%%>>> 
+%%>>> 	\def\fverb#1{\if g#1\writegalleytrue\else\writegalleyfalse\fi\fverbgalley}
+%%>>> 
+%%>>> 	\def\fverbgalley#1{%
+%%>>> 		\if 0#1\localwritecodefalse\let\next=\fverbzero%
+%%>>>                 \else\localwritecodetrue\if 1#1\let\next=\fverbone%
+%%>>>                 \else\if 2#1\let\next=\fverbtwo%
+%%>>>                 \else\let\next=\fverbthree\fi\fi\fi\next}
+%%>>> 
+%%>>>         \def\endfverb{%
+%%>>>                 \let\verbatim@processline=\origverbatim@processline%
+%%>>>                 %\gdef\verbatim@processline{\the\verbatim@line\par}%
+%%>>>                 \endgroup%%
+%%>>>                 \endgroup\par%
+%%>>>                 \@Esphack%
+%%>>> 		\writegalleytrue%
+%%>>>         }
+%%>>> 
+%%>>> 	\def\fverbzero{\fverblistinit%
+%%>>> 		\fverblistcheck%
+%%>>> 		\fverbtop%
+%%>>> 		\begingroup%
+%%>>>                 \ifhmode\par\fi%
+%%>>> 		\verbatim@start}
+%%>>> 
+%%>>> 	\def\fverbone#1{\fverblistinit%
+%%>>> 		\addtofverblist{#1}%
+%%>>> 		\fverblistcheck%
+%%>>> 		\fverbtop%
+%%>>> 		\begingroup%
+%%>>>                 \ifhmode\par\fi%
+%%>>> 		\verbatim@start}
+%%>>> 
+%%>>> 	\def\fverbtwo#1#2{\fverblistinit%
+%%>>> 		\addtofverblist{#1}%
+%%>>> 		\addtofverblist{#2}%
+%%>>> 		\fverblistcheck%%
+%%>>> 		\fverbtop%
+%%>>> 		\begingroup%
+%%>>>                 \ifhmode\par\fi%
+%%>>> 		\verbatim@start}
+%%>>> 
+%%>>> 	\def\fverbthree#1#2#3{\fverblistinit%
+%%>>> 		\addtofverblist{#1}%
+%%>>> 		\addtofverblist{#2}%
+%%>>> 		\addtofverblist{#3}%
+%%>>> 		\fverblistcheck%%
+%%>>> 		\fverbtop%
+%%>>> 		\begingroup%
+%%>>>                 \ifhmode\par\fi%
+%%>>> 		\verbatim@start}
+%%>>> 
+%%>>> 
+
+%%%%%%%%%%%%%%%%%%%general short-hand macros
+
+\def\refname{REFERENCES}
+\def\adjustedbibliography{\let\section\fsection
+\begin{thebibliography}}
+\def\endadjustedbibliography{\end{thebibliography}}
+\def\equationspacing{
+    \abovedisplayskip 6pt plus3pt minus6pt
+    \belowdisplayskip \abovedisplayskip
+    \abovedisplayshortskip 6pt plus3pt minus6pt 
+    \belowdisplayshortskip \abovedisplayshortskip
+}
+
+\newtheorem{defn}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{cor}{Corollary}
+
+\def\prob#1{\text{P}\left({#1}\right)}
+\def\condprob#1#2{\text{P}\left[{{#1}|{#2}}\right]}
+\def\expct#1{\text{E}\left[{#1}\right]}
+\def\expctt#1#2{\text{E}_{#1}\left[{#2}\right]}
+\def\condexp#1#2{\text{E}\left[{#1~\vline~#2}\right]}
+\def\expect#1{\text{E}\left[{#1}\right]}
+\def\condexpect#1#2{\text{E}\left[{{#1}|{#2}}\right]}
+\def\LaPlace#1{\hbox{\cal L}\left\{{#1}\right\}}
+\def\equnderexp{\overset{\text{E}}{\equiv}}
+\def\mtwo{{\cal M}_{\text{loc}}^2}
+\def\htwo{{\cal H}_{\text{bloc}}}
+\def\highlight#1{\index{#1}{\textbf{\color{burgundy} #1}}}
+\def\highlighttt#1{\index{#1}{\textbf{\color{burgundy}\tt #1}}}
+\let\inrm=\text
+\let\bold\bf
+\def\cadlag{c\`adl\`ag\ }
+\def\caglad{c\`agl\`ad\ }
+\def\Ito{It\^o\ }
+\def\Bremaud{Br\'emaud\ }
+\let\sml=\tiny
+%%%%%%%%%%%%%%%%%%%
+
+
+
+\let\@oldoutputpage=\@outputpage
+
+\newif\iffloatingtag
+\floatingtagfalse
+
+\renewcommand\@outputpage{
+        \iffloatingtag
+                %\floating
+                \@oldoutputpage
+        \else
+                \@oldoutputpage
+        \fi
+        }
+
+\newif\iflocalpagestyle
+\localpagestyletrue
+
+
+\def\righthat{%
+\setlength{\unitlength}{.015ex}
+\begin{picture}(300,100)(0,0)
+\put(0,0){\Line(100,0)}
+\put(100,0){\Line(100,100)}
+\put(200,100){\Line(100,0)}
+\end{picture}
+}
+
+\def\lefthat{%
+\setlength{\unitlength}{.015ex}
+\begin{picture}(300,100)(0,0)
+\put(0,100){\Line(100,0)}
+\put(100,100){\Line(100,-100)}
+\put(200,0){\Line(100,0)}
+\end{picture}
+}
+
+\def\midhat{%
+\setlength{\unitlength}{.015ex}
+\begin{picture}(400,100)(0,0)
+\put(0,0){\Line(100,0)}
+\put(100,0){\Line(100,100)}
+\put(200,100){\Line(100,-100)}
+\put(300,0){\Line(100,0)}
+\end{picture}
+}
+
+\newsavebox{\headingbox}
+
+\newif\ifinheading
+\inheadingfalse
+
+\def\linebreakinheading{\ifinheading \linebreak \else \fi}
+
+
+\def\@makemajorhead#1{
+        \thispagestyle{empty}
+        \savebox{\headingbox}{
+        \raisebox{-36pt}{
+            \raisebox{4pt}{
+                \begin{minipage}[t]{4in}     
+                    \center 
+                    \normalsize 
+%                    \uppercase{\bf #1}\strut
+                    {\bf #1}\strut % for tech_paper.sty
+                 \end{minipage}                     
+        }}}
+        \hbox to\textwidth{\hfill\usebox{\headingbox}\hfill}
+        \nointerlineskip
+        \vspace*{-\parskip}
+        \addvspace{\baselineskip}
+        }
+
+\def\topnewpage#1{\@topnewpage[\@makemajorhead#1]}
+
+%%>>> \def\slideheadingstyle#1{#1}
+%%>>> 
+%%>>> \def\slideheadingstyle#1{\vbox to 5in {{\hbox to \textwidth{{\strut \null \hbox to 1em {} \Large \bf \it {#1} \hfill \null\strut }}}
+%%>>>                 \rule{\textwidth}{3pt} \raise\baselineskip\hbox{\rule[-6pt]{\textwidth}{1pt} }}}
+%%>>> 
+%%>>> \def\slideheadingstyle#1{\vbox to .5in {{\hbox to \textwidth{{\strut \null \hbox to 1em {} \Large \bf \it {#1} \hfill \null\strut }}}
+%%>>>                 \rule{\textwidth}{2pt} \raise\baselineskip\hbox{\rule[-.5pt]{\textwidth}{.75pt} }}}
+%%>>> 
+%%>>> \def\@makeslidehead#1{
+%%>>>         \thispagestyle{empty}
+%%>>>         \clearpage
+%%>>>         \savebox{\headingbox}{
+%%>>>         \hspace{-9pt}{
+%%>>>                 \begin{minipage}[t]{\textwidth}     
+%%>>>                 {\slideheadingstyle{#1} }\strut
+%%>>>                  \end{minipage}                     
+%%>>>         }}
+%%>>>         \hbox to\textwidth{\hfill\usebox{\headingbox}\hfill}
+%%>>>         \@afterheading
+%%>>>         }
+%%>>> 
+%%>>> 
+%%>>> \def\slidetop{
+%%>>>     \clearpage
+%%>>>     \@afterindenttrue 
+%%>>>     \secdef\@slidetop\@schapter} 
+%%>>> 
+%%>>> \def\@slidetop[#1]#2{
+%%>>>     \if@twocolumn
+%%>>>         \@topnewpage[\@makeslidehead{#2}] 
+%%>>>     \else 
+%%>>>         \@makeslidehead{#2}
+%%>>>     \fi
+%%>>>     } 
+%%>>> 
+%%>>> %code style borrowed from epsf.sty
+%%>>> \newread\inputverbfilein
+%%>>> \newif\ifinputverbatend     
+%%>>> \newif\ifinputverbbbfound   
+%%>>> \newif\ifinputverbfileok    
+%%>>> \newif\ifinputverbreadit    
+%%>>> \def\inputverbguts{%
+%%>>>                 \read\inputverbfilein to \inputverbline
+%%>>>                 \ifeof\inputverbfilein
+%%>>>                         \inputverbfileokfalse
+%%>>>                 \else                %otherwise process one line
+%%>>>                         \verbatim@processline\inputverbline
+%%>>>                 \fi
+%%>>> }
+%%>>> 
+%%>>> \def\inputverb#1{%
+%%>>> \strut\newline
+%%>>> \inputverbreaditfalse
+%%>>> \IfFileExists{#1}{\inputverbreadittrue}{\inputverbreaditfalse}%
+%%>>> \ifinputverbreadit
+%%>>>     \openin\inputverbfilein=#1
+%%>>>             \inputverbfileoktrue         
+%%>>>             \inputverbatendfalse   
+%%>>>                 \begingroup
+%%>>>                         \parskip 0pt
+%%>>>                         \NormalSlash
+%%>>>                         \codesize\tt 
+%%>>>                         \@bsphack
+%%>>>                         \let\do\@makeother\dospecials
+%%>>>                         \def\verbatim@processline{%
+%%>>>                                         \noindent\strut\expandafter \csname verb|\endcsname \the\verbatim@line \relax 
+%%>>>                                 } 
+%%>>>             \catcode`\^^I\active
+%%>>>             \catcode`\^^M\active
+%%>>>             \catcode`\ \active
+%%>>>             \@noligs
+%%>>>             \@vobeyspaces
+%%>>>             \obeytabs
+%%>>>             \loop               
+%%>>>             \inputverbguts
+%%>>>             \ifinputverbfileok\repeat
+%%>>>         \endgroup
+%%>>>         \@esphack
+%%>>>         \edef\verbatim@processline{\the\verbatim@line\par}
+%%>>>         \strut\newline
+%%>>>         \closein\inputverbfilein
+%%>>> \else
+%%>>>                 \immediate\write17{>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<}
+%%>>>                 \immediate\write17{>>>>>>>>>>>>Not incorporating #1}
+%%>>>                 \immediate\write17{>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<}
+%%>>> \fi
+%%>>> }
+%%>>> 
+%%>>> 
+%%>>> 
+%%>>> \newcommand\vcatcodes{\catcode`\ =12 \catcode`\#=12 \catcode `\{=12 \catcode `\}=12 \catcode`\\=12} 
+%%>>> \newcommand\ncatcodes{\catcode`\ =10 \catcode`\#= \catcode `\{=1 \catcode `\}=12 \catcode`\\=0} 
+%%>>> 
+%%>>> \begingroup \catcode `|=0 \catcode `[= 1
+%%>>> \catcode`]=2 \catcode `\{=12 \catcode `\}=12
+%%>>> \catcode`\\=12 |gdef|@xverbatim#1\end{verbatim}[#1|end[verbatim]]
+%%>>> |gdef|@sxverbatim#1\end{verbatim*}[#1|end[verbatim*]]
+%%>>> |endgroup
+%%>>> 
+%%>>> \begingroup
+%%>>> \catcode `|=0 \catcode `[=1 \catcode`]=2 \catcode `\{=12 \catcode `\}=12 \catcode`\\=12
+%%>>> |gdef|verbline#1\endverbline[|begingroup|vcatcodes#1|endgroup]
+%%>>> |endgroup
+%%>>> 
+%%>>> \def\normalcatcodes{%
+%%>>> \catcode`\{=1 \catcode`\}=2 \catcode`\$=3 \catcode`\&=4 \catcode`\#=6 \catcode`\^=7 \catcode`\_=8%
+%%>>> \catcode`\^^I=10 \chardef\active=13 \catcode`\~=\active \catcode`@=11%
+%%>>> }%
+%%>>> 
+%for a document title page
+\newbox\customrule
+\setbox\customrule=\hbox{\setlength{\unitlength}{1pt}%
+	\begin{picture}(10,10)(0,0)% 
+	\put(0,1){\special{"0.4 10.0 0.0 !L2}}
+	\put(0,5){\special{"2 10.0 0.0 !L2}}
+	\end{picture}%
+}
+
+\long\def\DocumentTitlePage#1#2#3#4#5#6#7{
+\thispagestyle{empty}
+\noindent\begin{minipage}[t]{\textwidth}
+{\hbox to 1.01\textwidth{\leaders\copy\customrule\hfill}}
+\end{minipage}
+\vfill
+\begin{centering}
+\begin{centering}
+\includegraphics[height=1in]{WDataSci-Mark1-300x240.png}
+
+Wypasek Data Science, Inc.
+\end{centering}
+\vfill
+\vfill
+\vfill
+\vfill
+\vfill
+\vfill
+\vfill
+\vfill
+\vfill
+{\twentyfourpt #1}
+\vfill
+{\twelvept #2}
+\vfill
+{\twelvept #3}
+\vfill
+{\twelvept #4}
+{\twelvept #5}
+\vfill
+{\twelvept Author(s): #6}
+\vfill
+\end{centering}
+\begin{abstract}
+#7
+\end{abstract}
+\clearpage
+}
+
+
+\long\def\DocumentTitlePageWithCR#1#2#3#4#5#6#7#8{
+\thispagestyle{empty}
+\noindent\begin{minipage}[t]{\textwidth}
+{\hbox to 1.01\textwidth{\leaders\copy\customrule\hfill}}
+\end{minipage}
+\vfill
+\begin{centering}
+\begin{centering}
+\includegraphics[height=1in]{WDataSci-Mark1-300x240.png}
+
+Wypasek Data Science, Inc.
+\end{centering}
+\vfill
+\vfill
+\vfill
+\vfill
+\vfill
+\vfill
+\vfill
+\vfill
+\vfill
+{\twentyfourpt #1}
+\vfill
+{\twelvept #2}
+\vfill
+{\twelvept #3}
+\vfill
+{\twelvept #4}
+{\twelvept #5}
+{\twelvept #6}
+\vfill
+{\twelvept Author(s): #7}
+\vfill
+\end{centering}
+\begin{abstract}
+#8
+\end{abstract}
+\clearpage
+}
+
+%gnuplot stuff
+
+%\usepackage[pdftex]{graphicx}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{svg}
+
+\usepackage{gnuplottex}
+\ShellEscapetrue
+
+\usepackage{tikz}
+\usetikzlibrary{trees}
+
+
+
+
+\endinput
+
+
+

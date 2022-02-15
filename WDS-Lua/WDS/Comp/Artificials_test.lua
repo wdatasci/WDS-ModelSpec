@@ -233,7 +233,7 @@ end
 
 
 
-sdata=mat.dLetterMatrix(20,1,1,nil,26)
+sdata=mat.sMatrix(20,1,1,nil,26)
 
 sdata:print("sdata:")
 

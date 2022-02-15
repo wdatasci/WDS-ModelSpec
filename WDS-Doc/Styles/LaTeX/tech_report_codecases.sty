@@ -1,0 +1,219 @@
+\ProvidesPackage{tech_report_codecases}
+
+\def\reml{}
+\def\nextl{}
+\long\def\nextlagg#1#2||.{%
+	\writeout{1=#1}%
+	\writeout{2=#2}%
+	\long\gdef\reml{#2}\long\gdef\nextl{#1}%
+	}
+
+\def\popwordword{}
+\def\popwordrem{}
+\def\popword{\expandafter\sspopword\popwordrem||.}
+
+\gdef\sspopword#1#2||.{\xdef\popwordword{#1}\xdef\popwordrem{#2}}
+
+\def\specialcaselist#1{\xdef\sspecialcaselist{#1 {done} {done}}}
+%\def\specialcaselist#1{\xdef\sspecialcaselist{#1 {done} {done}||.}}
+
+\newif\iffoundspecialcase
+
+\newtoks\specialcodetoks
+\newtoks\tempspecialcodetoks
+
+\def\specialcodecasesstart{%
+	\xdef\popwordrem{\sspecialcaselist}%
+	\foundspecialcasefalse%
+	\specialcodetoks=\lverbatim@line%
+	\specialcodecases%
+}
+
+\def\specialcodedone{done}
+\def\specialcodearg{ hey you there}
+\def\specialcodecases{%
+	\popword%
+	%\writeout{\meaning\popwordword}%
+	%\writeout{\meaning\specialcodedone}%
+	\ifx\popwordword\specialcodedone%
+		\let\next=\relax%
+	\else%
+		%\PutToks\verbatim@line(to:)\tempspecialcodetoks%
+		\tempspecialcodetoks\verbatim@line%
+		\xdef\specialcodeargtemp{\the\tempspecialcodetoks}
+		%\writeout{\specialcodeargtemp}
+		%\show\tempspecialcodetoks
+		\xdef\specialcodearg{\meaning\specialcodeargtemp}%
+		\csname \popwordword\endcsname%
+		\ifx\popwordword\specialcodedone%
+			\let\next=\relax%
+		\else%
+			\iffoundspecialcase%
+				\let\next=\relax%
+			\else%
+				\let\next=\specialcodecases%
+			\fi%
+		\fi%
+	\fi%
+	\next%
+}
+
+\xdef\tempa{hey}
+\xdef\tempb{hey}
+\xdef\tempc{hey}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%coded special cases
+
+\long\def\chclean{%
+		\Append{//HCLEANtest||.}(to:)\tempspecialcodetoks%
+		\xdef\specialcodearg{\the\tempspecialcodetoks}%
+		\edef\tempc{\noexpand\expandafter\noexpand\schclean\specialcodearg}\tempc}
+
+\long\def\schclean#1//HCLEAN#2#3||.{%
+	%\writeout{1=#1} \writeout{2=#2} \writeout{3=#3} %
+	\edef\tempa{#2} \edef\tempb{t}%est}%
+	\ifx\tempa\tempb%
+		%\writeout{checked for chclean}%
+		\else%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\writeout{//HCLEAN\tempa}%
+	\fi%
+}
+
+
+
+\long\def\hclean{%
+		\Append{HCLEANtest||.}(to:)\tempspecialcodetoks%
+		\xdef\specialcodearg{\the\tempspecialcodetoks}%
+		\edef\tempc{\noexpand\expandafter\noexpand\shclean\specialcodearg}\tempc}
+
+\long\def\shclean#1HCLEAN#2#3||.{%
+	%\writeout{1=#1} \writeout{2=#2} \writeout{3=#3} %
+	\edef\tempa{#2} \edef\tempb{t}%est}%
+	\ifx\tempa\tempb%
+		%\writeout{checked for hclean}%
+		\else%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\JustPop\verbatim@line%
+		\writeout{HCLEAN\tempa}%
+	\fi%
+}
+
+\newif\ifhput\hputfalse
+
+\long\def\hbegin{%
+		\Append{//HBEGINtest||.}(to:)\tempspecialcodetoks%
+		\xdef\specialcodearg{\the\tempspecialcodetoks}%
+		\edef\tempc{\noexpand\expandafter\noexpand\shbegin\specialcodearg}\tempc}
+
+\long\def\shbegin#1//HBEGIN#2#3||.{%
+	%\writeout{1=#1} \writeout{2=#2} \writeout{3=#3} %
+	\edef\tempa{#2} \edef\tempb{t}%est}%
+	\ifhput\ifx\tempa\tempb%
+		\immediate\write\verbatimh@out{\the\tabcleanverbtoks}%
+		%\writeout{checked for hbegin while hput true}%
+	\fi\else\ifx\tempa\tempb%
+		%\writeout{checked for hbegin while hput false}%
+		\else%
+		\tempspecialcodetoks\verbatim@line%
+		\immediate\write\verbatimh@out{\the\tempspecialcodetoks}%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\writeout{//HBEGIN\tempa}%
+		\immediate\write\verbatimh@out{\the\tempspecialcodetoks}%
+		\hputtrue%
+	\fi\fi%
+}
+
+\long\def\hend{%
+		\Append{//HENDtest||.}(to:)\tempspecialcodetoks%
+		\xdef\specialcodearg{\the\tempspecialcodetoks}%
+		\edef\tempc{\noexpand\expandafter\noexpand\shend\specialcodearg}\tempc}
+
+\long\def\shend#1//HEND#2#3||.{%
+	%\writeout{1=#1} \writeout{2=#2} \writeout{3=#3} %
+	\edef\tempa{#2} \edef\tempb{t}%est}%
+	\ifhput\ifx\tempa\tempb%
+		\else%
+		\tempspecialcodetoks\verbatim@line%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\JustPop\tempspecialcodetoks%
+		\writeout{//HEND\tempa}%
+		\immediate\write\verbatimh@out{\the\tempspecialcodetoks}%
+		%\if\tempa;\immediate\write\verbatimh@out{;}\fi%
+		\hputfalse%
+	\fi\else\ifx\tempa\tempb%
+		%\writeout{checked for hend while hput false}%
+	\fi\fi%
+}
+
+
+\long\def\enndcode{%
+		\Append{ifdef TeXtest||.}(to:)\tempspecialcodetoks%
+		\xdef\specialcodearg{\the\tempspecialcodetoks}%
+		\edef\tempc{\noexpand\expandafter\noexpand\senndcode\specialcodearg}\tempc}
+
+\long\def\senndcode#1ifdef TeX#2||.{%
+	%\writeout{1=#1} \writeout{2=#2} \writeout{3=#3} \writeout{4=#4}%
+	\edef\tempa{#2} \edef\tempb{test}%
+	\ifx\tempa\tempb%
+		%\writeout{checked for enndcode}%
+		\else%
+		\foundspecialcasetrue%
+		\gdef\afterverblineguts{\end{code}}
+		\writeout{ended code with a ifdef TeX}%
+	\fi%
+}
+
+
+%\specialcaselist{ }
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%coded special cases
+
+\newcommand\IndexName{Index}
+\def\PutIndexHere{%
+	\vfill\clearpage%
+        %\setcounter{currentlevel}{0}%
+	%\section*{\bf \IndexName}
+	\begingroup\catcode`\_=12\catcode`\#=12%
+		\noindent\pdfbookmark{\IndexName}{\IndexName}{\bf \IndexName}%
+      		\@mkboth{\MakeUppercase\IndexName}{\MakeUppercase\IndexName}%
+  		\begingroup%
+		\printindex
+  		\endgroup
+		\vfill\clearpage
+  	\endgroup}
+
+
+\def\indexHere#1{\index{#1}\index{\thisfile!#1}}
+\def\indexFunction#1{\index{#1!Function}\indexHere{Functions!#1}}
+
+
+\endinput
+
+

@@ -1,0 +1,16 @@
+#!/usr/bin/tcsh
+
+if ( $# == 0 ) then
+    echo "$0 is based on hint from vba_extract.py from the XlsxWriter Python module'
+    exit 0
+endif
+
+
+if ( $# == 1 ) then
+    unzip -j $1 xl/vbaProject.bin -d .
+else
+    unzip -j $1 xl/vbaProject.bin -d $2
+endif
+
+
+

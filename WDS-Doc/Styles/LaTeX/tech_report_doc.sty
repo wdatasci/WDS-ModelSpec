@@ -1,0 +1,43 @@
+\ProvidesPackage{tech_report_doc}
+
+\newbox\customrule
+\setbox\customrule=\hbox{\setlength{\unitlength}{1pt}%
+	\begin{picture}(10,10)(0,0)% 
+	%\put(0,0){\Line(100,0)}
+	%\put(0,10){\special{"0.39998 100.0 0.0 !L2}}
+	\put(0,1){\special{"0.4 10.0 0.0 !L2}}
+	\put(0,5){\special{"2 10.0 0.0 !L2}}
+	\end{picture}%
+}
+
+
+\long\def\doctitlepage#1#2#3#4{
+\thispagestyle{empty}
+\noindent\begin{minipage}[t]{\textwidth}
+{\hbox to 1.01\textwidth{\leaders\copy\customrule\hfill}}
+\end{minipage}
+\vfill
+\begin{centering}
+\vfill
+{\twentyfourpt #1}
+\vfill
+{\twelvept #2}
+\vfill
+{\twelvept #3}
+\vfill
+\end{centering}
+\vfill
+\noindent\begin{minipage}[b]{\textwidth}
+\hbox to 1.01\textwidth{\leaders\copy\customrule\hfill
+	\begin{minipage}{1.5in}
+		\centering
+		%\includegraphics[clip,keepaspectratio,width=1.5in]{.eps}
+	\end{minipage}
+\leaders\copy\customrule\hfill}
+\end{minipage}
+\clearpage
+}
+
+\endinput
+
+

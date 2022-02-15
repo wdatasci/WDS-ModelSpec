@@ -1,0 +1,19 @@
+#!/usr/bin/tcsh -f
+
+
+foreach x (xsd/*)
+
+set y=${x:t}
+echo $x
+echo $y
+echo ${y:r}
+
+/usr/bin/rm -f gython/gBound/g${y:r}*.py*
+
+/opt/python/python generateDS-1.9a/generateDS.py -f -o python/gBound/g${y:r}.py.1 xsd/$y
+cat python/gBound/g${y:r}.py.1 | sed 's/sys.stdout.write/#sys.stdout.write/;s/rootObj.export/#rootObj.export/' >! python/gBound/g${y:r}.py
+
+end
+
+
+

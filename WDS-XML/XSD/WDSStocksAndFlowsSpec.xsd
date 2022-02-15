@@ -1,0 +1,258 @@
+<?xml version="1.0"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="WDSStocksAndFlows">
+    <xs:complexType>
+      <xs:sequence>
+
+        <xs:element name="ParameterList">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" name="Parameter">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Value" type="xs:string" />
+                  </xs:sequence>
+                  <xs:attribute name="Name" type="xs:string" use="required" />
+                  <xs:attribute name="Type" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="Units">
+          <xs:complexType>
+            <xs:sequence>
+
+              <xs:element name="ParameterList">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="Parameter">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Value" type="xs:string" />
+                        </xs:sequence>
+                        <xs:attribute name="Name" type="xs:string" use="required" />
+                        <xs:attribute name="Type" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+
+
+              <xs:element maxOccurs="unbounded" name="Unit">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Mneumonic" type="xs:string" />
+                    <xs:element name="Shorthand" type="xs:string" />
+                    <xs:element name="Concept" type="xs:string" />
+                    <xs:element name="ActualsVariable" type="xs:string" />
+                    <xs:element name="Type" type="xs:string" />
+
+                    <xs:element name="ToSimInd" type="xs:int" />
+                    <xs:element name="SimCVStructural" type="xs:double" />
+                    <xs:element name="SimCVPerPeriod" type="xs:double" />
+
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+                </xs:complexType>
+              </xs:element>
+
+            </xs:sequence>
+            <xs:attribute name="Handle" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="Stocks">
+          <xs:complexType>
+            <xs:sequence>
+
+              <xs:element name="Number" type="xs:int" />
+              <xs:element name="MacroReturnNumber" type="xs:int" />
+              <xs:element name="FunctionReturnNumber" type="xs:int" />
+	
+              <xs:element name="ParameterList">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="Parameter">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Value" type="xs:string" />
+                        </xs:sequence>
+                        <xs:attribute name="Name" type="xs:string" use="required" />
+                        <xs:attribute name="Type" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+
+
+              <xs:element maxOccurs="unbounded" name="Stock">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Mneumonic" type="xs:string" />
+                    <xs:element name="Shorthand" type="xs:string" />
+                    <xs:element name="Concept" type="xs:string" />
+                    <xs:element name="ActualsVariable" type="xs:string" />
+                    <xs:element name="Type" type="xs:string" />
+                    <xs:element name="LaterUse" type="xs:string" />
+                    <xs:element name="Treatment" type="xs:string" />
+                    <xs:element name="FOutput" type="xs:int" />
+                    <xs:element name="MOutput" type="xs:int" />
+
+                    <xs:element name="ToSimInd" type="xs:int" />
+                    <xs:element name="SimCV" type="xs:double" />
+
+                    <xs:element name="NumberOfBases" type="xs:int" />
+
+                    <xs:element name="Base1Type" type="xs:int" />
+                    <xs:element name="Base1Variable" type="xs:string" />
+                    <xs:element name="Base1IndexOrCode" type="xs:int" />
+                    <xs:element name="Base1Weighting" type="xs:double" />
+
+                    <xs:element name="Base2Type" type="xs:int" />
+                    <xs:element name="Base2Variable" type="xs:string" />
+                    <xs:element name="Base2IndexOrCode" type="xs:int" />
+                    <xs:element name="Base2Weighting" type="xs:double" />
+
+                    <xs:element name="Base3Type" type="xs:int" />
+                    <xs:element name="Base3Variable" type="xs:string" />
+                    <xs:element name="Base3IndexOrCode" type="xs:int" />
+                    <xs:element name="Base3Weighting" type="xs:double" />
+
+                    <xs:element name="Base4Type" type="xs:int" />
+                    <xs:element name="Base4Variable" type="xs:string" />
+                    <xs:element name="Base4IndexOrCode" type="xs:int" />
+                    <xs:element name="Base4Weighting" type="xs:double" />
+
+                    <xs:element name="Base5Type" type="xs:int" />
+                    <xs:element name="Base5Variable" type="xs:string" />
+                    <xs:element name="Base5IndexOrCode" type="xs:int" />
+                    <xs:element name="Base5Weighting" type="xs:double" />
+
+                    <xs:element name="Base6Type" type="xs:int" />
+                    <xs:element name="Base6Variable" type="xs:string" />
+                    <xs:element name="Base6IndexOrCode" type="xs:int" />
+                    <xs:element name="Base6Weighting" type="xs:double" />
+
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+                </xs:complexType>
+              </xs:element>
+
+            </xs:sequence>
+            <xs:attribute name="Handle" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="Flows">
+          <xs:complexType>
+            <xs:sequence>
+
+              <xs:element name="Number" type="xs:int" />
+              <xs:element name="MacroReturnNumber" type="xs:int" />
+              <xs:element name="FunctionReturnNumber" type="xs:int" />
+
+              <xs:element name="ParameterList">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="Parameter">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Value" type="xs:string" />
+                        </xs:sequence>
+                        <xs:attribute name="Name" type="xs:string" use="required" />
+                        <xs:attribute name="Type" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+
+              <xs:element maxOccurs="unbounded" name="Flow">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Mneumonic" type="xs:string" />
+                    <xs:element name="Shorthand" type="xs:string" />
+                    <xs:element name="Concept" type="xs:string" />
+                    <xs:element name="PrePost" type="xs:string" />
+                    <xs:element name="AorS" type="xs:string" />
+                    <xs:element name="RollWeighting" type="xs:string" />
+                    <xs:element name="ActualsVariable" type="xs:string" />
+
+                    <xs:element name="NumberOfFlowMatrices" type="xs:int" />
+
+                    <xs:element name="ToSimInd" type="xs:int" />
+                    <xs:element name="SimCV" type="xs:double" />
+
+                    <xs:element name="NumberOfBases" type="xs:int" />
+
+                    <xs:element name="Base1Type" type="xs:int" />
+                    <xs:element name="Base1Variable" type="xs:string" />
+                    <xs:element name="Base1IndexOrCode" type="xs:int" />
+                    <xs:element name="Base1Weighting" type="xs:double" />
+
+                    <xs:element name="Base2Type" type="xs:int" />
+                    <xs:element name="Base2Variable" type="xs:string" />
+                    <xs:element name="Base2IndexOrCode" type="xs:int" />
+                    <xs:element name="Base2Weighting" type="xs:double" />
+
+                    <xs:element name="Base3Type" type="xs:int" />
+                    <xs:element name="Base3Variable" type="xs:string" />
+                    <xs:element name="Base3IndexOrCode" type="xs:int" />
+                    <xs:element name="Base3Weighting" type="xs:double" />
+
+                    <xs:element name="Base4Type" type="xs:int" />
+                    <xs:element name="Base4Variable" type="xs:string" />
+                    <xs:element name="Base4IndexOrCode" type="xs:int" />
+                    <xs:element name="Base4Weighting" type="xs:double" />
+
+                    <xs:element name="Base5Type" type="xs:int" />
+                    <xs:element name="Base5Variable" type="xs:string" />
+                    <xs:element name="Base5IndexOrCode" type="xs:int" />
+                    <xs:element name="Base5Weighting" type="xs:double" />
+
+                    <xs:element name="Base6Type" type="xs:int" />
+                    <xs:element name="Base6Variable" type="xs:string" />
+                    <xs:element name="Base6IndexOrCode" type="xs:int" />
+                    <xs:element name="Base6Weighting" type="xs:double" />
+
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+                </xs:complexType>
+              </xs:element>
+
+            </xs:sequence>
+            <xs:attribute name="Handle" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="Orders">
+          <xs:complexType>
+            <xs:sequence>
+
+              <xs:element maxOccurs="unbounded" name="Order">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Mneumonic" type="xs:string" />
+                    <xs:element name="USF" type="xs:int" />
+                    <xs:element name="IndexOrCode" type="xs:int" />
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+                </xs:complexType>
+              </xs:element>
+
+            </xs:sequence>
+            <xs:attribute name="Handle" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+
+
+      </xs:sequence>
+      <xs:attribute name="Name" type="xs:string" use="required" />
+      <xs:attribute name="Handle" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

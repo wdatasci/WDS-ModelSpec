@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="IBM437"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="DNSMMatrix">
+    <xs:complexType>
+      <xs:sequence>
+
+        <xs:element name="NumberOfStates" type="xs:int" />
+
+        <xs:element name="NumberOfAdditionalAxes" type="xs:int" />
+
+        <xs:element name="ProvidesNonZeroCoords" type="xs:int" />
+
+        <xs:element name="AdditionalAxesUpperLimits">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Axis1" type="xs:int"/>
+              <xs:element name="Axis2" type="xs:int"/>
+              <xs:element name="Axis3" type="xs:int"/>
+              <xs:element name="Axis4" type="xs:int"/>
+	    </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="AdditionalAxesLowerLimits">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Axis1" type="xs:int"/>
+              <xs:element name="Axis2" type="xs:int"/>
+              <xs:element name="Axis3" type="xs:int"/>
+              <xs:element name="Axis4" type="xs:int"/>
+	    </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="StateLabels">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" name="StateLabel">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                      <xs:attribute name="Position" type="xs:int" use="required" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+
+        <xs:element name="NonZeroElements">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Number" type="xs:int" />
+              <xs:element name="NonZeroCoordinates">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="NonZeroCoordinate">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="I" type="xs:int" />
+                          <xs:element name="J" type="xs:int" />
+                        </xs:sequence>
+            		<xs:attribute name="Position" type="xs:int" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element maxOccurs="unbounded" name="MData">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Col1" type="xs:double" />
+              <xs:element name="Col2" type="xs:double" />
+              <xs:element name="Col3" type="xs:double" />
+              <xs:element name="Col4" type="xs:double" />
+              <xs:element name="Col5" type="xs:double" />
+              <xs:element name="Col6" type="xs:double" />
+              <xs:element name="Col7" type="xs:double" />
+              <xs:element name="Col8" type="xs:double" />
+              <xs:element name="Col9" type="xs:double" />
+              <xs:element name="Col10" type="xs:double" />
+              <xs:element name="Col11" type="xs:double" />
+              <xs:element name="Col12" type="xs:double" />
+              <xs:element name="Col13" type="xs:double" />
+              <xs:element name="Col14" type="xs:double" />
+              <xs:element name="Col15" type="xs:double" />
+              <xs:element name="Col16" type="xs:double" />
+              <xs:element name="Col17" type="xs:double" />
+              <xs:element name="Col18" type="xs:double" />
+              <xs:element name="Col19" type="xs:double" />
+              <xs:element name="Col20" type="xs:double" />
+              <xs:element name="Col21" type="xs:double" />
+              <xs:element name="Col22" type="xs:double" />
+              <xs:element name="Col23" type="xs:double" />
+              <xs:element name="Col24" type="xs:double" />
+              <xs:element name="Col25" type="xs:double" />
+              <xs:element name="Col26" type="xs:double" />
+              <xs:element name="Col27" type="xs:double" />
+              <xs:element name="Col28" type="xs:double" />
+              <xs:element name="Col29" type="xs:double" />
+              <xs:element name="Col30" type="xs:double" />
+              <xs:element name="Col31" type="xs:double" />
+              <xs:element name="Col32" type="xs:double" />
+              <xs:element name="Col33" type="xs:double" />
+              <xs:element name="Col34" type="xs:double" />
+              <xs:element name="Col35" type="xs:double" />
+              <xs:element name="Col36" type="xs:double" />
+              <xs:element name="Col37" type="xs:double" />
+              <xs:element name="Col38" type="xs:double" />
+              <xs:element name="Col39" type="xs:double" />
+              <xs:element name="Col40" type="xs:double" />
+              <xs:element name="Col41" type="xs:double" />
+              <xs:element name="Col42" type="xs:double" />
+              <xs:element name="Col43" type="xs:double" />
+              <xs:element name="Col44" type="xs:double" />
+              <xs:element name="Col45" type="xs:double" />
+              <xs:element name="Col46" type="xs:double" />
+              <xs:element name="Col47" type="xs:double" />
+              <xs:element name="Col48" type="xs:double" />
+              <xs:element name="Col49" type="xs:double" />
+              <xs:element name="Col50" type="xs:double" />
+              <xs:element name="Col51" type="xs:double" />
+              <xs:element name="Col52" type="xs:double" />
+              <xs:element name="Col53" type="xs:double" />
+              <xs:element name="Col54" type="xs:double" />
+              <xs:element name="Col55" type="xs:double" />
+              <xs:element name="Col56" type="xs:double" />
+              <xs:element name="Col57" type="xs:double" />
+              <xs:element name="Col58" type="xs:double" />
+              <xs:element name="Col59" type="xs:double" />
+              <xs:element name="Col60" type="xs:double" />
+              <xs:element name="Col61" type="xs:double" />
+              <xs:element name="Col62" type="xs:double" />
+              <xs:element name="Col63" type="xs:double" />
+              <xs:element name="Col64" type="xs:double" />
+            </xs:sequence>
+            <xs:attribute name="Row" type="xs:int" use="required" />
+            <xs:attribute name="Axis1" type="xs:int" use="required" />
+            <xs:attribute name="Axis2" type="xs:int" use="required" />
+            <xs:attribute name="Axis3" type="xs:int" use="required" />
+            <xs:attribute name="Axis4" type="xs:int" use="required" />
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="Name" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

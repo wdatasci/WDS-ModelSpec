@@ -1,0 +1,6 @@
+#!/usr/bin/tcsh
+
+svnserve -d --listen-port 3690 --listen-host 127.0.0.1 -r /WDS/svn_repo/WDSRepository
+
+
+

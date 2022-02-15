@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="DNSMDriverInfo">
+    <xs:complexType>
+      <xs:sequence>
+
+
+
+        <xs:element name="ParameterList">
+          <xs:complexType>
+            <xs:sequence>
+
+
+                    <xs:element maxOccurs="unbounded" name="Parameter">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Value" type="xs:string" />
+                        </xs:sequence>
+                          <xs:attribute name="Name" type="xs:string" use="required" />
+                          <xs:attribute name="Type" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+
+
+
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="NumberOfSimulations" type="xs:int" />
+        <xs:element name="SimAggType" type="xs:int" />
+
+        <xs:element name="ForecastHorizon" type="xs:int" />
+
+        <xs:element name="OperatingMonthID" type="xs:int" />
+        <xs:element name="OperatingMaxDelq" type="xs:int" />
+
+        <xs:element name="PrimaryVinVar" type="xs:string" />
+        <xs:element name="PrimaryVinVarNumber" type="xs:int" />
+        <xs:element name="PrimaryVinVarStartIndex" type="xs:int" />
+        <xs:element name="PrimaryVinVarStopIndex" type="xs:int" />
+        <xs:element name="PrimaryVinVarSingleIndex" type="xs:int" />
+
+        <xs:element name="SecondaryVinVar" type="xs:string" />
+        <xs:element name="SecondaryVinVarNumber" type="xs:int" />
+        <xs:element name="SecondaryVinVarStartIndex" type="xs:int" />
+        <xs:element name="SecondaryVinVarStopIndex" type="xs:int" />
+        <xs:element name="SecondaryVinVarSingleIndex" type="xs:int" />
+
+        <xs:element name="Segments">
+          <xs:complexType>
+            <xs:sequence>
+
+              <xs:element name="ParameterList">
+                <xs:complexType>
+                  <xs:sequence>
+
+                    <xs:element maxOccurs="unbounded" name="Parameter">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Value" type="xs:string" />
+                        </xs:sequence>
+                          <xs:attribute name="Name" type="xs:string" use="required" />
+                          <xs:attribute name="Type" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+
+              <xs:element maxOccurs="unbounded" name="Segment">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Mneumonic" type="xs:string" />
+                    <xs:element name="Shorthand" type="xs:string" />
+                    <xs:element name="PrimaryVinVarValue" type="xs:string" />
+                    <xs:element name="Concept" type="xs:string" />
+                    <xs:element name="ToForecastInd" type="xs:int"/>
+                    <xs:element name="PlaceSamplerCopyBefore" type="xs:string"/>
+                    <xs:element name="AgeAtForecastMonth0" type="xs:int"/>
+                    <xs:element name="MonthIDAtForecastMonth0" type="xs:int"/>
+                    <xs:element name="NewProductionInd" type="xs:int"/>
+                    <xs:element name="NewProductionInitialState" type="xs:string"/>
+                    <xs:element name="NewProductionUnits" type="xs:int"/>
+                    <xs:element name="NewProductionBCL" type="xs:int"/>
+                    <xs:element name="NewProductionBAR" type="xs:int"/>
+                    <xs:element name="NewProductionBPB" type="xs:int"/>
+                    <xs:element name="NewProductionFFees" type="xs:int"/>
+                    <xs:element name="NewProductionFPurch" type="xs:int"/>
+                    <xs:element name="NewProductionFPmt" type="xs:int"/>
+                    <xs:element name="NewProductionDefault" type="xs:int"/>
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+                </xs:complexType>
+              </xs:element>
+
+          </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+
+      </xs:sequence>
+      <xs:attribute name="Name" type="xs:string" use="required" />
+      <xs:attribute name="Handle" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

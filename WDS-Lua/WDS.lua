@@ -1,4 +1,4 @@
---[[Copyright 2019, Wypasek Data Science, Inc.  (WDataSci, WDS)
+--[[Copyright 2018-2022, Wypasek Data Science, Inc.  (WDataSci, WDS)
 --Released under the MIT open source license.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -72,7 +72,7 @@ for several common treatments across languages, and some general utility functio
 </ul>
 
 @module WDS
-@copyright 2018,2019
+@copyright 2018-2022
 @license MIT
 @author Christian Wypasek, Wypasek Data Science, Inc.
 
@@ -457,10 +457,11 @@ end
 
 local __show
 __show=
-function (obj,opts)
+function (obj,opts,depth)
+    depth=depth or 1
     opts=opts or {}
     opts.maxdepth=opts.maxdepth or 10
-    opts.depth=opts.depth or 1
+    opts.depth=opts.depth or depth
     opts.hidden=opts.hidden or false
     opts.indent=opts.indent or ""
     opts.itemsep=opts.itemsep or ","
@@ -478,6 +479,7 @@ show=AddToModuleHelp{
 , info=info} ..
 __show
 
+_G.show_str=show
 _G.show=function(obj,opts,ldepth) print(show(obj,opts,ldepth)) end
 
 show_values=
@@ -632,8 +634,11 @@ AddToModuleHelp{
 function(word,keyquote)
     local rv=string.format("%q",word)
     rv=string.sub(rv,2,#rv-1)
-    local rv_needs_to_be_quoted=quote_string 
+    local rv_needs_to_be_quoted=false --quote_string 
     if rv_needs_to_be_quoted==false and string.find(rv,"[^%w_]") then
+        rv_needs_to_be_quoted=true
+    end
+    if rv_needs_to_be_quoted==false and string.find(rv,"%d") and string.find(rv,"%D") then
         rv_needs_to_be_quoted=true
     end
     local qrv=rv
@@ -643,6 +648,7 @@ function(word,keyquote)
         else
             qrv='"'..rv..'"'
         end
+    else
     end
     return rv, qrv
 end
@@ -656,7 +662,7 @@ do
         local name1, qname, kname
         local t1,qt
         if opts.name then
-            name1,qname=StringExportable(tostring(opts.name),1)
+            name1,qname=StringExportable(opts.name,true)
             name1=qname
             qname=qname.." ="
         else
@@ -717,6 +723,7 @@ do
     end
     _M.lson=local_lson
 end
+_G.lson=_M.lson
 
 rtrim=AddToModuleHelp{
     rtrim=[==[--[[--
@@ -972,6 +979,9 @@ end
 
 local local_table_simple_value_comp
 local_table_simple_value_comp=function(a,b)
+    if #a==nil or #b==nil then
+        return false
+    end
     if #a ~= #b then
         return false
     end
@@ -1624,6 +1634,8 @@ __testcall__=function()
     print("wds.lson(\"t\",t,1)=",ts)
     t2=load(ts)()
     print("wds.show(load(ts)())=",show(t2))
+    t2=load(ts)
+    print("wds.show(load(ts))=",show(t2))
     print("wds.table_simple_value_comp(t,load(ts)())=",table_simple_value_comp(t,load(ts)()))
 
     s="hey what the hey is going on hey there"

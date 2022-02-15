@@ -87,9 +87,9 @@ function(a,b,c)
     if c==nil then c=1 end 
     local __state__={a,b,c,0,a-c} 
     return function(t, j) 
-                t[5]=t[5]+t[3]
-                if t[5]<=t[2] then 
-                    return t[5] 
+                __state__[5]=__state__[5]+__state__[3]
+                if __state__[5]<=__state__[2] then 
+                    return __state__[5] 
                 else
                     return nil
                 end 
@@ -97,7 +97,6 @@ function(a,b,c)
 end
 
 list=function(f) local rv={} for v in (function () return f, {}, 0 end)()  do table.insert(rv,v) end return rv end
-
 
 list_range=AddToModuleHelp{
     list_range=[==[--[[--
@@ -114,6 +113,17 @@ function(a,b,c)
     local rv={}
     for i=a,b,c do table.insert(rv,i) end
     return rv
+end
+
+
+__testcall__=function()
+    show(_M.list(_M.range(-10,10,.5)))
+    return 0
+end
+
+
+if module_name_dots=="main-call-without-args" or wds.bIsMain(table.pack(...),module_name) then
+    __testcall__()
 end
 
 

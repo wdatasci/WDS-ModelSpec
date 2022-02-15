@@ -1,0 +1,48 @@
+\ProvidesPackage{tech_report_slide}
+
+\newsavebox{\headingbox}
+
+\def\slideheadingstyle#1{#1}
+
+\def\slideheadingstyle#1{\vbox to 5in {{\hbox to \textwidth{{\strut \null \hbox to 1em {} \Large \bf \it {#1} \hfill \null\strut }}}
+                \rule{\textwidth}{3pt} \raise\baselineskip\hbox{\rule[-6pt]{\textwidth}{1pt} }}}
+
+\def\slideheadingstyle#1{\vbox to .5in {{\hbox to \textwidth{{\strut \null \hbox to 1em {} \Large \bf \it {#1} \hfill \null\strut }}}
+                \rule{\textwidth}{2pt} \raise\baselineskip\hbox{\rule[-.5pt]{\textwidth}{.75pt} }}}
+
+\def\@makeslidehead#1{
+        \thispagestyle{empty}
+        \clearpage
+        \savebox{\headingbox}{
+        %\hspace{-9pt}\raisebox{108pt}{
+        \hspace{-9pt}{
+                \begin{minipage}[t]{\textwidth}     
+                {\slideheadingstyle{#1} }\strut
+                 \end{minipage}                     
+        }}
+        \hbox to\textwidth{\hfill\usebox{\headingbox}\hfill}
+        %\addtolength\hoffset{5pt}
+        %\nointerlineskip
+        \@afterheading
+        %\vspace*{-\parskip}
+        %\addvspace{\baselineskip}
+        }
+
+
+
+\def\slidetop{
+    \clearpage
+    \@afterindenttrue 
+    \secdef\@slidetop\@schapter} 
+
+\def\@slidetop[#1]#2{
+    \if@twocolumn
+        \@topnewpage[\@makeslidehead{#2}] 
+    \else 
+        \@makeslidehead{#2}
+    \fi
+    } 
+
+\endinput
+
+

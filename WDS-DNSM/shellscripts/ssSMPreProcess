@@ -1,0 +1,18 @@
+#!/usr/bin/tcsh -fx
+
+set DNSMVersion=DNSMV3
+
+
+if ( ${#} == 1 || $2 == 1 ) then
+
+xsltproc xsl/DNSMMatrix2HeaderSubset.xsl ${1}.xmlcomdir/PVTDataExportMap >! ${1}.xmlcomdir/PVTDataExportMapHeader
+xsltproc xsl/DNSMMatrix2csv.xsl ${1}.xmlcomdir/PVTDataExportMap >! ${1}.xmlcomdir/PVTDataExportMapGuts.csv
+
+endif
+
+if ( ${#} == 1 || $2 == 2 ) then
+
+xsltproc xsl/DNSMMatrix2HeaderSubset.xsl ${1}.xmlcomdir/Sg1InputsExportMap >! ${1}.xmlcomdir/Sg1InputsExportMapHeader
+xsltproc xsl/DNSMMatrix2csv.xsl ${1}.xmlcomdir/Sg1InputsExportMap >! ${1}.xmlcomdir/Sg1InputsExportMapGuts.csv
+
+endif

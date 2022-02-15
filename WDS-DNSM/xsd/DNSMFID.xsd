@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="IBM437"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="DNSMFID">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="NumberOfStates" type="xs:int" />
+        <xs:element name="StateLabels">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" name="StateLabel">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                      <xs:attribute name="Position" type="xs:int" use="required" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Betas">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Number" type="xs:int" />
+              <xs:element maxOccurs="unbounded" name="Beta">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Label" type="xs:string" />
+                    <xs:element name="I" type="xs:int" />
+                    <xs:element name="J" type="xs:int" />
+                    <xs:element name="Value" type="xs:double" />
+                    <xs:element name="FlowRef" type="xs:int" />
+                    <xs:element name="OpZeroOrOne" type="xs:int" />
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="FunctionalInputs">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Number" type="xs:int" />
+              <xs:element maxOccurs="unbounded" name="FunctionInput">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Label" type="xs:string" />
+                    <xs:element name="I" type="xs:int" />
+                    <xs:element name="J" type="xs:int" />
+                    <xs:element name="Value" type="xs:double" />
+                    <xs:element name="FlowRef" type="xs:int" />
+                    <xs:element name="OpZeroOrOne" type="xs:int" />
+                    <xs:element name="BaseSetInd" type="xs:int" />
+                    <xs:element name="Script" type="xs:string" />
+                    <xs:element name="InputReference" type="xs:int" />
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="RedundantFunctionalInputs">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Number" type="xs:int" />
+              <xs:element maxOccurs="unbounded" name="FunctionInput">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Label" type="xs:string" />
+                    <xs:element name="I" type="xs:int" />
+                    <xs:element name="J" type="xs:int" />
+                    <xs:element name="Value" type="xs:double" />
+                    <xs:element name="FlowRef" type="xs:int" />
+                    <xs:element name="OpZeroOrOne" type="xs:int" />
+                    <xs:element name="BaseSetInd" type="xs:int" />
+                    <xs:element name="Script" type="xs:string" />
+                    <xs:element name="InputReference" type="xs:int" />
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="Name" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

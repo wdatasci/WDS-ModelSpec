@@ -1,0 +1,284 @@
+#!/bin/tcsh 
+#-v
+
+#snippet from http://tipsarea.com/2013/04/11/how-to-get-the-script-path-name-in-cshtcsh/
+set script_fn=`readlink -f $0`
+set script_dir=`dirname $script_fn`
+setenv TEXINPUTS "${script_dir}/../../WDS-Doc/Styles/Latex:${TEXINPUTS}"
+#printenv TEXINPUTS
+
+
+set sq="'"
+set dq='"'
+set ds='$'
+set opt_strings=STRINGS
+set opt_yes=YES
+set opt_no=NO
+
+set USAGE1="$0"
+set USAGE2="A wrapper for lualatex that also helps maintain the intermediate files in a build-like manner"
+set USAGE3=""
+
+set s="arg1_base"
+set s2="<<file>>[.tex]"
+set opt_arg1_base="UNSET"
+set opt_strings="${opt_strings},${s}"
+set USAGE1="${USAGE1} ${s2}"
+set USAGE3="${USAGE3}\n\n ${s2} : must be the first argument, except in the case of --help or -h "
+set USAGE3="${USAGE3}\n                the <<file>> name is used for the base name of intermediate files and directories"
+set USAGE3="${USAGE3}\n                Value: <<<${s}>>>"
+
+set s="help"
+set USAGE1="${USAGE1} [${s}|-h]"
+set opt_no="${opt_no},${s}"
+set USAGE3="${USAGE3}\n\n --${s}|-h : display the usage and/or help information which can reflect other options"
+set USAGE3="${USAGE3}\n                Value: <<<${s}>>>"
+
+set s="doublerun"
+set USAGE1="${USAGE1} [--${s}]"
+set opt_no="${opt_no},${s}"
+set USAGE3="${USAGE3}\n\n --${s} : perform the latex double-run required to resolve references such as for a TOC"
+set USAGE3="${USAGE3}\n                Value: <<<${s}>>>"
+
+set s="mvpdf"
+set USAGE1="${USAGE1} [--${s}]"
+set opt_yes="${opt_yes},${s}"
+set USAGE3="${USAGE3}\n\n --${s} : moves the final pdf file out of the build directory"
+set USAGE3="${USAGE3}\n                Value: <<<${s}>>>"
+
+set s="showpdf"
+set USAGE1="${USAGE1} [--${s}]"
+set opt_no="${opt_no},${s}"
+set USAGE3="${USAGE3}\n\n --${s} : launches an xpdf view of the final result"
+set USAGE3="${USAGE3}\n                Value: <<<${s}>>>"
+
+set s="clean"
+set USAGE1="${USAGE1} [--${s}]"
+set opt_no="${opt_no},${s}"
+set USAGE3="${USAGE3}\n\n --${s} : removes the intermediate build directories"
+set USAGE3="${USAGE3}\n                Value: <<<${s}>>>"
+
+set s="cleanquiet"
+set USAGE1="${USAGE1} [--${s}]"
+set opt_no="${opt_no},${s}"
+set USAGE3="${USAGE3}\n\n --${s} : performs the --clean without prompts"
+set USAGE3="${USAGE3}\n                Value: <<<${s}>>>"
+
+set s="cleanonly"
+set USAGE1="${USAGE1} [--${s}]"
+set opt_no="${opt_no},${s}"
+set USAGE3="${USAGE3}\n\n --${s} : performs the --cleanquiet without a build first"
+set USAGE3="${USAGE3}\n                Value: <<<${s}>>>"
+
+if ( $# == 0 ) then
+    echo "USAGE: ${USAGE1}"
+    echo "${USAGE2}"
+    echo ""
+    echo "Note: use --help option for greater detail"
+    exit 0
+endif
+
+set opt_arg1_base="${1:s-.tex--}"
+echo "file base = ${opt_arg1_base}"
+
+if ( "$1" != "-h" && "$1" != "--help" ) then
+    if ( "$1" == "${opt_arg1_base}" ) then
+        if ( -f "$1.tex" ) then
+        else
+            echo "first argument must be a .tex file or a "${1}.tex" must exist"
+            exit 1
+        endif
+    endif
+endif
+    
+
+#from the standard example, and yes, for tcsh, both lines are necessary.....
+
+foreach x ( ${opt_yes:as/,/ /} )
+    eval set opt_${x}=yes
+end
+
+foreach x ( ${opt_no:as/,/ /} )
+    eval set opt_${x}=no
+end
+
+set opt_yes_no="${opt_yes:s/YES,//},${opt_no:s/NO,//}"
+set opt_no_dash="${opt_yes_no:as/,/ /}"
+set opt_no_dash="no-${opt_no_dash:as/ /,no-/}"
+
+set temp=(`getopt -s tcsh -o h --long ${opt_yes_no},${opt_no_dash} -- $argv:q`)
+eval set argv=\($temp:q\)
+
+@ k = 0
+while (1)
+    @ k += 1
+    set x=$1:q
+    echo "processing ${x}"
+    switch ($x:q)
+    case -h:
+        set opt_help=yes
+        breaksw
+    case --help:
+    case --clean:
+    case --cleanquiet:
+    case --cleanonly:
+    case --doublerun:
+    case --mvpdf:
+    case --showpdf:
+        eval set opt_${x:s/--//}=yes
+        echo "using ${x} opt"
+        breaksw
+    case --no-clean:
+    case --no-cleanquiet:
+    case --no-cleanonly:
+    case --no-doublerun:
+    case --no-mvpdf:
+    case --no-showpdf:
+        eval set opt_${x:s/--no-//}=no
+        echo "using ${x} opt"
+        breaksw
+    case --:
+        echo "done processing getopt options"
+        break
+    default:
+        echo "options error"
+        exit 1
+    endsw
+    shift
+end
+
+set usual_suspects=toc,aux,out,log,idx,ilg,ind,gnuploterrors
+
+if ( ${opt_help} == yes ) then
+
+    set s="s/XXXX/XXXX/"
+
+    foreach x ( ${opt_strings:as/,/ /}  ${opt_yes:as/,/ /}  ${opt_no:as/,/ /} )
+        if ( $x != STRINGS && $x != YES && $x != NO ) then
+            eval set v="${ds}{opt_${x}}"
+            set s="${s};s/<<<${x}>>>/${v}/g"
+        endif
+    end
+
+    echo "sed command to evaluate: $s"
+
+    echo "USAGE: ${USAGE1}"
+    echo "${USAGE2}"
+    echo ""
+    echo "${USAGE3}" | sed -e "$s"
+
+cat << EOCAT
+    
+Additional notes:
+
+    Where possible, intermediate files will be placed in:
+        ${opt_arg1_base}.build
+    
+    and if using gnuplottex:
+        gnuplottex
+
+    The --clean or --cleanquiet options can be used to remove those locations and the usual suspects:
+
+         ${opt_arg1_base}.{toc,aux,out,log,idx,ilg,ind,gnuploterrors}
+
+    The --mvpdf options moves the final out of ${opt_arg1_base}.build before a cleaning operation.
+
+EOCAT
+    exit 0
+
+endif
+
+echo "remaing arguments $argv"
+
+if ( -d ${opt_arg1_base}.build ) then
+    echo "not creating a ${opt_arg1_base}.build directory"
+else
+    mkdir -p ${opt_arg1_base}.build/gnuplottex
+    chmod -R a+rwx ${opt_arg1_base}.build
+endif
+
+if ( -d gnuplottex ) then
+    echo "not creating a gnuplottex directory"
+else
+    mkdir -p gnuplottex
+    chmod a+rwx gnuplottex
+endif
+
+if ( $opt_cleanonly == no ) then
+
+
+    #lualatex -shell-escape --enable-write18 --output-directory=${opt_arg1_base}.build $*
+    
+    lualatex --shell-escape --enable-write18 $*
+    if ( $opt_doublerun == yes ) then
+    lualatex --shell-escape --enable-write18 $*
+    endif
+
+    if ( $opt_mvpdf == yes ) then
+        if ( -f ${opt_arg1_base}.build/${opt_arg1_base}.pdf ) then
+            mv ${opt_arg1_base}.build/${opt_arg1_base}.pdf .
+        endif
+    endif
+
+endif
+
+if ( $opt_showpdf == yes ) then
+    if ( $opt_mvpdf == yes ) then
+        if ( -f ${opt_arg1_base}.pdf ) then
+            xpdf ${opt_arg1_base}.pdf 
+        else
+            if ( -f ${opt_arg1_base}.build/${opt_arg1_base}.pdf ) then
+                xpdf ${opt_arg1_base}.build/${opt_arg1_base}.pdf 
+            endif
+        endif
+    endif
+endif
+
+
+
+if ( ${opt_cleanquiet} == yes || ${opt_cleanonly} == yes ) then
+    set cleanup=(${opt_arg1_base}.build gnuplottex ${opt_arg1_base}.{${usual_suspects}})
+    echo -n "remove all of ${cleanup}\n(y/n)?"
+    set response=$<
+    if ( "$response" == "y" ) then
+        foreach x ( $cleanup )
+            /bin/rm -rf $x
+        end
+    endif
+    exit 0
+endif
+
+if ( ${opt_clean} == yes ) then
+    if ( -f ${opt_arg1_base}.build/${opt_arg1_base}.pdf ) then
+        echo -n "mv ${opt_arg1_base}.pdf out of ${opt_arg1_base}.build (y/n)?"
+        set response=$<
+        if ( "$response" == "y" ) then
+            mv ${opt_arg1_base}.build/${opt_arg1_base}.pdf .
+        endif
+    endif
+    if ( -d ${opt_arg1_base}.build ) then
+        echo -n "remove ${opt_arg1_base}.build (y/n)?"
+        set response=$<
+        if ( "$response" == "y" ) then
+            /bin/rm -rf ${opt_arg1_base}.build
+        endif
+    endif
+    if ( -d gnuplottex ) then
+        echo -n "remove gnuplottex (y/n)?"
+        set response=$<
+        if ( "$response" == "y" ) then
+            /bin/rm -rf gnuplottex
+        endif
+    endif
+    set cleanup=(${opt_arg1_base}.build gnuplottex ${opt_arg1_base}.{${usual_suspects}})
+    foreach x ( $cleanup )
+        if ( -f $x ) then
+            /bin/rm -i $x
+        endif
+    end
+    exit 0
+endif
+
+
+
+

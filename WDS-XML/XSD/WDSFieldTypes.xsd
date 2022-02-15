@@ -1,0 +1,76 @@
+<?xml version='1.0'?>
+<!-- Copyright 2019, 2020, 2021, 2022, Wypasek Data Science, Inc. 
+    Author: Christian Wypasek (CJW)
+-->
+<xs:schema attributeFormDefault='unqualified' elementFormDefault='qualified' xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+
+    <xs:simpleType name='Nbr'>
+        <xs:union memberTypes='xs:decimal
+                               xs:integer
+                               xs:negativeInteger
+                               xs:nonNegativeInteger
+                               xs:positiveInteger
+                               xs:nonPositiveInteger
+                               xs:long
+                               xs:int
+                               xs:short
+                               xs:byte
+                               xs:unsignedLong
+                               xs:unsignedShort
+                               xs:unsignedInt
+                               xs:unsignedByte
+                               xs:float
+                               xs:double'/>
+    </xs:simpleType>
+
+
+    <xs:simpleType name='Lng'>
+        <xs:union memberTypes='
+                               xs:integer
+                               xs:negativeInteger
+                               xs:nonNegativeInteger
+                               xs:positiveInteger
+                               xs:nonPositiveInteger
+                               xs:long
+                               xs:int
+                               xs:short
+                               xs:byte
+                               xs:unsignedLong
+                               xs:unsignedShort
+                               xs:unsignedInt
+                               xs:unsignedByte
+                               '/>
+    </xs:simpleType>
+
+
+    <xs:simpleType name='Dbl'>
+        <xs:union memberTypes='xs:decimal
+                               xs:long
+                               xs:int
+                               xs:short
+                               xs:byte
+                               xs:unsignedLong
+                               xs:unsignedShort
+                               xs:unsignedInt
+                               xs:unsignedByte
+                               xs:float
+                               xs:double'/>
+    </xs:simpleType>
+
+    <xs:simpleType name='LODbl'>
+        <xs:list itemType='xs:double'/>
+    </xs:simpleType>
+
+    <xs:simpleType name='Str'>
+        <xs:union memberTypes='xs:token
+                               xs:normalizedString
+                               xs:string
+                        '/>
+    </xs:simpleType>
+
+    <xs:simpleType name='LOStr'>
+        <xs:list itemType='xs:token'/>
+    </xs:simpleType>
+
+
+</xs:schema>

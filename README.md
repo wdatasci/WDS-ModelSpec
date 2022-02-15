@@ -1,6 +1,10 @@
 # UNDER CONSTRUCTION
 Supporting libraries are added periodically.
 
+# Notes through 2022-02:
+The documentation for the model specification and style files have been added in WDS-XLM.
+
+
 # Notes on updates through 2021-08:
 In addition to general updates:
 <ul>
@@ -45,9 +49,8 @@ in almost any language or PMML.
 
 # Specific subdirectory notes (under construction, current directions/targets)
 <ul>
-    <li>WDS-XSD: the WDS-ModelSpec schema and documentation including:</li>
+    <li>WDS-Doc: the WDSModelSpec documentation including:</li>
                 <ul>
-                    <li>A precise XML Schema (XSD)</li>
                     <li>A concise doc covering:</li>
                         <ul>
                             <li>Naming Conventions</li>
@@ -56,10 +59,26 @@ in almost any language or PMML.
                             <li>Implementation objectives</li>
                         </ul>
                     <li>An extended documentation with discussion of historical development directions and commentary</li>
-                    <li>Core examples</li>
                 </ul>
-    <li>WDS-PMML: transformation utilities between WDS-ModelSpec and PMML</li>
-    <li>Prototypes: for use or for teaching purposes, a collection of process meta-models</li>
+    <li>WDS-General:</li>
+    <ul>
+        <li>Prototypes: for use or for teaching purposes, a collection of process meta-models</li>
+        <li>util: a collection of helper scripts</li>
+    </ul>
+    <li>WDS-XSD: the WDS-ModelSpec schema and transformations:</li>
+                <ul>
+                    <li>XSD-Source-Mapping-Example.xlsm, an example using Excel as a gui to export proper XML formats.</li>
+                    <li>XSD</li>
+                        <ul>
+                            <li>A precise XML Schema (upcoming)</li>
+                            <li>States and Stages Schema</li>
+                            <li>Stocks and Flows Schema</li>
+                            <li>Generic Parameterizable Matrix Schema</li>
+                        </ul>
+                    <li>XSL (upcoming)</li>
+                    <li>WDS-PMML: transformation utilities between WDS-ModelSpec and PMML (upcoming)</li>
+                </ul>
+    <li>WDS-DNSM: an archive of old dynamic systems model work</li>
 </ul>
 
 

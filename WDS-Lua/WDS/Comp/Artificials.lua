@@ -49,7 +49,7 @@ local mat=require("WDS.Comp.Matrix")
 local pesc=require("WDS.Util.python_esc")
 
 -- swapping _ENV/_G to restrict everything to this module, but the
--- usual suspects will need to be accessed through _M_G
+-- usual suspects will need to be accessed through _G
 
 local _M={}
 local _G=_G
@@ -185,41 +185,41 @@ tVariableMatter=wds.AddToModuleHelp{
         print=function(self,title)
 
             if title then
-                _M_G.print(title)
+                _G.print(title)
             end
 
-            if self.Name and #self.Name>0 then _M_G.print("   Name: "..self.Name) end
-            if self.Handle and #self.Handle>0 then _M_G.print("   Handle: "..self.Handle) end
-            if self.ArtBaseName and #self.ArtBaseName>0 then _M_G.print("   ArtBaseName: "..self.ArtBaseName) end
-            if self.CleanLimits and self.CleanLimits~=NULL then _M_G.print("   CleanLimits: "..wds.show(self.CleanLimits,2)) end
-            if self.bUseCLLeft then _M_G.print("    bUseCLLeft: "..self.bUseCLLeft,"",2) end
-            if self.bUseCLRight then _M_G.print("    bUseCLRight: "..self.bUseCLRight,"",2) end
+            if self.Name and #self.Name>0 then _G.print("   Name: "..self.Name) end
+            if self.Handle and #self.Handle>0 then _G.print("   Handle: "..self.Handle) end
+            if self.ArtBaseName and #self.ArtBaseName>0 then _G.print("   ArtBaseName: "..self.ArtBaseName) end
+            if self.CleanLimits and self.CleanLimits~=NULL then _G.print("   CleanLimits: "..wds.show(self.CleanLimits,{},2)) end
+            if self.bUseCLLeft then _G.print("    bUseCLLeft: "..self.bUseCLLeft,"",2) end
+            if self.bUseCLRight then _G.print("    bUseCLRight: "..self.bUseCLRight,"",2) end
             if self.CritVals and self.CritVals~=NULL then self.CritVals:print("   CritVals: ","",2) end
-            _M_G.print("    nCritVals: "..self.nCritVals)
-            _M_G.print("    nCritValRows: "..self.nCritValRows)
-            _M_G.print("    nArtVars: "..self.nArtVars)
-            _M_G.print("    iArtVar_First: "..self.iArtVar_First)
-            _M_G.print("    iArtVar_Last: "..self.iArtVar_Last)
-            if self.ArtVarLabels and self.ArtVarLabels~=NULL then _M_G.print("   ArtVarLabels: "..wds.show(self.ArtVarLabels,2)) end
+            _G.print("    nCritVals: "..self.nCritVals)
+            _G.print("    nCritValRows: "..self.nCritValRows)
+            _G.print("    nArtVars: "..self.nArtVars)
+            _G.print("    iArtVar_First: "..self.iArtVar_First)
+            _G.print("    iArtVar_Last: "..self.iArtVar_Last)
+            if self.ArtVarLabels and self.ArtVarLabels~=NULL then _G.print("   ArtVarLabels: "..wds.show(self.ArtVarLabels,2)) end
             if self.CoefVals and self.CoefVals~=NULL then self.CoefVals:print("   CoefVals: ","",2) end
 
-            if self.__classname__ and #self.__classname__>0 then _M_G.print("   __classname__: "..self.__classname__) end
+            if self.__classname__ and #self.__classname__>0 then _G.print("   __classname__: "..self.__classname__) end
 
         end
     })
 
 -- fVarArgs is a local helper function to handle positional or optional processing.
 local fVarArgs=function(positional_order,...)
-        local args=_M_G.table.pack(...)
-        --_M_G.print("positional_order=",wds.show(positional_order))
+        local args=_G.table.pack(...)
+        --_G.print("positional_order=",wds.show(positional_order))
 
         --first, is ... already 'packed', if so, there is only one argument, it 
         --has a count, and it does not have a class
-        if #args==1 and _M_G.type(args[1])=="table" and args[1].__classname__==nil and args[1].__class__==nil then
+        if #args==1 and _G.type(args[1])=="table" and args[1].__classname__==nil and args[1].__class__==nil then
             args=args[1]
         end
-        --_M_G.print("args=",wds.show(args))
-        --_M_G.print("args=",wds.show(args,2))
+        --_G.print("args=",wds.show(args))
+        --_G.print("args=",wds.show(args,2))
         local n=#args
         if n==0 then -- nothing to take as positional
             return args
@@ -228,19 +228,19 @@ local fVarArgs=function(positional_order,...)
         local args_i={}
         if n>0 then
             args_i=pesc.list(pesc.range(1,n))
-            for _,i in _M_G.pairs(args_i) do
+            for _,i in _G.pairs(args_i) do
                 if positional_order[i] and args[positional_order[i]]==nil then
                     rv[positional_order[i]]=args[i]
                 end
             end
         end
         -- take any other named arguments
-        for k,v in _M_G.pairs(args) do
+        for k,v in _G.pairs(args) do
             if args_i[k]==nil then
                 rv[k]=v
             end
         end
-        --_M_G.print("rv=",wds.show(rv,2))
+        --_G.print("rv=",wds.show(rv,2))
         return rv
     end
 
@@ -255,7 +255,7 @@ fVariableMatter=AddToModuleHelp{
 -- @function fVariableMatter
 } ..  function(...)
         local args=fVarArgs(fVariableMatter_Args,...)
-        --_M_G.print("args=",wds.show(args,2))
+        --_G.print("args=",wds.show(args,2))
         local Treatment=args.Treatment
         local CleanLimitLeftVal=args.CleanLimitLeftVal
         local CleanLimitRightVal=args.CleanLimitRightVal
@@ -264,7 +264,7 @@ fVariableMatter=AddToModuleHelp{
             CleanLimitLeftVal=CleanLimitLeftVal or CleanLimits[1]
             CleanLimitRightVal=CleanLimitRightVal or CleanLimits[2]
         end
-        if CleanLimitLeftVal and _M_G.type(CleanLimitLeftVal)=="table" and #CleanLimitLeftVal==2 then
+        if CleanLimitLeftVal and _G.type(CleanLimitLeftVal)=="table" and #CleanLimitLeftVal==2 then
             CleanLimitRightval=CleanLimitRightVal or CleanLimitLeftVal[2]
             CleanLimitLeftVal=CleanLimits[1]
         end
@@ -275,14 +275,14 @@ fVariableMatter=AddToModuleHelp{
 
         rv.Treatment=eTreatment(Treatment)
 
-        local tCritVals=_M_G.type(args.CriticalValues)
+        local tCritVals=_G.type(args.CriticalValues)
         if not(wds.bIn(rv.Treatment, eTreatment.Categorical, eTreatment.CategoricalNumeric)) then
             if tCritVals=="table" then
                 rv.CritVals=mat.dMatrix_WrapOrRef(args.CriticalValues,{SingleRow=true})
             elseif tCritVals=="string" then
                 rv.CritVals=mat.dMatrix_WrapOrRef(wds.string_split(args.CriticalValues," ",true,true),{SingleRow=true})
                 for i=1,#rv.CritVals.data do
-                   rv.CritVals.data[i]=_M_G.tonumber(rv.CritVals.data[i])
+                   rv.CritVals.data[i]=_G.tonumber(rv.CritVals.data[i])
                 end
             elseif tCritVals=="number" then
                 rv.CritVals=mat.dMatrix_WrapOrRef({args.CriticalValues},{SingleRow=true})
@@ -293,7 +293,7 @@ fVariableMatter=AddToModuleHelp{
             elseif tCritVals=="string" then
                 rv.CritVals=mat.dMatrix_WrapOrRef(wds.string_split(args.CriticalValues," ",true,true),{SingleRow=true})
                 for i=1,#rv.CritVals.data do
-                    if _M_G.string.find(rv.CritVals.data[i],"|") then
+                    if _G.string.find(rv.CritVals.data[i],"|") then
                         rv.CritVals.data[i]=mat.dMatrix_WrapOrRef(wds.string_split(rv.CritVals.data[i],"|",true,true))
                     end
                 end
@@ -363,32 +363,32 @@ fVariableMatter=AddToModuleHelp{
             rv.iArtVar_First = 1
             rv.iArtVar_Last=1
         else
-            _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Unrecognized Treatment!")
+            _G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Unrecognized Treatment!")
         end
 
         if (rv.Treatment == eTreatment.Hats or rv.Treatment == eTreatment.iHats) and rv.nCritVals == 1 then
-            _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
+            _G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
         elseif (rv.Treatment == eTreatment.BSplineOrder2) and rv.nCritVals <= 3 then
-            _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
+            _G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
         elseif (rv.Treatment == eTreatment.BSplineOrder3) and rv.nCritVals <= 5 then
-            _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
+            _G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
         elseif (rv.Treatment == eTreatment.DiscreteLC or rv.Treatment == eTreatment.DiscreteRC or rv.Treatment == eTreatment.Categorical or rv.Treatment == eTreatment.CategoricalNumeric)
             and rv.nCritVals == 0 then
-            _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
+            _G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
         end
 
         if not(wds.bIn(rv.Treatment, eTreatment.None, eTreatment.Constant, eTreatment.Categorical, eTreatment.CategoricalNumeric)) then
             for i=2, rv.nCritVals do
                 if rv.CritVals{1,i} <= rv.CritVals{1,i-1} then
-                    _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
+                    _G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Knots")
                 end --if
             end -- i
         end --if
 
         if args.CoefficientValues and args.CoefficientsValues~=NULL then
-            if mat.isMatrix(args.CoefficientValues) then
+            if mat.bIsMatrix(args.CoefficientValues) then
                 if args.CoefficientValues.n_cols~=rv.nArtVars then
-                    _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Coefficients")
+                    _G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Coefficients")
                 end
                 rv.CoefVals=args.CoefficientValues
             elseif type(args.CoefficientValues)=="table" and ( #args.CoefficientValues % rv.nArtVars == 0 ) then
@@ -396,7 +396,7 @@ fVariableMatter=AddToModuleHelp{
             elseif type(args.CoefficientValues)=="double" and #args.CoefficientValues==1 then
                 rv.CoefVals=mat.dMatrix_WrapOrRef(args.CoefficientValues,{n_rows=1,n_cols=1})
             else
-                    _M_G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Coefficients")
+                    _G.error("Error, Number:="..(WDSContextID + 1)..", "..WDSModuleName..", Invalid Coefficients")
             end
             rv.nScores=args.CoefficientValues.n_rows
         end
@@ -444,7 +444,7 @@ fArtificialsLabels=wds.AddToModuleHelp{
         suffix_sep=args.Separator or ""
         local rv={}
         for i=varm.iArtVar_First,varm.iArtVar_Last do
-            _M_G.table.insert(rv,VariableBaseName..suffix_sep.._M_G.tostring(i))
+            _G.table.insert(rv,VariableBaseName..suffix_sep.._G.tostring(i))
         end
         return rv
     end
@@ -480,7 +480,7 @@ fArtificials=AddToModuleHelp{
             CVs=dMatrix(CVs)
             for i=1,CVs.n_rows do
                 for j=1,CVs.n_cols do
-                    if _M_G.type(CVs{i,j})=="table" then
+                    if _G.type(CVs{i,j})=="table" then
                         CVs[{i,j}]=dMatrix(CVs{i,j})
                     end
                 end
@@ -538,22 +538,22 @@ fArtificials=AddToModuleHelp{
         elseif wds.bIn(varm.Treatment, eTreatment.Categorical, eTreatment.CategoricalNumeric) then
 
             found = false
-            if mat.isNULLOrError(tempval) then
+            if mat.bIsNULLOrError(tempval) then
                 found = true
                 i = 0
             else
                 for _i = 1, varm.nCritVals do
                     for j = 1, varm.nCritValRows do
-                        if wds.isEmpty(CVs{j, _i}) then
+                        if wds.bIsEmpty(CVs{j, _i}) then
                             break
                         end
                         --Note: CJW, this is not efficient, but in case CVs{j, _i} 
                         --is not expanded into rows.........
-                        if mat.isMatrix(CVs{j, _i}) then
+                        if mat.bIsMatrix(CVs{j, _i}) then
                             local CVsji=CVs{j, _i}
                             for k=1,#CVsji.data do
                                 if varm.Treatment==eTreatment.CategoricalNumeric then
-                                    if _M_G.math.abs(tempval-CVs.data[k])<0.000001 then
+                                    if _G.math.abs(tempval-CVs.data[k])<0.000001 then
                                         i=_i
                                         found = true
                                         break
@@ -572,7 +572,7 @@ fArtificials=AddToModuleHelp{
                             end
                         else
                             if varm.Treatment==eTreatment.CategoricalNumeric then
-                                if _M_G.math.abs(tempval-CVs{j, _i})<0.000001 then
+                                if _G.math.abs(tempval-CVs{j, _i})<0.000001 then
                                     i=_i
                                     found = true
                                     break
@@ -601,7 +601,7 @@ fArtificials=AddToModuleHelp{
             rc[{r, ia}] = 1
 
         else
-            bIsMissing = not mat.isNumeric(tempval)
+            bIsMissing = not mat.bIsNumeric(tempval)
             if not bIsMissing and varm.bUseCLLeft and not ( NULL==CleanLimitLeftVal ) then
                 bIsMissing = tempval < CleanLimitLeftVal
             end
@@ -955,7 +955,7 @@ fArtificialsScored=AddToModuleHelp{
             CVs=dMatrix(CVs)
             for i=1,CVs.n_rows do
                 for j=1,CVs.n_cols do
-                    if _M_G.type(CVs{i,j})=="table" then
+                    if _G.type(CVs{i,j})=="table" then
                         CVs[{i,j}]=dMatrix(CVs{i,j})
                     end
                 end
@@ -1018,22 +1018,22 @@ fArtificialsScored=AddToModuleHelp{
             elseif wds.bIn(varm.Treatment, eTreatment.Categorical, eTreatment.CategoricalNumeric) then
 
                 found = false
-                if mat.isNULLOrError(tempval) then
+                if mat.bIsNULLOrError(tempval) then
                     found = true
                     i = 0
                 else
                     for _i = 1, varm.nCritVals do
                         for j = 1, varm.nCritValRows do
-                            if wds.isEmpty(CVs{j, _i}) then
+                            if wds.bIsEmpty(CVs{j, _i}) then
                                 break
                             end
                             --Note: CJW, this is not efficient, but in case CVs{j, _i} 
                             --is not expanded into rows.........
-                            if mat.isMatrix(CVs{j, _i}) then
+                            if mat.bIsMatrix(CVs{j, _i}) then
                                 local CVsji=CVs{j, _i}
                                 for k=1,#CVsji.data do
                                     if varm.Treatment==eTreatment.CategoricalNumeric then
-                                        if _M_G.math.abs(tempval-CVs.data[k])<0.000001 then
+                                        if _G.math.abs(tempval-CVs.data[k])<0.000001 then
                                             i=_i
                                             found = true
                                             break
@@ -1052,7 +1052,7 @@ fArtificialsScored=AddToModuleHelp{
                                 end
                             else
                                 if varm.Treatment==eTreatment.CategoricalNumeric then
-                                    if _M_G.math.abs(tempval-CVs{j, _i})<0.000001 then
+                                    if _G.math.abs(tempval-CVs{j, _i})<0.000001 then
                                         i=_i
                                         found = true
                                         break
@@ -1083,7 +1083,7 @@ fArtificialsScored=AddToModuleHelp{
                 end --k
 
             else
-                bIsMissing = not mat.isNumeric(tempval)
+                bIsMissing = not mat.bIsNumeric(tempval)
                 if not bIsMissing and varm.bUseCLLeft and not ( NULL==CleanLimitLeftVal ) then
                     bIsMissing = tempval < CleanLimitLeftVal
                 end

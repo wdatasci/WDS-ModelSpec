@@ -1,0 +1,14 @@
+#!/bin/tcsh
+
+if ( $# == 0 ) then
+    echo "$0, a simple vimdiff helper"
+    echo "USAGE $0  <path>  <basename> "
+    echo "  launches vimdiff <basename>.* <path>/<basename>.* "
+    exit 0
+endif
+
+set basename=`echo "$2" | sed -e 's/\..\+$//'`
+
+vimdiff ${basename}.* ${1}/${basename}.*
+
+

@@ -1,0 +1,659 @@
+\documentclass[10pt]{article}
+
+\usepackage[commentary,index]{WDSTechnical}
+\def\subfolder{\jobname.build/}
+
+\usepackage{cancel}
+
+\setlength\mypaperwidth{8.5in}
+\setlength\paperwidth{\mypaperwidth}
+\setlength\mypaperheight{11in}
+\setlength\paperheight{\mypaperheight}
+\setlength\hoffset{-72pt}
+\setlength\voffset{-72pt}
+
+\setlength\mytextwidth{7in}
+\setlength\textwidth{\mytextwidth}
+\setlength\leftmargin{54pt}
+\setlength\oddsidemargin{54pt}
+\setlength\evensidemargin{54pt}
+
+\setlength\mytextheight{9.5in}
+\setlength\textheight{\mytextheight}
+\setlength\topmargin{36pt}
+\setlength\headheight{12pt}
+\setlength\headsep{24pt}
+\setlength\marginparsep{0pt}
+\setlength\marginparwidth{0pt}
+\setlength\marginparpush{0pt}
+
+\begin{document}
+
+\def\thistitle{Thoughts on the concurrent fitting/combining of default and prepayment and matrix model fitting}
+
+\def\thissubtitle{Documentation}
+\def\othersubtitle{}
+
+\def\thisversion{0.0.1}
+%\def\thisfirm{NA}
+\def\thisdate{NA}
+\def\thiscopyright{Copyright 2019-2022}
+\def\thisauthor{Christian Wypasek}
+
+\def\thisabstract{These are some really old thoughts on fitting competing risk models. I had made several significant
+improvements to the concepts including: A simple technique for tricking non-competing risk fitting software (like SAS) into fitting
+competing risks, the use of progressive conal ordering for robustness, and a baseline fitting method based on martingale residuals.  Details 
+will be in WDS-ModelSpec docs.}
+\title{\thistitle}
+\date{\thisdate}
+\author{\thisauthor}
+
+\DocumentTitlePage{\thistitle}{\thissubtitle}{Version \thisversion }{}{\thiscopyright }{\thisauthor }{\thisabstract }
+
+
+\section{Current Techniques}
+
+%The following graph is only for purposes of discussion and does not represent real data:
+
+%\epsfxsize 4in 
+%\epsfysize 3in 
+%\epsfbox{test.agr.eps}
+
+Obviously, in order to understand cash flow, both prepayment and default need to be well understood.
+Whereas default is (hopefully) a small proportion of any overall pool with a small impact on prepayment, the prepayment rate 
+constantly changes the dynamic of default propensity of the surviving pool. The marginal effect of a late cycle default 
+on default timing estimates becomes inflated. In the prime world, this may potentially be due to non-informative censoring witnessed by evidence 
+that prepayment speed tends to be negatively correlated to default risk.  
+
+The techniques we have used or are considering have all 
+tried to adjust for this phenomenon and
+may be described as one of the following:
+\begin{enumerate}
+\item {\bf Mark then life (MTL)}\\
+	The intuition is that the ultimate default propensity exists prior to life.
+	In this scenario, to find $C^p(t)$, the cumulative 
+	prepayment probability, one must first find $C^d(\infty)$, the ultimate default probability, and then find $C^p(t)$ via the product of 
+	$1-C^d(\infty)$ and the 
+	conditional probability of prepayment by time $t$ given the loan will never go into default. 
+
+	The challenge remains the overestimation of the default rate and the solution technique is to treat prepayments as non-defaults 
+	throughout the study.
+
+\item {\bf Competing lives with fastest receiving the mark (a.k.a. the racing game)}
+
+	The intuition is that often the marginal default timing is inflated and similarly the prepayment timing may be slightly inflated.
+	Compensate these two effects by ``racing'' the two estimated distributions, i.e., Let $X$ be the time to default and let $Y$ be the time 
+	to prepayment and let $S^d(t)$ and $S^p(t)$ be their respective survival functions.  Then our estimate of $C^d(t)$ becomes:
+	$$C^d(t)=\prob{X \le t, X<Y}=\int_0^t-\condprob{X \le y}{Y=y}dS^p(y)+\prob{X \le t,Y > t},$$
+	which under the assumption of independence of $X$ and $Y$ (at least given the common covariate picture) becomes:
+	$$C^d(t)=\int_0^t-\prob{X \le y}dS^p(y)+(1-S^d(t))S^p(t).$$
+
+	The challenge remains the overestimation of the default rate and the solution technique is to allow this 
+	transformation of $S^d$ and $S^p$  to damp out the biasing of their estimates.  Even though there is a damping out of the biasing of $C^d(t)$ especially at
+	$t=\infty$ by 
+	correcting for prepayment, both prepay and default curves may be faster than intended. Furthermore, the effectiveness may depend on the relative speeds 
+	and $C^d(\infty)$.  
+
+	CJW--The more I know and the more I have seen through examples, the more I realize that there are still too many effects 
+	confounding the overall timing with this technique.  
+	At GE, this seemed intuitive and seemed to work, but through work with MTL and LTM I think we now know why there
+	are problems and how to correct them.
+
+\item {\bf Life then mark (LTM)}
+
+	The intuition is the loan has a ``productive life'' the end of which carries a mark of prepayment or default.  Consider the graph above and 
+	let $S(t)$ denote the total survival function and let $h(t), h^d(t), h^p(t)$ represent the hazard rates for the total survival, default and
+	prepayment respectively.  It follows that $S(t)$ satisfies the differential equation:
+	$$ {dS(t) \over dt}=-h(t)S(t)=-(h^d(t)+h^p(t))S(t).$$
+	Furthermore,
+	$$ {dC^d(t) \over dt}=h^d(t)S(t) \text{~and~} {dC^p(t) \over dt}=h^p(t)S(t).$$
+
+	Note that the estimation of $S(t)$ and $h(t)$ can be performed knowing that the censoring is truely non-informative.  Under some absolute 
+	continuity assumptions, let $\nu(t)={h^d(t) \over h^p(t)}$, the instantaneous odds of a default at time $t$.  The result becomes:
+
+	$$ {dC^d(t) \over dt}={\nu(t)\over 1+\nu(t)}h(t)S(t).$$
+
+	The derivative $\nu$ can be estimated via a separate but interesting (logistic) model for the odds of a default given that the non-productive time
+	occurs at time $t$.  Here, $t$ is treated as just another variable, but its inclusion redirects the exit patterns, i.e., early exits may have a higher 
+	default rate 
+	followed by a prepay exodus until burnout followed by steady state leaving rates. 
+
+	For conditional models as in the case where a loan has not gone to default or prepayment after time $t_1$, the differential equation can just be 
+	solved forward with $S(t_1)=1$.  This will also incorporate only the exit patterns which exist after time $t_1$.
+
+\end{enumerate}
+
+
+The above technique for fitting LTM is the ``fast'' way and easy to fit in SAS.  However, the estimation of $S(t)$ may be compounded 
+by the fact that it is a mixture of both default and prepayment timing distributions.  Any variables used to fit $S(t)$ are equally applied to both 
+parts of the mixture.  The ``long(er)'' process for fitting both the derivative and the total survival proceeds below.
+ 
+\section{First, Some Light Background Discussion}
+ 
+CJW-Please forgive the following fault: I tend to move rather freely between discrete time and continuous time.  Motivations tend to be in continuous time, 
+then applied discrete time with a subjectively small $\Delta t$.  This should not be much of a problem in a non-Brownian motion stochastic calculus.
+(Ok, I have found places like integrating out the baselines that need to be done in a discretized manner and not just rectangular on the theoretical, 
+otherwise the discussion still flows.)
+
+For a nicely behaved lifetime, $X$, with distribution function, $F$, and density, $f$, the hazard rate is defined as:
+$$h(t)={f(t)\over 1-F(t)}.$$
+$F$ can then be written:
+$$F(t)=1-e^{-\int_0^th(u)du}.$$
+Conditional survival distributions are taken as:
+$$\prob{X \le t | X > c}=1-e^{-\int_c^th(u)du}.$$
+And for small increments, $\Delta t$,
+$$\prob{X \le t+\Delta t | X>t} \approx h(t)\Delta t.$$
+ 
+In proportional hazards models, for a given covariate picture, $Z$, the forms for $h$ in continuous and discrete times are taken as:
+$$h(t)=g(\beta Z)h_0(t)   \hspace{1in} \text{ and }   \hspace{1in}  {h(t)\Delta t \over 1-h(t)\Delta t }={h_0(t)\Delta t \over 1-h_0(t)\Delta t }g(\beta Z).$$
+Here, $h_0$ is a baseline hazards rate that is not parameterized but can be estimated from the data, and $g$ is a function, usually $g(x)=e^x$ to 
+ensure non-negativity.
+Essentially, given a baseline rate, a proportional hazards is a small increment proportional odds model (notice the similarities to ${\nu(t)\over 1+\nu(t)}h(t)$ above).
+ 
+Fitting a proportional hazard rate model derives from Poisson processes.  Suppose a collection of Poisson processes, $N^1_t, \ldots, N^n_t$, with intensities,
+$\lambda_1, \ldots, \lambda_n$, is aggregated, i.e., $N_t=\sum_{i=1}^n N^i_t$.  Furthermore, suppose an event for $N$ occurs at time $t$, then the probability
+that the event occurs due to Poisson process $i$ is given by:
+$$\lambda_i \over \sum_{j=1}^n \lambda_j.$$
+Given a collection of covariate pictures, $Z_1, \ldots, Z_N$, and event times $T_1, \ldots, T_N$, (assume times are ordered, $T_i<T_j$ when $i<j$), 
+the likelihood for subject $i$ is:
+$$ { h_i(t) \over \sum_{j=i}^N h_j(t) } = {e^{\beta Z_i}h_0(t) \over \sum_{j=i}^N e^{\beta Z_j}h_0(t)}= {e^{\beta Z_i} \over \sum_{j=i}^N e^{\beta Z_j}},$$
+i.e., the baseline cancels out and the likelihood is the proportional factor over the sum of factors for all subjects able to fail at time $T_i$.
+In general, this is only considered a partial likelihood for the dynamics surrounding $h_0(t)$ are left un-specified, hence it is also a semi-parametric model.
+This interpretation also facilitates right censoring in which case the denominator above includes all subjects able to fail at time $T_i$, but only
+subjects that actually fail contribute to the overall likelihood of the model/dataset.
+ 
+The nature of the likelihood function is inherently linked to the Kaplan-Meier estimator, a variant of which is used to estimate $S_0(t)=e^{-\int_0^th(u)du}$. 
+Once $S_0(t)$ is estimated from the data, $S_i(t)=[S_0(t)]^{e^{\beta Z_i}}$.
+
+\section{Working Marked Point Processes into the Mix}
+
+\subsection{Fitting the long technique}
+
+Instead of playing a racing game with composite distributions as above in technique 2 which introduced scores of censoring/numerical/technique issues, let us 
+look to the loan level.  Instead of treating subject $i$ as a single counting process stream as described in the previous section, treat each subject as a 
+composite stream itself, i.e., $N^i_t=N^{i,d}_t+N^{i,p}_t$ (even though we generally care only about the first event epoch).
+Note that 
+this is \underline{exactly} a 3-state case of a semi-Markov renewal model (I need to check Cinlar for the exact name I'm looking for) which is like a continuous 
+time Markov chain except sojourn times are general distributions.  In other words, this type of procedure could be used for fitting timed-multinomials, 
+possibly conditional on a given state with the multinomial outcome as the transistion into another state.
+
+As before, assume that event times are ordered, $T_1, \ldots, T_N$, with a 1-1 mapping to subjects and let $M_1, \ldots, M_N$, be the respective marks which 
+may be $d, p$ or $e$ for default, prepayment or end of study respectively.  For our purposes end of study times are the only purposefull but truely non-informative 
+censoring times for we will assume there are no other stopping times.  As before censored observations do not have unique contributions to likelihood.  Let 
+$h^d_i(t)=e^{\beta^d Z_i}h^d_0(t), h^p_i(t)=e^{\beta^p Z_i}h^p_0(t)$ be the default and prepayment hazards for subject $i$.
+For a non-censored observation, $i$, the contribution to likelihood is:
+$$ {{1_{\{M_i=d\}}e^{\beta^d Z_i}h^d_0(T_i)+1_{\{M_i=p\}}e^{\beta^p Z_i}h^p_0(T_i) } 
+\over { \sum_{j=i}^N e^{\beta^d Z_j}h^d_0(T_i)+e^{\beta^p Z_j}h^p_0(T_i) } }.$$
+Here, $1_{\{A\}}$ is the indicator of a set, i.e., $1_{\{A\}}=1$ if $A$ occurs and 0 otherwise.
+
+Of course, it would be nice if we could {\em cancel} out the baseline hazards, but they are not shared in common any longer.  However, dividing numerator and 
+denominator by $h^d_0(T_i)$ yields a contribution to likelihood of :
+$$ {{1_{\{M_i=d\}}e^{\beta^d Z_i}+1_{\{M_i=p\}}e^{\beta^p Z_i}{h^p_0(T_i)\over h^d_0(T_i)} } 
+\over { \sum_{j=i}^N e^{\beta^d Z_j}+e^{\beta^p Z_j}{h^p_0(T_i)\over h^d_0(T_i)} } }.$$
+Here, ${h^p_0(t)\over h^d_0(t)}$ is the instanteous odds ratio of prepayments to defaults at time $t$ as before in LTM.  Now, take a standard logistic form of 
+${h^p_0(t)\over h^d_0(t)}={e^{\phi(t)}}$. Note that this ratio (actually a Radon-Nikodym derivative between the two measures and therefore induces some 
+absolute continuity assumptions between the default and prepayment support) can be found from the definition of $\nu$ in the LTM discussion above.  
+$\nu(t)$ can be estimated from a separate odds model of the form $\nu(t)=e^{\hat{\beta}Z_i+\phi(t)}$ fit on loans with non-censored observations.  The 
+term ${\hat{\beta}Z_i}$ becomes a controlling factor to find the average effect of time alone.  In a general sense, there may be terms of $Z_i$ which are 
+correlated to time and could be included above, but this would become more computationally intensive and we will not consider that immmediately. To see this 
+complexity, notice that we are dividing by $h^d_0(T_i)$ at the time of the numerators event, interactions with time would require the denominators covariates
+to be interacted with the numerators time for each $T_i$.  
+
+
+The process for fitting the marked point process becomes as follows:
+\begin{itemize}
+\item Fit the derivative effect, $\phi(t)$ via a logistic model, $\nu(t)=e^{\hat{\beta}Z_i+\phi(t)}$.
+
+\item Maximize the following likelihood function:
+$$\prod_{M_i \not = e} {{1_{\{M_i=d\}}e^{\beta^d Z_i}+1_{\{M_i=p\}}e^{\beta^p Z_i}e^{\phi(T_i)} }
+\over { \sum_{j=i}^N e^{\beta^d Z_j}+\left({\sum_{j=i}^N e^{\beta^p Z_j}}\right)e^{\phi(T_i)} } }. $$
+\end{itemize}
+
+Of course, it looks like $\hat{\beta}=\beta^p-\beta^d$, however, these sub-models can be entirely specified as to what is appropriate for prepayment or what is
+appropriate for default. Furthermore, these coefficients are fit in a non-informative censoring environment.
+
+
+\subsection{Estimating the baseline}
+
+Most references on baselines either give a formula or some glancing idea at how it was derived, but to understand its extension, it helps to see the 
+derivation. Even though it is commonly said that the baseline hazard rate is estimated empirically from the data, it is actually 
+a maximum likelihood estimate.
+Assume that the event times $T_1, \ldots, T_N$ are ordered as above, 
+but let us temporarily assume that there are no censored observations.  The baseline will be 
+estimated in a multiplicative manner, and let $\alpha_n$ be the factor:
+	$$\alpha_n={S_0(T_n)\over S_0(T_{n-1})}.$$
+It follows that $S(T_n)$ has the form:
+	$$S(T_n)={\left[{\prod_{1 \le k \le n} \alpha_k }\right]}^{e^{\beta Z_n}}.$$
+The probability mass function then has the form:
+	$$pmf_n=(1-\alpha_n^{e^{\beta Z_n}})\prod_{1 \le k < n} \alpha_k^{e^{\beta Z_n}}.$$
+Given $\beta$, the total likelihood of the dataset with parameters $\alpha_k$ is given by the product of corresponding terms of the above form, the log-likelihood is:
+	$$\log{\prod_{1 \le n \le N} pmf_n}=\sum_{1 \le n \le N} \log(1-\alpha_n^{e^{\beta Z_n}}) +
+	\sum_{1 \le n \le N}\sum_{1 \le k < n} e^{\beta Z_n}\log( \alpha_k ).$$
+
+To maximize this log-likelihood, let us look to the point where the derivatives of the above quantity with respect to each $\alpha_n$ equate to zero.  
+These derivatives are given by:
+
+$${\delta LL \over \delta \alpha_n}= {1\over 1-\alpha_n^{e^{\beta Z_n}}}\left[{-e^{\beta Z_n}\alpha_n^{e^{\beta Z_n}-1}}\right] +{1\over \alpha_n}
+\sum_{k > n} e^{\beta Z_k}.$$
+
+Equating to 0 for each $1 \le n \le N$, and solving for the term, $\alpha_n^{e^{\beta Z_n}}$, one obtains:
+$$\alpha_n^{e^{\beta Z_n}}={e^{-\beta Z_n}\sum_{k > n} e^{\beta Z_k} \over 1+ e^{-\beta Z_n}\sum_{k > n} e^{\beta Z_k}}.$$
+A quick gyration yields:
+$$\alpha_n={\left[{1-{e^{\beta Z_n}\over \sum_{ k \ge n} e^{\beta Z_k}}}\right]}^{e^{-\beta Z_n}}.$$
+This solution holds when each subject with an observed event as a unique event time. The equation is adapted in the case of ties and the technique is to 
+solve a system of equations.  If this is not easily observable, consider the following:  Suppose there is a multiplicity of events at time $n$, say $l_n$. 
+If every $Z_i$ with $t_i=t_n$ were identical, adding a factor of $l_n$ to the derivatives above, setting equal to 0 and solving would be elementary.  
+However, the summation of $\alpha_n^{e^{\beta Z_i}}$ terms complicates this.  
+
+Extending this concept to censoring is simple, only non-censored observations contribute a term to the likelihood.  Extending this to marked point
+processes follows exactly the same concept, if a loan prepays, its default stream is censored and only the prepayment term contributes to likelihood.
+There will also be switching from continuous to discrete time and back again to obtain the proceeding algorithm.  {\bf If one would want to save 
+oneself considerable grief, with these insights one could skip to the final answer of this section and understand the result.}  Otherwise,....
+
+In continuous time, the total survival function for subject $n$ is given by:
+$$S^n(t)=1-e^{-\int_0^t \left({e^{\beta^dZ_n}+e^{\beta^pZ_n}e^{\phi(u)}}\right)h_0(u)du}.$$
+For defaults, the cumulative distribution satisfies the following differential equation:
+$${dC^d(t)\over dt}=e^{\beta^dZ_n}h_0(t)S^n(t),$$
+and for prepayments:
+$${dC^p(t)\over dt}=e^{\beta^pZ_n}e^{\phi(t)}h_0(t)S^n(t),$$
+
+Given the mark of subject $n$, $M_n$, and taking the time at $t_n$, let $\Delta t_n=t_n-t_{n-1}$ and let us rewrite these two densities in a way amenable to the probability mass function above:
+\begin{align*}
+pmf_n&\approx \left[{1_{\{M_n=d\}}e^{\beta^dZ_n}+1_{\{M_n=p\}}e^{\beta^pZ_n}e^{\phi(t_n)}}\right]h_0(t_n)e^{-\int_{t_{n-1}}^{t_n} \left({e^{\beta^dZ_n}+e^{\beta^pZ_n}e^{\phi(u)}}\right)h_0(u)du}S^n(t_{n-1})\Delta t_n.
+\intertext{To make this equation a little less unwieldy, let us temporarily use the notation, 
+$a_n=e^{\beta^dZ_n}$, $b_n=e^{\beta^pZ_n}$, and $c(t)=e^{\phi(t)}$, rewriting the equation as,}
+pmf_n&\approx \left[{1_{\{M_n=d\}}a_n+1_{\{M_n=p\}}b_nc(t_n)}\right]h_0(t_n)e^{-\int_{t_{n-1}}^{t_n} \left({a_n+b_nc(t_n)}\right)h_0(u)du}S^n(t_{n-1})\Delta t_n.\\
+%
+\intertext{Taking $c(t)=t_n$ and $h_0(t)=h_0(t_n)$ over $(t_{n-1},t_n]$, and recalling that $\lambda\Delta t\approx 1-e^{-\lambda\Delta t}$ for
+an exponential,  simplifies the expression to}
+%
+pmf_n&\approx \left[{1_{\{M_n=d\}}a_n+1_{\{M_n=p\}}b_nc(t_n)}\right]h_0(t_n)e^{-\left({a_n+b_nc(t_n)}\right)h_0(t_n)\Delta t_n}S^n(t_{n-1})\Delta t_n.\\
+&\approx \Big[{1_{\{M_n=d\}}a_nh_0(t_n)\Delta t_ne^{-a_nh_0(t_n)\Delta t_n}e^{-b_nc(t_n)h_0(t_n)\Delta t_n}}\\
+&{\hspace{1in}+1_{\{M_n=p\}}b_nc(t_n)h_0(t_n)\Delta t_ne^{-b_nc(t_n)h_0(t_n)\Delta t_n}e^{-a_nh_0(t_n)\Delta t_n}}\Big]S^n(t_{n-1}).\\
+&\approx \Big[{1_{\{M_n=d\}}(1-e^{-a_nh_0(t_n)\Delta t_n})e^{-b_nc(t_n)h_0(t_n)\Delta t_n}}\\
+&{\hspace{1in}+1_{\{M_n=p\}}(1-e^{-b_nc(t_n)h_0(t_n)\Delta t_n})e^{-a_nh_0(t_n)\Delta t_n}}\Big]S^n(t_{n-1}).\\
+\intertext{Taking $\alpha_n=e^{-h_0(t_n)\Delta t_n}$, yields:}
+pmf_n&\approx \Big[{1_{\{M_n=d\}}(1-\alpha_n^{a_n})\alpha_n^{b_n} +1_{\{M_n=p\}}(1-\alpha_n^{b_nc(t_n)})\alpha_n^{a_n}}\Big]S^n(t_{n-1}).\\
+&\approx \Big[{1_{\{M_n=d\}}(1-\alpha_n^{a_n})\alpha_n^{b_n} +1_{\{M_n=p\}}(1-\alpha_n^{b_nc(t_n)})\alpha_n^{a_n}}\Big]
+\prod_{1 \le k < n} \alpha_n^{a_n+b_nc(t_n)}.
+\end{align*}
+
+Following the technique above for a vanilla baseline calculation, taking the derivative of the log-likelihood 
+yields:
+\begin{align*}
+{\delta LL \over \delta \alpha_n}~ =~  & 1_{\{M_n=d\}} \left[{{1\over 1-\alpha_n^{a_n}}(-a_n\alpha_n^{a_n-1})+{b_n\over \alpha_n} }\right] \\
+&+ 1_{\{M_n=p\}} \left[{ {1\over 1-\alpha_n^{b_nc(t_n)}}(-b_nc(t_n)\alpha^{b_nc(t_n)-1})+{a_n\over \alpha_n}}\right] \\
+&+{1\over \alpha_n}\sum_{k>n}(a_k+b_kc(t_n)).\\
+\intertext{It may take a moment of thought to convince oneself, but within the last summation for the $k^{th}$ term, 
+$c(t)$ must be evaluated at $t_n$.  Equating each partial derivative to zero and using a similar gyration as above, one obtains: }
+\alpha_n ~ = ~ & {\left[{1- {1_{\{M_n=d\}}a_n+1_{\{M_n=p\}}b_nc(t_n)\over \sum_{k \ge n} a_k+b_kc(t_n)}
+         }\right]}^{1\over 1_{\{M_n=d\}}a_n+1_{\{M_n=p\}}b_nc(t_n)}\\
+~ = ~ & {\left[{1- {1_{\{M_n=d\}}e^{\beta^dZ_n}+1_{\{M_n=p\}}e^{\beta^pZ_n}(t_n)\over \sum_{k \ge n} e^{\beta^dZ_k}+e^{\beta^pZ_k}e^{\phi(t_n)}}
+         }\right]}^{1\over 1_{\{M_n=d\}}e^{\beta^dZ_n}+1_{\{M_n=p\}}e^{\beta^pZ_n}e^{\phi(t_n)}}.
+\end{align*}
+In the case of tied event times, the system of equations generated by setting derivatives to 0 is solved.
+
+
+\section{Further extensions and equations for Newton-Raphson fitting}
+
+Once the format for two outcomes is established, extension to a greater number of outcomes is direct. 
+For example, if the mark set is $m_0, m_1, \ldots, m_l$, (with $m_0$ as the censored mark),
+the key to this extension is a family of Radon-Nikodym derivatives, $\phi_2(t), \ldots, \phi_l(t)$, 
+between the multiple hazard functions and one pre-specified reference outcome.  
+These could of course be fit using a common reference generalized logit model. The quanitities above of the form 
+$1_{\{M_n=d\}}e^{\beta^dZ_n}+1_{\{M_n=p\}}e^{\beta^pZ_n}e^{\phi(t_n)}$ would be replaced by
+$$1_{\{M_n=m_1\}}e^{\beta^1Z_n}+\sum_{k=2}^l1_{\{M_n=m_k\}}e^{\beta^kZ_n}e^{\phi_k(t_n)}.$$
+
+If we use a linear form for $\phi_k(t)=\phi_kt$, (now treating $\phi_k$ and $t$ as vector valued), the $\phi^k$ could also be fit simulataneously
+to the $\beta^k$.  
+This would alleviate some of the censored data issues around the preconditioning 
+model.  Let us consider the following form for the likelihood function:
+$$L=\prod_{M_i \not = e} {{  \sum_{k=1}^l1_{\{M_n=m_k\}}e^{\beta^kZ_i}e^{\phi_kT_{i,i}}\eta(i,i) }
+\over { \sum_{j=i}^N \left({ \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}} }\right)\eta(i,j) } }. $$
+
+In case you missed it, there is a $\phi_1$.  Let us generalize $T_j$ to  $T_{j,i}$, where $T_{j,i}$ represents a vector of time varying 
+covariates for observation $j$ taken at the time of observation $i$.  By appropriate selection of variables, one can use time varying data such 
+as incentive or home price index even for the reference class.  There is 
+an open question of identifiability. For time in the usual sense, this issue can be resolved by coding the problem in a fully flexible manner where one 
+can totally specify which variables get used for each model, i.e., time in the usual sense will not be specified for the reference class.
+Recall that one of the reasons that time is a special case is that we are using the Radon-Nikodym derivatives to eliminate {\em as much as is common 
+to all members of the cohort at that event epoch.}  Therefore any variable that has the same impact for all observations must be 
+treated as a time-like variable.  Observation unique or at least some-what unique variables can be specified as time-varying.
+
+
+Let us also consider the strata functional $\eta(i,j)$.  It will generally be assumed that $\eta(i,i)=1$ but it is included for completeness.
+In the usual sense of {\em strata} in a Cox model, $\eta$ will be either 0 or 1 depending on whether or not $i$ and $j$ are within the same strata.
+Let us generalize this to the sense of a potentially {\em soft} strata case where $\eta$ is a neighbor defining metric.  It can also be a catch all
+term for a weighting scheme.  Clearly bayesian notions will surround the parameter definitions within $\eta$ and the area will need some more 
+thought.
+
+
+Admittedly, it was first noticed during early modeling experiments, but there is a natural interaction between the concepts of the previous two
+paragraphs.  A hard strata structure is used whereever one works under the assumption of a fixed proportionality function for each covariate, regardless 
+of the baseline. However, the strata structure and functional, $\eta(i,j)$, are used to guarantee that only common baselines are canceled out. 
+It is therefore only natural to discover that if different baselines are reasonable for different cohorts, then the Radon-Nikodym derivatives,
+$\phi^k$, are also likely to change by strata.  In our generalized covariate, $T$, we may want to consider some elements treated as {\em time-like} variables 
+in the usual sense which probably need to be interacted with strata, or maybe not, in order to fit a fixed proportionality function across 
+cohorts.  Once again, a fully flexible piece of software for fitting will cure the problem.
+
+For model fitting, we will employ Newton's method, for a quick reminder:  Let our vector of parameters be $\vec{\beta}$.
+Since the likelihood $L$ is the product of probabilities (usually small) and 
+these often have a multiplicative or exponential form themselves, we will maximize the log-likelihood, $LL$, for an additive form.
+The candidate for a maximum must satisfy $\nabla LL(\vec{\beta})=0$.  If the Fisher information matrix, $-\expect{\nabla^2 LL(\vec{\beta})}$, is 
+nicely behaved, i.e., nothing like quasi-complete separation in logistic regression, the following algorithm should converge to a maximum: Given an initial
+estimate, $\vec{\beta}_0$, iterate until desired convergence through $\vec{\beta}_{n+1}=\vec{\beta}_n+\Delta\vec{\beta}_n$ where
+$$\nabla^2LL(\vec{\beta}_n)\Delta\vec{\beta}_n=-\nabla LL\vec{\beta}_n.$$
+For testing variable significance, we will use the inverse of the Fisher information matrix as a variance estimate of the parameter estimates,
+$$cov(\vec{\beta})=(-\nabla^2LL(\vec{\beta}))^{-1}.$$
+
+
+{\samepage 
+Thus, for a Newton-Raphson technique the following quantities are required:
+\begin{align*}
+{\delta LL \over \delta \beta_a^{k_1}}=&\sum_{M_i\not = m_0}\left[{ 1_{\{M_n=m_{k_1}\}}Z_{i,a} \eta(i,i)
+		-{\sum_{j=i}^NZ_{j,a}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)
+		\over \sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}} \eta(i,j)}}\right] \\
+{\delta LL \over \delta \phi_a^{k_1}}=&\sum_{M_i\not = m_0}\left[{ 1_{\{M_n=m_{k_1}\}}T_{i,i,a} \eta(i,i)
+		-{\sum_{j=i}^NT_{j,i,a}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)
+		\over \sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}}\eta(i,j) }}\right] \\
+{\delta^2 LL \over \delta \beta_a^{k_1} \delta \beta_b^{k_1}}=&\sum_{M_i\not = m_0}\left[{
+	-{\sum_{j=i}^NZ_{j,a}Z_{j,b}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)\over \sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}}\eta(i,j) }
+	+{\sum_{j=i}^NZ_{j,a}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\sum_{j=i}^NZ_{j,b}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)
+	\over \left({\sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}}\eta(i,j)}\right)^2 }
+	}\right] \\
+{\delta^2 LL \over \delta \beta_a^{k_1} \delta \phi_b^{k_1}}=&\sum_{M_i\not = m_0}\left[{
+	-{\sum_{j=i}^NZ_{j,a}T_{j,i,b}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)\over \sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}}\eta(i,j) }
+	+{\sum_{j=i}^NZ_{j,a}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)\sum_{j=i}^NT_{j,i,b}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)
+	\over \left({\sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}}\eta(i,j)}\right)^2 }
+	}\right] \\
+{\delta^2 LL \over \delta \phi_a^{k_1} \delta \phi_b^{k_1}}=&\sum_{M_i\not = m_0}\left[{
+	-{\sum_{j=i}^NT_{j,i,a}T_{j,i,b}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)\over \sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}}\eta(i,j) }
+	+{\sum_{j=i}^NT_{j,i,a}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)\sum_{j=i}^NT_{j,i,b}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)
+	\over \left({\sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}}\eta(i,j)}\right)^2 }
+	}\right] \\
+{\delta^2 LL \over \delta \beta_a^{k_1} \delta \beta_b^{k_2}}=&\sum_{M_i\not = m_0}\left[{
+	{\sum_{j=i}^NZ_{j,a}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)\sum_{j=i}^NZ_{j,b}e^{\beta^{k_2}Z_j}e^{\phi_{k_2}T_{j,i}}\eta(i,j)
+	\over \left({\sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}}\eta(i,j)}\right)^2 }
+	}\right] \\
+{\delta^2 LL \over \delta \beta_a^{k_1} \delta \phi_b^{k_2}}=&\sum_{M_i\not = m_0}\left[{
+	{\sum_{j=i}^NZ_{j,a}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)\sum_{j=i}^NT_{j,i,b}e^{\beta^{k_2}Z_j}e^{\phi_{k_2}T_{j,i}}\eta(i,j)
+	\over \left({\sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}}\eta(i,j)}\right)^2 }
+	}\right] \\
+{\delta^2 LL \over \delta \phi_a^{k_1} \delta \phi_b^{k_2}}=&\sum_{M_i\not = m_0}\left[{
+	{\sum_{j=i}^NT_{j,i,a}e^{\beta^{k_1}Z_j}e^{\phi_{k_1}T_{j,i}}\eta(i,j)\sum_{j=i}^NT_{j,i,b}e^{\beta^{k_2}Z_j}e^{\phi_{k_2}T_{j,i}}\eta(i,j)
+	\over \left({\sum_{j=i}^N \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}}\eta(i,j)}\right)^2 }
+	}\right] \\
+\end{align*}
+
+
+}
+
+Let's talk a minute about fitting the baseline, (this discussion should be above but we'll work that around later).
+In the case of no ties and regarding the $LL$ for the baseline and talking the product below only over non-censored observations, we have
+	$$LL=\log{\prod_{1 \le n \le N} pmf_n}=\sum_{1 \le n \le N} \left[{\sum_{k=1}^l1_{\{M_n=m_k\}}\log(1-\alpha_n^{e^{\beta^k Z_n}e^{\phi^kT_{n,n}}}) +
+	\sum_{1 \le j < n} \left({\sum_{k=1}^le^{\beta^k Z_n}e^{\phi^kT_{n,j}}}\right)\log( \alpha_j )}\right].$$
+Recall that the parameters, $\alpha_k$, are the factors of the baseline survival.
+For the two outcome case, we had the following derivative (in a slightly simpler form than presented previously):
+\begin{align*}
+{\delta LL \over \delta \alpha_n}~ =~  & {1\over \alpha_n}\left({- 1_{\{M_n=d\}} {a_n\over 1-\alpha_n^{a_n}} - 1_{\{M_n=p\}} {b_nc(t_n)\over 1-\alpha_n^{b_nc(t_n)}} 
++\sum_{k\ge n}(a_k+b_kc(t_n))}\right).\\
+\intertext{In the case of ties and applying the multinomial form above, we obtain,}
+{\delta LL \over \delta \alpha_n}~ =~  & {1\over \alpha_n}\left({- \sum_{\{t_g=t_n \cap M_g\not = m_0\}} \sum_{k=1}^l 1_{\{M_g=m_k\}}
+{e^{\beta^kZ_g}e^{\phi_kT_{g,n}}  \over 1-\alpha_n^{e^{\beta^kZ_g}e^{\phi_kT_{g,n}}}  }
++\sum_{t_g\ge t_n}\sum_{k=0}^l e^{\beta^kZ_g}e^{\phi_kT_{g,n}}}\right).\\
+\intertext{With some abuse of notation, the above assumes only one $\alpha_n$ for each unique time $t_n$.  The second derivative proceeds directly,}
+{\delta^2 LL \over \delta \alpha_n^2}~ =~  & {1\over \alpha_n}\left({ -{\delta LL\over \delta \alpha_n} - \sum_{\{t_g=t_n \cap M_g\not = m_0\}} \sum_{k=1}^l 
+1_{\{M_g=m_k\}}
+{\left({e^{\beta^kZ_g}e^{\phi_kT_{g,n}} }\right)^2 \alpha_n^{e^{\beta^kZ_g}e^{\phi_kT_{g,n}}-1} \over \left({1-\alpha_n^{e^{\beta^kZ_g}e^{\phi_kT_{g,n}}} }\right)^2  }
+}\right).
+\end{align*}
+It follows that the second derivative is negative whenever the first derivative is 0 and at least a local maximum criterion is satisfied.
+
+The other more pressing reason to consider the the first and second derivatives is a parameterization of the baseline.  Now, it is clear that anything where the 
+first derivative above is non-zero is sub-optimal, however, a parameterization cleans up the baseline and reduces overfitting noise.
+Since for each $\alpha_n$ there is a unique $t_n$, suppose that we have the form $\alpha_n=\theta(t_n)$ and that $\theta(t)$ has a parameter $\theta_p$. 
+Note that it is required that $0 \le \theta(t) \le 1$. We can then
+use the following equations for Newton-Raphson fitting:
+\begin{align*}
+{\delta LL \over \delta \theta_p}&=\sum_n {\delta LL \over \delta \alpha_n}{\delta \alpha_n\over \delta \theta_p}\\
+{\delta^2 LL \over \delta \theta_p^2}&=\sum_n \left[{{\delta LL^2 \over \delta \alpha_n^2}\left({\delta \alpha_n\over \delta \theta_p}\right)^2
++{\delta LL \over \delta \alpha_n}{\delta^2 \alpha_n\over \delta \theta_p^2}
+}\right]\\
+{\delta^2 LL \over \delta \theta_p \delta \theta_q}&=\sum_n \left[{{\delta LL^2 \over \delta \alpha_n^2}{\delta \alpha_n\over \delta \theta_p}
+{\delta \alpha_n\over \delta \theta_q}
++{\delta LL \over \delta \alpha_n}{\delta^2 \alpha_n\over \delta \theta_p \delta \theta_q}
+}\right]
+\end{align*}
+
+\section{References}
+\begin{enumerate}
+\item {\em Applied Survival Analysis, Regression Modeling of Time to Event Data}, David W. Hosmer, Jr. and Stanly Lemeshow, Wiley Series in Probability and Statistics, 1999.
+
+\item Cinlar
+\end{enumerate}
+
+
+
+\section{Discrete-time parameterized geometric matrix models}
+
+Here we are using the term discrete-time parameterized geometric matrix models to describe an entire family models that can
+be constructed via state-wise conditioning methods. Sometimes directly, sometimes indirectly, this family actually encompasses:
+\begin{itemize}
+\item Ordinary (binary) logistic regression
+\item Multinomial logistic regression
+\item DMMs, or more appropriately named discrete time Markov chains (DTMCs, usually stationary)
+\item Net-flow models (under-determined or partially hidden DTMCs)
+\item DDMMs, or non-stationary DTMCs
+\item Discrete-time proportional hazards with competing risks via a geometric, full likelihood construction
+\end{itemize}
+
+For this discussion of this type of model, let us first start with the form of the dataset.  This will motivate the discussion 
+of the form of the model and the likelihood construction.  The likelihood is motivated by logistic regression and we will review that case 
+briefly.  The form of the likelihood is very natural and the maximum likelihood estimates with Fisher information by-products
+can be found via a Newton-Raephson technique.  The required first and second derivative expressions are included below.
+
+
+\subsection{Dataset form}
+
+The original motivation for this discussion comes from estimating net-flow roll matrices from aggregate pool-level information, such 
+as Intex data.  Net-flow models are naturally considered since tracking each dollar in a pool is usually not possible.  However, 
+since Net-flow models are special cases of DTMCs, it makes fortuitous sense to consider the most general case possible and limit ourselves
+only to what the data can support.
+
+At each time point in a net-flow model, one has a distribution vector describing the current state of the system.  
+The model is a roll matrix or linear tranformation of the current distribution vector to create an estimate of the expected distribution 
+at the next time step.  The error associated the with the transformation is garnered with the observed data at the next time step.
+With notation described below, the basic model form is:
+	$$\condexpect{\widehat{\pi}(obs_i,t_{obs_i}+1)}{obs_i,\beta}= \widehat{\pi}(obs_i,t_{obs_i})P(\beta,Z_{obs_i}).$$
+Although the distribution information at the next time step may be redundantly stored on another observation, we will assume that the 
+dataset has the basic form of:
+
+\begin{equation*}
+\begin{pmatrix}
+obs_1 \\
+obs_2 \\
+\vdots \\
+obs_N
+\end{pmatrix}
+=
+\begin{pmatrix}
+Z_{obs_1} & \widehat{\pi}(obs_1,t_{obs_1}) & \widehat{\pi}(obs_1,t_{obs_1}+1) \\
+Z_{obs_2} & \widehat{\pi}(obs_2,t_{obs_2}) & \widehat{\pi}(obs_2,t_{obs_2}+1) \\
+\vdots \\
+Z_{obs_N} & \widehat{\pi}(obs_N,t_{obs_N}) & \widehat{\pi}(obs_N,t_{obs_N}+1) 
+\end{pmatrix}
+\end{equation*}
+
+Here, for each observation, $obs_1, \ldots, obs_N$, there is an associated time point, $t_{obs_1}$, and covariate picture, $Z_{obs_1}$.
+The notation may seem slightly cumbersome at the moment, but only to emphasize that $t_{obs_2}$ may or may not equal $t_{obs_1}+1$. 
+With the understanding of the above form, the $obs_{.}$ notation will usually be dropped.
+
+With this form of the dataset, each time point creates a distinct observation that does not depend on any other time point. This facilitates 
+combining  different sources of data to which a common model may be estimated.   We will not restrict the form of the covariate picture, $Z$, 
+which may be time-dependent (including any time-like variables) and complex or simply an constant 1 
+for an intercept term (yes, if an intercept is desired it must be in the dataset and specified as an ordinary variable).
+
+The distribution vector may or may not be normalized.  If the distribution vector is pre-normalized, it is assumed that the total weight 
+associated with each observiation is 1.  We usually refer to non-normalized cases as events/trials that represent repeated measures experiments.
+The repeated measures may result from a pooled collection of loans and/or the dollars associated with a loan.
+
+
+\subsection{Logistic motivations of model form}
+
+Classic binary logistic regression has the following properties: each observation represents the one trial of a Bernoulli experiment upon a 
+unique subject.  The binary response is usually called a {\em good} or a {\em bad}. 
+It is assumed that the dataset represents $N$ independent trials for which the probability of one response (say good) is bernoulli with probablity perfectly determined by:
+$$\prob{\text{good}}=p={e^{\beta Z}\over 1+e^{\beta Z}}$$
+
+The dataset usually looks like:
+\begin{equation*}
+\begin{pmatrix}
+obs_1 \\
+obs_2 \\
+\vdots \\
+obs_N
+\end{pmatrix}
+=
+\begin{pmatrix}
+Z_{obs_1} & 0 \text{ or } 1 \\
+Z_{obs_2} & 0 \text{ or } 1 \\
+\vdots \\
+Z_{obs_N} & 0 \text{ or } 1 
+\end{pmatrix}
+\end{equation*}
+where the response is 1 for a good and 0 for a bad.
+
+However, this can be translated into the form of the previous section by realizing that this is a two state model, calling the states 1 and 2.
+The trial response of a good represents starting in state 1 and moving to state 2 in one time step and a response of a bad comes from staying 
+in state 1 during the trial. Here, we set $\widehat{\pi}(t)=[1 ~ 0]$ for $t=0$ and $\widehat{\pi}(1)=[1 ~ 0]$ for a bad and 
+$\widehat{\pi}(1)=[0 ~ 1]$ for a good. The transistion matrix model is very simple:
+\begin{equation*}
+\begin{pmatrix}
+{1\over 1+e^{\beta Z}} & {e^{\beta Z} \over 1+e^{\beta Z}} \\
+0 & 1
+\end{pmatrix}
+\end{equation*}
+
+The likelihood function for the logistic case can then be written as follows:
+$$L(\beta)=\prod_{obs} (\widehat{p}_1(1))^{\widehat{\pi}_1(1)}(\widehat{p}_2(1))^{\widehat{\pi}_2(1)}$$
+where $\widehat{p}(1)=\expect{\widehat{\pi}(1)|Z}$, $\widehat{p}_1(1)={1\over 1+e^{\beta Z}}$ and $\widehat{p}_2(1)=1-\widehat{p}_1(1)$.
+One benefit of this particular likelihood expression is that observations with identical covariate pictures can be grouped. For example, suppose 
+each $Z$ belongs to only one of $m$ classes, $Z^1, \ldots, Z^m$. Let $N^i$ denote the number of observations of class $i$ and let 
+$\widehat{\pi}^i$ denote the sum of $\widehat{\pi}$ where $Z=Z^i$. By rearranging the products above, it follows that:
+\begin{align*}
+L(\beta)&=\prod_{obs} (\widehat{p}_1(1))^{\widehat{\pi}_1(1)}(\widehat{p}_2(1))^{\widehat{\pi}_2(1)}\\
+L(\beta)&=\prod_{i=1}^{m}\prod_{Z=Z^i}(\widehat{p}_1(1))^{\widehat{\pi}_1(1)}(\widehat{p}_2(1))^{\widehat{\pi}_2(1)}\\
+L(\beta)&=\prod_{i=1}^{m}\prod_{Z=Z^i}(\widehat{p}^i_1(1))^{\widehat{\pi}_1(1)}(\widehat{p}^i_2(1))^{\widehat{\pi}_2(1)}\\
+L(\beta)&=\prod_{i=1}^{m}(\widehat{p}^i_1(1))^{\widehat{\pi}^i_1(1)}(\widehat{p}^i_2(1))^{\widehat{\pi}^i_2(1)}\\
+\end{align*}
+This grouping of observations with identical covariate pictures is why the likelihood form for events/trials scenarios is exactly the same as
+if each element of an aggregate (loan in a pool or dollar in a loan/loan pool) was treated as a separate subject. There are dispersion issues 
+to be taken into account, but we will set this temporarily aside for this discussion.
+
+The multinomial form is a natural generalization.  In this form there are $n$-states, 1 through $n$. The subject starts in state 1 and 
+may transistion during 1 time step.  The transistion matrix form for $n=3$ is:
+\begin{equation*}
+\begin{pmatrix}
+  {1                \over 1+e^{\beta_{12} Z}+e^{\beta_{13} Z}} 
+& {e^{\beta_{12} Z} \over 1+e^{\beta_{12} Z}+e^{\beta_{13} Z}} 
+& {e^{\beta_{13} Z} \over 1+e^{\beta_{12} Z}+e^{\beta_{13} Z}} \\
+0 & 1 & 0 \\
+0 & 0 & 1
+\end{pmatrix}
+\end{equation*}
+The likelihood function for the multinomial case follows in a similar fashion:
+$$L(\beta)=\prod_{obs} \prod_{j=1}^n(\widehat{p}_j(1))^{\widehat{\pi}_j(1)}.$$
+
+It should be noted that the above structure also represents a discrete-time proportional hazards model with competing risks.  The estimation method described here is a geometric, 
+full likelihood construction, as opposed to a partial-likelihood construction as in Life-Then-Mark.  Geometric construction implies that a loan is incorporated into the dataset,
+one observation for each surviving time point and one for the terminal event time.  All observations for each loan are used in estimating the single-step, roll-into-event probability.
+This is in contrast to the partial-likelihood survival technique where the time-dependent roll-into-event rate uses each loan once against a comparable surviving set.
+Ultimately, via a monthly hazard rate, other competing risk survival models can be incorporated into the matrix model.
+
+
+\subsection{The matrix model likelihood}
+
+
+In a short, sweet summary, the discrete-time parameterized geometric matrix models are special cases of the multinomial logistic model just described.  For each observation, the current
+distribution ($\widehat{\pi}(t)$) is a pre-disposing set of values that combined with the transistion matrix, $P(\beta,Z)$, 
+yields a new set of probabilities, $\widehat{p}(t+1)$ for a multinomial experiment.  The likelihood function is:
+$$L(\beta)=\prod_{obs} \prod_{j=1}^n(\widehat{p}_j(t+1))^{\widehat{\pi}_j(t+1)},$$
+where
+$$\widehat{p}(t+1)=\condexpect{\widehat{\pi}(t+1)}{\beta,Z}/\Sigma \widehat{\pi}(t) = \widehat{\pi}(t)P(\beta,Z)/\Sigma \widehat{\pi}(t) .$$
+Note: the $\Sigma \widehat{\pi}(t)$ is required for the number of events in events/trials scenarios and it is assumed that there is mass conservation.
+
+With that done, let us move on to estimating $\beta$.
+
+
+
+\subsection{Estimating $\beta$}
+
+Notation is going to become unusually ugly, so let us adopt the following conventions and notations:
+
+\begin{itemize}
+\item For indexing, we will always use the following letters in the same manner:
+
+\begin{tabular}{|c|c|c|}\hline
+Rows & Columns & Covariate Index \\ \hline
+i & j & k\\ \hline
+a & b & c\\ \hline
+u & v & w\\ \hline
+\end{tabular}
+
+\item The actual number of covariates is left unspecified and  treated as a vector $Z=(Z_k)$ for each observation.
+\item It will probably be common that the transistion matrix is sparse, but in keeping with a total general discussion, we will assume it
+is densely populated, $n\times n$ matrix: $P(\beta,Z)=(P_{ij}(\beta,Z))_{1\le i,j \le n}.$
+\item Transistion matrices must have row sums of 1.  To parameterize this correctly, we treat each row as a sub-model with the diagonal element
+as the {\em reference state}.  In other words, with $n$ columns for each row, there are $n-1$ degrees of freedom, each with its own sub-sub-model, and
+the 1 degree of freedom lost is associated with the diagonal element.  The coefficient vector is a triply-indexed set, $\beta=(\beta_{ijk})_{1 \le i,j \le n, i\not = j}$,
+but we will use $\beta_{ij}Z$ to represent $\Sigma \beta_{ijk}Z_k$.
+and 
+\begin{align*}
+P_{ii}(\beta, Z)&= {1 \over {1+\sum_{1 \le v \le n, v \not = i} e^{\beta_{iv}Z}}}\\
+p_{ij}(\beta, Z)&= {e^{\beta_{ij}Z} \over {1+\sum_{1 \le v \le n, v \not = i} e^{\beta_{iv}Z}}}
+\end{align*}
+
+\end{itemize}
+
+As before, the expected response for each observation is given by:
+$$\widehat{p}(t+1)=\condexpect{\widehat{\pi}(t+1)}{\beta,Z}/\Sigma \widehat{\pi}(t) = \widehat{\pi}(t)P(\beta,Z)/\Sigma \widehat{\pi}(t)$$
+and the likehood function is 
+$$L(\beta)=\prod_{obs} \prod_{j=1}^n(\widehat{p}_j(t+1))^{\widehat{\pi}_j(t+1)}.$$
+The log-likelihood is used in practice,
+$$LL(\beta)=\sum_{obs} \sum_{j=1}^n {\widehat{\pi}_j(t+1)}\log(\widehat{p}_j(t+1)).$$
+
+
+For model fitting, we will employ Newton's method, for a quick reminder:  Let our parameters, $\beta$ be stacked into a vector, $\vec{\beta}$.
+The candidate for a maximum must satisfy $\nabla LL(\vec{\beta})=0$.  If the Fisher information matrix, $-\expect{\nabla^2 LL(\vec{\beta})}$, is 
+nicely behaved, i.e., nothing like quasi-complete separation in logistic regression, the following algorithm should converge to a maximum: Given an initial
+estimate, $\vec{\beta}_0$, iterate until desired convergence through $\vec{\beta}_{n+1}=\vec{\beta}_n+\Delta\vec{\beta}_n$ where
+$$\nabla^2LL(\vec{\beta}_n)\Delta\vec{\beta}_n=-\nabla LL\vec{\beta}_n.$$
+For testing variable significance, we will use the inverse of the Fisher information matrix as a variance estimate of the parameter estimates,
+$$cov(\vec{\beta})=(-\nabla^2LL(\vec{\beta}))^{-1}.$$
+
+We therefore need the following quantities: ${\delta LL(\beta)\over \delta \beta_{abc}}$ and ${\delta^2 LL(\beta)\over \delta \beta_{abc}\delta \beta_{uvw}}$.
+These quantities can be related back to $\widehat{\pi}$, $\widehat{p}$, and $P(\beta, Z)$ through,
+\begin{align*}
+{\delta LL(\beta)\over \delta \beta_{abc}}&=\sum_{obs} \sum_{j=1}^n {\widehat{\pi}_j(t+1)\over \widehat{p}_j(t+1)}{\delta \widehat{p}_j(t+1)\over \delta \beta_{abc}} \\
+{\delta LL(\beta)\over \delta \beta_{abc}}&=\sum_{obs} \sum_{j=1}^n {\widehat{\pi}_j(t+1)\over \widehat{p}_j(t+1)}\sum_{i=1}^n \widehat{\pi}_i(t){\delta P_{ij}(\beta,Z) \over \delta \beta_{abc}} \\
+{\delta^2 LL(\beta)\over \delta \beta_{abc}\delta \beta_{uvw}}&=
+	\sum_{obs} \sum_{j=1}^n {\widehat{\pi}_j(t+1)\over \widehat{p}_j(t+1)}* \\
+&\hspace{.25in} \left[{
+			-{1\over \widehat{p}_j(t+1)}\left({\sum_{i=1}^n\widehat{\pi}_i(t){\delta P_{ij}(\beta,Z) \over \delta \beta_{abc}}}\right)
+			\left({\sum_{i=1}^n\widehat{\pi}_i(t){\delta P_{ij}(\beta,Z) \over \delta \beta_{uvw}}}\right)
+			+\sum_{i=1}^n\widehat{\pi}_i(t){\delta^2 P_{ij}(\beta,Z) \over \delta \beta_{abc} \delta \beta_{uvw}}
+			}\right] 
+\end{align*}
+
+The remaining quantities are ${\delta P_{ij}(\beta,Z) \over \delta \beta_{abc}}$ and ${\delta^2 P_{ij}(\beta,Z) \over \delta \beta_{abc} \delta \beta_{uvw}}$. After a small amount of grief, they 
+can be show to be:
+\begin{align*}
+{\delta P_{ij}\over \delta \beta_{abc}}&=1_{\{i=a\}}Z_c\left[{ -P_{ij}P_{ib} + 1_{\{j=b\}}P_{ij}}\right] \\
+{\delta^2 P_{ij} \over \delta \beta_{abc} \delta \beta_{uvw}}&=1_{\{i=a\}}1_{\{i=u\}}Z_cZ_w\left[{2P_{ij}P_{iv}P_{ib} -1_{\{j=v\}}P_{iv}P_{ib}-1_{\{j=b\}}P_{iv}P_{ib}-1_{\{b=v\}}P_{ij}P_{ib}
++1_{\{j=b=v\}}P_{ij}}\right]
+\end{align*}
+(Here the dependence on $(\beta, Z)$ is implicit.)
+
+
+
+\end{document}

@@ -1,0 +1,579 @@
+\ProvidesPackage{tech_report_fverb}
+
+\def\slashcatcode{12}
+
+\newcommand\ActiveSlash{\catcode`\/=\active}
+\newcommand\NormalSlash{\catcode`\/=12}
+
+\newcommand\CommentHash{%
+\catcode`\#=\catcode`\%
+}
+\newcommand\NormalHash{\catcode`\#=6}
+
+\newcommand\ToggleHash{%
+        \ifnum\NormalHash%
+                \CommentHash%
+                \else%
+                \NormalHash%
+                \fi%
+}
+
+\begingroup
+\endlinechar=-1
+\catcode`\^^M=13 
+\def^^M{\endgroup}
+\gdef\aftergobbleguts{}
+\gdef\aftergobble{\aftergobbleguts\gdef\aftergobbleguts{}}
+\gdef\gobblelineguts#1^^M{\gdef\gobbledlineguts{#1}\endgroup\aftergobble}
+\gdef\gobbletoparlineguts#1\par{\gdef\gobbledlineguts{#1}\endgroup\aftergobble}
+\gdef\gobbletoeollineguts#1\endlinechar{\gdef\gobbledlineguts{#1}\endgroup\aftergobble}
+\gdef\skipthisandnextlineguts#1^^M#2^^M{}
+\gdef\skipnextlineguts#1^^M{}
+\endgroup
+
+\newcommand\gobbleline{\begingroup \catcode`\^^M=13 \gobblelineguts}
+\newcommand\gobbletoparline{\begingroup \gobbletoparlineguts}
+\newcommand\gobbletoeolline{\begingroup \gobbletoeollineguts}
+\newcommand\skipnextline{\begingroup \catcode`\^^M=13 \skipnextlineguts}
+\newcommand\skipthisandnextline{\begingroup \catcode`\^^M=13 \skipthisandnextlineguts}
+
+\ActiveSlash
+\newcommand/{\NormalSlash\futurelet\testchar\ActiveSlashGuts}
+\NormalSlash
+
+\newsavebox\remaindertrash
+%\def\firstwordguts#1 {\gdef\fw{#1}}
+\def\firstwordguts#1 #2 ||.{\gdef\fw{#1}\gdef\sw{#2}}
+\def\empty{}
+\def\firstword#1{\savebox{\remaindertrash{\expandafter\firstwordguts#1 {} ||.}}}
+
+\def\DoubleSlashCommand#1{%
+        \gdef\aftergobbleguts{\firstword{\gobbledlineguts}\csname \fw \endcsname\ActiveSlash}%
+                \gobbleline}
+
+                \newcommand\ActiveSlashGuts{%
+                        \ifx/\testchar%
+                                \let\next=\DoubleSlashCommand%
+                                \else%
+                                \ifx*\testchar %
+                                \let\next=\DoubleSlashCommand%
+                                \else%
+                                \gdef\next{/\ActiveSlash}%
+                                \fi%
+                                \fi%
+                                \next%
+                }
+
+        \let\CppComments=\ActiveSlash
+        \let\UnCppComments=\NormalSlash
+
+        \def\sfl{\show\@filelist}
+
+        \def\SetUpLocalFile{%
+                \begingroup
+                \Firsttoks\localfilelist(into:)\temptoks
+                \xdef\thisfile{\the\temptoks}
+                \xdef\localfilealpha{file\alph{localfiledepth}}
+                \expandafter\newwrite\csname\localfilealpha\endcsname
+                \edef\tempstring{\jobname.\thisfile.wrp}
+                \immediate\expandafter\openout \csname\localfilealpha\endcsname \tempstring
+                \recordcurrentlevel
+                \index{"! Input Files!\thisfile}
+        }
+        \def\WrapUpLocalFile{%
+                \restorecurrentlevel
+                \immediate\expandafter\closeout\csname\localfilealpha\endcsname
+                \edef\tempstring{\jobname.\thisfile.wrp}
+                \input{\tempstring}
+                \endgroup
+        }
+
+        \newtoks\hashtok
+        \catcode`\#=12
+        \hashtok{#}
+        \catcode`\#=6
+        \def\hash{\the\hashtok}
+
+        \chardef\escape=0
+
+        \def\MakeLetter#1#2#3{%
+                \edef\AL{#1}%
+                \edef\ALcc{\the\catcode`#1}%
+                \edef\ALRestor{\noexpand\catcode`\AL=\ALcc}%
+                \expandafter\gdef\csname#3\endcsname{\ALRestor}%
+                \expandafter\let\csname#3\endcsname=\ALRestor%
+                \catcode`#1=#2%
+        }
+
+        %example: \MakeLetter{T}{\active}{RestoreCapt}
+
+        \newcommand\opencode{\futurelet\testchar\sopencode}
+        \newcommand\openecode{\futurelet\testchar\sopenecode}
+        \newif\iflath \lathfalse
+        \gdef\codelathnum{17}
+        \def\openlath#1#2#3{\opencode{#1}{#2}{#3}% 
+                \gdef\codelathnum{\csname verbatim#1@out\endcsname}\lathtrue}
+
+        \def\sopencode{\ifx[\testchar\let\next=\ossopencode\else\let\next=\ssopencode\fi\next}
+
+        \def\ssopencode#1#2#3{%
+                \def\codetempnum{\csname verbatim#1@out\endcsname}
+                \expandafter\gdef\csname code#1\endcsname{\csname verbatim#1@out\endcsname}\relax
+                \expandafter\gdef\csname verbatim#1@outfile\endcsname{#2}\relax
+                \expandafter\newwrite\csname verbatim#1@out\endcsname\relax
+                \expandafter\def\csname codecolor#1\endcsname{#3}\relax
+                \expandafter\def\csname codeopen#1\endcsname{}\relax
+                \expandafter\def\csname codeclose#1\endcsname{}\relax
+                \expandafter\def\csname codeemcode#1\endcsname{}\relax
+                \expandafter\def\csname codeocode#1\endcsname{}\relax
+                \ifcodename
+                        {\bf #1 } is written here
+                \fi
+                \ifwritecode
+                \immediate\openout \codetempnum #2 
+                \immediate\expandafter\write\csname\localfilealpha\endcsname{\noexpand\closecode{#1}}
+                \fi
+                }
+
+        \def\ossopencode[#1]#2#3#4{\ssopencode{#2}{#3}{#4}
+                \expandafter\def\csname codeocode#2\endcsname{#1}\relax
+                }
+
+        \def\sopenecode{\ifx[\testchar\let\next=\ossopenecode\else\let\next=\ssopenecode\fi\next}
+
+        \def\ssopenecode#1#2#3#4#5{%
+                \opencode{#1}{#2}{#3}
+                \expandafter\def\csname codeopen#1\endcsname{#4}\relax
+                \expandafter\def\csname codeclose#1\endcsname{#5}\relax
+                \expandafter\def\csname codeemcode#1\endcsname{e}\relax
+                \def\tempstring{\csname codeopen#1\endcsname}
+                \immediate\write\codetempnum{\tempstring}
+                }
+
+        \def\ossopenecode[#1]#2#3#4#5#6{%
+                \opencode[#1]{#2}{#3}{#4}
+                \expandafter\def\csname codeopen#2\endcsname{#5}\relax
+                \expandafter\def\csname codeclose#2\endcsname{#6}\relax
+                \expandafter\def\csname codeemcode#2\endcsname{e}\relax
+                \def\tempstring{\csname codeopen#2\endcsname}
+                \immediate\write\codetempnum{\tempstring}
+                }
+
+
+        \def\closecode#1{%
+                \def\codetempnum{\csname verbatim#1@out\endcsname}
+                \ifwritecode
+                \immediate\write\codetempnum{\csname codeclose#1\endcsname}
+                \immediate\closeout\codetempnum
+                \ifentabcode \entabcode{#1}\fi
+                \fi
+        }
+
+        \def\entabcode#1{%
+                \immediate\write17{>>>>>>>>>>>>>>entabcode \csname verbatim#1@outfile\endcsname}
+                \unix{entabcode \csname verbatim#1@outfile\endcsname}
+        }
+
+        %For a little more compactness
+        %\newcommand\codesize{\@setfontsize\tenpt\@viiipt\@ixpt}
+        \newcommand\codesize{\baselineskip 0pt \@setfontsize\codesize\@viiipt\@vipt}
+
+
+        \newcommand\OnBeginCode{}
+        \newcommand\OnEndCode{}
+
+        \xdef\afterverblineguts{}
+        \def\afterverbline{\afterverblineguts\xdef\afterverblineguts{}}
+        \def\specialcodecasesstart{}
+
+        \newtoks\lverbatim@line
+        \newtoks\enverbatim@line
+        \newtoks\lenverbatim@line
+        \catcode`\^^I\active
+        \newcommand\fverbobeys{%
+                \catcode`\^^M\active%
+                \catcode`\^^I\active%
+                \xdef^^I{\ \ \ \ \ \ \ \ }%
+		\@vobeyspaces}
+        \catcode`\^^I=10
+
+        \definecolor{purple}{cmyk}{0.45,0.86,0,0}
+        \def\codetempcolorone{black}
+        \def\codetempcolortwo{black}
+        \def\codetempcolorthree{black}
+        \newif\ifwritegalley \writegalleytrue
+        \newif\iflocalwritecode \localwritecodetrue
+        \newif\ifembedc \embedcfalse
+        \newif\ifembedchold \embedcholdfalse
+        \newif\ifembedcchold \embedccholdfalse
+        \newcounter{thiscodeblockline}
+
+        \newtoks\fverblist
+
+        \newcommand\fverbtop{%
+                \@bsphack%
+                \ifhmode\par\fi%
+                %\ifhmode\unskip\unskip\par\fi%
+                \noindent\begingroup%
+                \NormalSlash%
+                \codesize\tt%
+                \let\do\@makeother\dospecials%
+                \let\verbatim@processline=\fverbatim@processline%
+                \setcounter{thiscodeblockline}{0}%
+                \fverbobeys}
+
+        \newcommand\fverblistinit{\fverblist={ {fverbstop} }}
+        \def\addtofverblist#1{\Prepend{ {#1} }(to:)\fverblist\relax}
+
+        \def\fverblistcheck{%
+                \embedcfalse\embedcholdfalse\embedccholdfalse%
+                \temptokst=\fverblist%
+                \loop{%
+                        \Pop\temptokst(into:)\temptoks%
+                        \ifEqString{fverbstop}{\the\temptoks}\else%
+                        \if e\csname codeemcode\the\temptoks\endcsname\immediate\embedctrue\fi%
+                        \let\codetempcolorthree=\codetempcolorthree%
+                        \let\codetempcolortwo=\codetempcolorone%
+                        \edef\codetempcolorone{\csname codecolor\the\temptoks\endcsname}%
+                        }\repeat%
+                \ifembedc\embedcholdtrue\embedccholdtrue\fi%
+                }
+
+        \let\origverbatim@processline=\verbatim@processline
+
+	\newtoks\tabcleanverbtoks
+	\def\cleantabs#1{%
+		%\writeout{\the#1}%
+		\catcode`\^^I=10%
+		\tabcleanverbtoks=\expandafter{\the#1}\relax%
+		%\writeout{\the\tabcleanverbtoks}
+                }
+
+        \def\fverbatim@processline{%
+                \addtocounter{thiscodeblockline}{1}%
+		\cleantabs\verbatim@line\relax%
+                \specialcodecasesstart%
+                \temptokst=\fverblist%
+                \enverbatim@line=\verbatim@line%
+                \ifnumbercodelines%
+                        \effinputlineno\Append{\hfill\jumpto{\the\c@einputlineno}}(to:)\enverbatim@line%
+                \fi%
+                \loop{\Pop\temptokst(into:)\temptoks%
+                        \ifEqString{fverbstop}{\the\temptoks} \else%
+                        \ifwritecode%
+                        \ifembedc%
+                                \if e\csname codeemcode\the\temptoks\endcsname%
+					\cleantabs\verbatim@line\relax%
+                                        \immediate\write\csname verbatim\the\temptoks @out\endcsname{\the\tabcleanverbtoks}%
+                                \else\ifnum \c@thiscodeblockline>2%
+					\cleantabs\lverbatim@line\relax%
+                                        \immediate\write\csname verbatim\the\temptoks @out\endcsname{\the\tabcleanverbtoks}%
+                                \fi\fi%
+                        \else%
+				\cleantabs\verbatim@line\relax%
+                                \immediate\write\csname verbatim\the\temptoks @out\endcsname{\the\tabcleanverbtoks}%
+                        \fi%
+                        \fi%
+                        }\repeat%
+                \ifembedc\ifnum \c@thiscodeblockline>2%
+                        \ifwritegalley \noindent\vphantom{Mp}\the\lenverbatim@line\par\fi%
+                \fi\else%
+                        \ifwritegalley \noindent\vphantom{Mp}\the\enverbatim@line\par\fi%
+                \fi%
+                \lverbatim@line\verbatim@line%
+                \lenverbatim@line\enverbatim@line%
+                \afterverbline%
+        }
+
+        \def\fverb#1{\if g#1\writegalleytrue\else\writegalleyfalse\fi\fverbgalley}
+
+        \def\fverbgalley#1{%
+                \if 0#1\localwritecodefalse\let\next=\fverbzero%
+                \else\localwritecodetrue\if 1#1\let\next=\fverbone%
+                \else\if 2#1\let\next=\fverbtwo%
+                \else\let\next=\fverbthree\fi\fi\fi\next}
+
+        \def\endfverb{%
+                \let\verbatim@processline=\origverbatim@processline%
+                %\gdef\verbatim@processline{\the\verbatim@line\par}%
+                \OnEndCode%
+                \endgroup%%
+                \endgroup\par%
+                \@Esphack%
+                \localwritecodetrue%
+                \writegalleytrue%
+        }
+
+        \def\fverbzero{\fverblistinit%
+                \fverblistcheck%
+		\fverbtop%
+                \color\codetempcolorone%
+                \begingroup%
+                \OnBeginCode%
+                \ifhmode\par\fi%
+                \verbatim@start}
+
+        \def\fverbone#1{\fverblistinit%
+                \addtofverblist{#1}%
+                \fverblistcheck%
+		\fverbtop%
+                \color\codetempcolorone%
+                \begingroup%
+                \OnBeginCode%
+                \ifhmode\par\fi%
+                \verbatim@start}
+
+        \def\fverbtwo#1#2{\fverblistinit%
+                \addtofverblist{#1}%
+                \addtofverblist{#2}%
+                \fverblistcheck%%
+		\fverbtop%
+                \color\codetempcolorone%
+                \begingroup%
+                \OnBeginCode%
+                \ifhmode\par\fi%
+                \verbatim@start}
+	\let\endfverbtwo=\endfverb
+
+        \def\fverbthree#1#2#3{\fverblistinit%
+                \addtofverblist{#1}%
+                \addtofverblist{#2}%
+                \addtofverblist{#3}%
+                \fverblistcheck%%
+		\fverbtop%
+                \color\codetempcolorone%
+                \begingroup%
+                \OnBeginCode%
+                \ifhmode\par\fi%
+                \verbatim@start}
+	\let\endfverbthree=\endfverb
+
+        %old versions
+
+        \def\codend#1{\fverblistinit%
+                \fverblistcheck%
+		\fverbtop%
+                \color\codetempcolorone%
+                \writegalleyfalse%
+                \localwritecodetrue%
+                \begingroup%
+                \OnBeginCode%
+                \verbatim@start}
+        \let\endcodend=\endfverb
+
+        \def\code#1{\fverblistinit%
+                \addtofverblist{#1}%
+                \fverblistcheck%
+		\fverbtop%
+                \color\codetempcolorone%
+                \begingroup%
+                \writegalleytrue%
+                \localwritecodetrue%
+                \OnBeginCode%
+                \ifhmode\par\fi%
+                \verbatim@start}
+        \let\endcode=\endfverb
+
+        \def\dualcode#1#2#3#4#5{%
+                \edef\codetempnumone{\csname verbatim#1@out\endcsname}%
+                \edef\codetempnumtwo{\csname verbatim#2@out\endcsname}%
+                \edef\codetempcolorone{\csname codecolor#1\endcsname}%
+                \edef\codetempcolortwo{\csname codecolor#2\endcsname}%
+                \edef\dualcodelone{#3}%
+                \edef\dualcodeltwo{#4}%
+                \edef\dualcodeltwonote{#5}%
+                \fverblistinit%
+                \addtofverblist{#1}%
+                \addtofverblist{#2}%
+		\fverbtop%
+                \fverblistcheck%%
+                \color\codetempcolorone%
+                \begingroup%
+                \writegalleytrue%
+                \localwritecodetrue%
+                \OnBeginCode%
+                \ifhmode\par\fi%
+                \verbatim@start}
+
+        \def\enddualcode{\endfverb%
+                \ifwritecode
+                        \immediate\write\codetempnumone{\dualcodelone}
+                        \immediate\write\codetempnumtwo{\dualcodeltwo}
+                \fi
+                \begingroup \codesize\tt \parskip 0pt
+                        \textcolor{\codetempcolorone}{\dualcodelone} \textcolor{\codetempcolortwo}{\dualcodeltwo \dualcodeltwonote} 
+                \endgroup\par
+        }
+
+
+\newread\inputverbfilein
+\newif\ifinputverbatend     
+\newif\ifinputverbbbfound   
+\newif\ifinputverbfileok    
+\newif\ifinputverbreadit    
+\def\inputverbguts{%
+                \read\inputverbfilein to \inputverbline
+                \ifeof\inputverbfilein
+                        \inputverbfileokfalse
+                \else                %otherwise process one line
+                        \verbatim@processline\inputverbline
+                \fi
+}
+
+\def\inputverb#1{%
+\strut\newline
+\inputverbreaditfalse
+\IfFileExists{#1}{\inputverbreadittrue}{\inputverbreaditfalse}%
+\ifinputverbreadit
+    \openin\inputverbfilein=#1
+            \inputverbfileoktrue         
+            \inputverbatendfalse   
+                \begingroup
+                        \parskip 0pt
+                        \NormalSlash
+                        \codesize\tt 
+                        \@bsphack
+                        \let\do\@makeother\dospecials
+                        \def\verbatim@processline{%
+                                        %\strut\the\verbatim@line%\par
+                                        \noindent\strut\expandafter \csname verb|\endcsname \the\verbatim@line \relax 
+                                } 
+            \catcode`\^^I\active
+            \catcode`\^^M\active
+            \catcode`\^^L\active
+            \catcode`\ \active
+            \@noligs
+            \fverbobeys
+            \loop               
+            \inputverbguts
+            \ifinputverbfileok\repeat
+        \endgroup
+        \@esphack
+        \edef\verbatim@processline{\the\verbatim@line\par}
+        \strut\newline
+        \closein\inputverbfilein
+\else
+                \immediate\write17{>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<}
+                \immediate\write17{>>>>>>>>>>>>Not incorporating #1}
+                \immediate\write17{>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<}
+\fi
+}
+
+
+
+%Note-stripping
+
+\newread\notein
+\newwrite\noteout
+\newif\ifkeeplookingfornotes %loop control
+\newif\ifinsidenote      \insidenotefalse
+\newif\iffoundnotecommand \foundnotecommandfalse
+\newif\ifLeadingPercent \LeadingPercentfalse
+\newif\iffreshnote \freshnotefalse
+\newif\ifLookingForKeywords \LookingForKeywordsfalse
+\newif\ifVerbatimNotes \VerbatimNotesfalse
+\newcounter{noteinlineno}
+\newcounter{writtennoteinlineno}
+\newcounter{tempnoteinlineno}
+\newcounter{holdinputlineoffset}
+\def\notecheckline{}
+
+{\catcode`\%=12 \global\let\perCent=%}%
+{\catcode`\`=12 \global\let\leftQuote=`}%
+
+\long\def\NoteKeywordCheck#1#2 ::::#3#4{%
+        \freshnotefalse%
+        \ifx#1\perCent \LeadingPercenttrue%
+                \def\testa{#2}%
+                \def\testb{#31}\ifx\testa\testb \freshnotetrue \else
+                \def\testb{#3}\ifx\testa\testb \freshnotetrue \fi\fi
+                \def\testb{#41}\ifx\testa\testb \insidenotefalse \else
+                \def\testb{#4 }\ifx\testa\testb \insidenotefalse \fi\fi
+        \else \LeadingPercentfalse \fi%
+        %\ifLeadingPercent \writeout{\notecheckline}\fi
+        %\show\ifLeadingPercent
+        %\show\notecheckline
+        %\show\iffreshnote
+        \iffreshnote%
+                \addtocounter{writtennoteinlineno}{1}
+        \ifnotelinks
+                \def\LinkToCode{\jumptobat{jumpto}{\the\inputlineno\space\thispath/\thisfile}{LinkToCode}}
+                \immediate\write\noteout{\noexpand\jumptobat{jumpto}{\the\c@noteinlineno\noexpand\space\noexpand\thispath/\thisfile}%
+                {\noexpand\color{red}\noexpand\bf LinkToCode}}%
+                \addtocounter{writtennoteinlineno}{1}
+        \fi
+                \setcounter{tempnoteinlineno}{-\the\c@writtennoteinlineno}
+                \advance\c@tempnoteinlineno\c@noteinlineno
+                \immediate\write\noteout{\noexpand\setcounter{inputlineoffset}{\the\c@tempnoteinlineno}}%
+        \fi}
+
+\newcommand\vcatcodes{\catcode`\ =12 \catcode`\#=12 \catcode `\{=12 \catcode `\}=12 \catcode`\\=12} 
+\newcommand\ncatcodes{\catcode`\ =10 \catcode`\#= \catcode `\{=1 \catcode `\}=12 \catcode`\\=0} 
+
+\begingroup \catcode `|=0 \catcode `[= 1
+\catcode`]=2 \catcode `\{=12 \catcode `\}=12
+\catcode`\\=12 |gdef|@xverbatim#1\end{verbatim}[#1|end[verbatim]]
+|gdef|@sxverbatim#1\end{verbatim*}[#1|end[verbatim*]]
+|endgroup
+
+
+\begingroup
+\catcode `|=0 \catcode `[=1 \catcode`]=2 \catcode `\{=12 \catcode `\}=12 \catcode`\\=12
+|gdef|verbline#1\endverbline[|begingroup|vcatcodes#1|endgroup]
+|gdef|verbtline#1:endverbtline[\verb`#1`]
+|endgroup
+
+\def\ImportVerbatimFileNotes#1{\VerbatimNotestrue\LookingForKeywordsfalse\ImportNotes{#1}{ReallyEarly}{ReallyLate}}
+
+\def\ImportNotes#1#2#3{%
+        \setcounter{noteinlineno}{0}
+        \setcounter{writtennoteinlineno}{0}
+        \setcounter{holdinputlineoffset}{\the\c@inputlineoffset}
+        \immediate\openin\notein=#1
+        \immediate\openout\noteout=\jobname.notesfor.#1
+        \immediate\write\noteout{\noexpand\SetUpLocalFile}
+        \addtocounter{writtennoteinlineno}{1}
+        \immediate\write\noteout{\noexpand\def\noexpand\thisfile{#1}}
+        \addtocounter{writtennoteinlineno}{1}
+        \ifeof\notein\errmessage{I couldn't open #1, will ignore it}\else
+                \setcounter{currentlevelroot}{0}
+                \begingroup
+                        {\keeplookingfornotestrue\insidenotefalse\foundnotecommandfalse
+                        \catcode`\^^J=5
+                        \catcode`\^^M=10
+                        \let\do\@makeother\dospecials
+                        \catcode`\ =10
+                        \obeylines
+                        \loop
+                                \endlinechar=-1 \read\notein to \notecheckline
+                                \addtocounter{noteinlineno}{1}
+                                \ifeof\notein\keeplookingfornotesfalse\fi
+                                \ifLookingForKeywords\expandafter\NoteKeywordCheck\notecheckline 1 ::::{#2}{#3}\else\insidenotetrue\fi
+				\ifVerbatimNotes\ifinsidenote \begingroup%
+					\catcode `\`=10%
+					\immediate\write\noteout{\noexpand\verbtline\notecheckline :endverbtline }%
+					\endgroup%
+                                \else\ifinsidenote \immediate\write\noteout{\notecheckline}\fi
+                                \addtocounter{writtennoteinlineno}{1}
+                                \else\iffreshnote\insidenotetrue\fi\fi
+                        \ifkeeplookingfornotes\repeat
+                        }
+                \endgroup
+                \immediate\closein\notein%
+                \immediate\write\noteout{\noexpand\xdef\noexpand\thisfile{\jobname.notesfor.#1}}
+                \immediate\write\noteout{\noexpand\WrapUpLocalFile}
+                \immediate\write\noteout{\noexpand\setcounter{inputlineoffset}{\the\c@holdinputlineoffset}}
+                \immediate\closeout\noteout%
+                \ifwritecode
+                        \writecodefalse
+                        \Input{\jobname.notesfor.#1}
+                        \writecodetrue
+                \else
+                        \Input{\jobname.notesfor.#1}
+                \fi
+        \fi}%
+
+
+\endinput
+
+

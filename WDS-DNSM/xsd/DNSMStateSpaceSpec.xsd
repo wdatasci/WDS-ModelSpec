@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="DNSMStateSpace">
+    <xs:complexType>
+      <xs:sequence>
+
+        <xs:element name="ParameterList">
+          <xs:complexType>
+            <xs:sequence>
+
+                    <xs:element maxOccurs="unbounded" name="Parameter">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Value" type="xs:string" />
+                        </xs:sequence>
+                          <xs:attribute name="Name" type="xs:string" use="required" />
+                          <xs:attribute name="Type" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="States">
+          <xs:complexType>
+            <xs:sequence>
+
+
+              <xs:element name="Number" type="xs:int" />
+              <xs:element name="NumberOfBaseDimensions" type="xs:int" />
+              <xs:element name="NumberOfAgePages" type="xs:int" />
+              <xs:element name="Axis1LimitDefault" type="xs:int" />
+              <xs:element name="Axis2LimitDefault" type="xs:int" />
+              <xs:element name="Axis3LimitDefault" type="xs:int" />
+              <xs:element name="Axis4LimitDefault" type="xs:int" />
+
+              <xs:element name="ParameterList">
+                <xs:complexType>
+                  <xs:sequence>
+
+
+                    <xs:element maxOccurs="unbounded" name="Parameter">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Value" type="xs:string" />
+                        </xs:sequence>
+                          <xs:attribute name="Name" type="xs:string" use="required" />
+                          <xs:attribute name="Type" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+
+              <xs:element maxOccurs="unbounded" name="State">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Mneumonic" type="xs:string" />
+                    <xs:element name="Shorthand" type="xs:string" />
+                    <xs:element name="Concept" type="xs:string" />
+                    <xs:element name="NullInd" type="xs:string" />
+                    <xs:element name="Type" type="xs:string" />
+                    <xs:element name="NotionalDelq" type="xs:int" />
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+                </xs:complexType>
+              </xs:element>
+
+            </xs:sequence>
+            <xs:attribute name="Handle" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+
+
+        <xs:element name="Stages">
+          <xs:complexType>
+            <xs:sequence>
+
+
+              <xs:element name="Number" type="xs:int" />
+
+              <xs:element name="ParameterList">
+                <xs:complexType>
+                  <xs:sequence>
+
+                    <xs:element maxOccurs="unbounded" name="Parameter">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Value" type="xs:string" />
+                        </xs:sequence>
+                          <xs:attribute name="Name" type="xs:string" use="required" />
+                          <xs:attribute name="Type" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+
+              <xs:element maxOccurs="unbounded" name="Stage">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Mneumonic" type="xs:string" />
+                    <xs:element name="Shorthand" type="xs:string" />
+                    <xs:element name="Concept" type="xs:string" />
+                    <xs:element name="Type" type="xs:string" />
+                    <xs:element name="ModelHandle" type="xs:string" />
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+                </xs:complexType>
+              </xs:element>
+
+            </xs:sequence>
+            <xs:attribute name="Handle" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="Bridges">
+          <xs:complexType>
+            <xs:sequence>
+
+              <xs:element name="Number" type="xs:int" />
+
+              <xs:element name="ParameterList">
+                <xs:complexType>
+                  <xs:sequence>
+
+                    <xs:element maxOccurs="unbounded" name="Parameter">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Value" type="xs:string" />
+                        </xs:sequence>
+                          <xs:attribute name="Name" type="xs:string" use="required" />
+                          <xs:attribute name="Type" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+
+
+              <xs:element maxOccurs="unbounded" name="Bridge">
+
+                <xs:complexType>
+
+
+                  <xs:sequence>
+                    <xs:element name="StatePosition" type="xs:int" />
+                    <xs:element name="From" type="xs:int" />
+                    <xs:element name="To" type="xs:int" />
+                    <xs:element name="Type" type="xs:string" />
+                  </xs:sequence>
+                  <xs:attribute name="Position" type="xs:int" use="required" />
+
+                </xs:complexType>
+              </xs:element>
+
+            </xs:sequence>
+            <xs:attribute name="Handle" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+
+
+      </xs:sequence>
+      <xs:attribute name="Name" type="xs:string" use="required" />
+      <xs:attribute name="Handle" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

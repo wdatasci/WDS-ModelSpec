@@ -1,9 +1,6 @@
-
-
-
-create or replace function public.if(hyp boolean, thn int, els int) return int
-as begin
-return cast(case when (hyp) then thn else els end as int);
+create or replace function public.if(hyp boolean, thn int, els int) return int 
+as begin 
+return cast(case when (hyp) then thn else els end as int); 
 end;
 
 create or replace function public.if(hyp boolean, thn varchar, els varchar) return varchar

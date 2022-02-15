@@ -215,7 +215,7 @@ local _dMatrix_print=function(self,prefix,lineprefix,depth)
             if type(v)=="number" then
                 s=s..string.format(" %10.4f ",v)
             elseif type(v)=="table" then
-                s=s..string.format(" {%10s} ",wds.show(v,depth))
+                s=s..string.format(" {%10s} ",wds.show_str(v,{},depth))
             else
                 s=s..string.format(" %10s ",v)
             end
