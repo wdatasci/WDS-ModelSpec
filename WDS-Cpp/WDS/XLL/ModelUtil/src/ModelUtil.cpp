@@ -266,7 +266,7 @@ long xltypeMulti_to_long(LPXLOPER12 arg0, size_t r, size_t c, bool bStrict, long
 	return rv;
 }
 
-std::wstring LPOPER_to_wstring(LPXLOPER12 arg0, size_t r, size_t c)
+std::wstring LPOPER_to_wstring(LPXLOPER12 arg0, size_t r, size_t c, std::wstring defv)
 {
 	std::wstring rv = L"";
 	bool bThrowError = false;
@@ -332,7 +332,12 @@ std::wstring LPOPER_to_wstring(LPXLOPER12 arg0, size_t r, size_t c)
 	else {
 		bThrowError = true;
 	}
-	if (bThrowError) throw std::exception("Error in LPOPER_to_wstring");
+	if (bThrowError) {
+		if (defv == L"")
+			throw std::exception("Error in LPOPER_to_wstring");
+		else
+			rv = defv;
+	}
 	return rv;
 }
 

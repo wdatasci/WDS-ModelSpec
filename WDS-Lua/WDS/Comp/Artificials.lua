@@ -1,4 +1,4 @@
---[[Copyright (c) 2019 Wypasek Data Science, Inc.
+--[[Copyright (c) 2019-2022 Wypasek Data Science, Inc.
 --Released under the MIT open source license.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
