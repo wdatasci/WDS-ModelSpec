@@ -42,6 +42,13 @@ custom functions.  In this example, a configuration XML is used to define the in
 outputs, and other parameters.  XSL transformations provide the generized wrappers for 
 the guts of the function.  Put simply, define the columns you want and the guts of the 
 function and let the XSL take care of the pedantic ugly parts.
+<li>Bones</li> A generalizable version of RawBones that serves as a prototype for other 
+custom functions.  In this example, a configuration XML is used to define the inputs, 
+outputs, and other parameters.  XSL transformations provide the generized wrappers for 
+the guts of the function.  Put simply, define the columns you want and the guts of the 
+function and let the XSL take care of the pedantic ugly parts.
+<li>TSTest</li> A prototype for using Vertica UDTFs for processing panel time series
+data.  
 </ul>
 
 # UNDER CONSTRUCTION
