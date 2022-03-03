@@ -19,7 +19,7 @@ Excel-like if(condition,then,else). (Also used in other UDFs.)
 
 
 
-# UDF-Cpp
+# UDTF-Cpp
 C++ based UDFs, primarily UDTFs (User Defined Transformation Functions).
 These UDTFs can take tables and produce tables with additional or different columns
 and possibly a different number of rows.  As with analytic functions, UDTFs can be 
