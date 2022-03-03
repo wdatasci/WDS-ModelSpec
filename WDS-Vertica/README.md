@@ -12,7 +12,7 @@ SQL based UDFs. Each sql file contains supporting code, some examples include:
 <li>casters.sql</li> A few cast-ing wrappers used in other UDFs.
 <li>conditionals.sql</li> Simple conditional functions missing in Vertica, such as an 
 Excel-like if(condition,then,else). (Also used in other UDFs.)
-<li>MonthID.sql</li> Date utilities and a simple month indenifier, 12(y-2000)+m.
+<li>MonthID.sql</li> Date utilities and a simple month indentifier, 12(y-2000)+m.
 <li>finance.sql</li> Base payment functions mirroring Excel's PMT, PV, FV.
 <li>page-labels.sql</li> Basic grouping labels.
 </ul>
