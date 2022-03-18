@@ -2,7 +2,7 @@
 Supporting libraries are added periodically.
 
 # Notes through 2022-02:
-The documentation for the model specification and style files have been added in WDS-XLM.
+The documentation for the model specification and style files have been added in WDS-XML.
 
 
 # Notes on updates through 2021-08:
