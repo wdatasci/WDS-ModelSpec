@@ -16,7 +16,7 @@
 
 %ifs required for Options
 \newif\ifindex          \indexfalse
-
+\newif\ifcodename       \codenamefalse
 \newif\iflandscape      \landscapefalse
 \newif\ifdraft          \draftfalse
 \newif\ifcommentary     \commentarytrue
@@ -29,7 +29,6 @@
 
 \newlength\myleftmargin
 \setlength\myleftmargin  {1.25in}
-
 \newlength\mypaperwidth
 \setlength\mypaperwidth  {8.5in}
 
@@ -60,9 +59,14 @@
 
 
 %Options
+\DeclareOption{displaycode}{\displaycodetrue}
+\DeclareOption{nowritecode}{\writecodefalse}
+\DeclareOption{noruncode}{\runcodefalse}
 \DeclareOption{commentary}{\commentarytrue}
 \DeclareOption{nocommentary}{\commentaryfalse}
 \DeclareOption{index}{\indextrue}
+\DeclareOption{entabcode}{\entabcodetrue}
+\DeclareOption{codename}{\codenametrue}
 \DeclareOption{landscape}{\landscapetrue}
 \DeclareOption{draft}{\drafttrue}
 \DeclareOption{spaceholder}{}
@@ -171,9 +175,9 @@
 \ProcessOptions
 
 
-
 %Packages to include
-\ifindex \usepackage{imakeidx} \makeindex 
+\ifindex 
+    \usepackage{imakeidx} \makeindex 
 %adjustments to imakeidx so so that toc link works
 \renewenvironment{theindex}
     {\imki@maybeaddtotoc
@@ -328,6 +332,15 @@
 
 \let\ifundefined\ifndef
 
+\def\ifEqString#1#2{\xdef\testa{#1}\xdef\testb{#2}\ifx\testa\testb}
+
+\def\ifundefined#1{%
+  \expandafter\ifx\csname#1\endcsname\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi}
+
 
 
 %lua stuff
@@ -335,6 +348,18 @@
 \def\subfolder{\jobname.build/}
 
 \usepackage{luacode}
+
+%gnuplot stuff
+
+\usepackage{graphicx}
+\usepackage{svg}
+
+\usepackage{gnuplottex}
+\ShellEscapetrue
+
+\usepackage{tikz}
+\usetikzlibrary{trees}
+
 
 
 %token stuff

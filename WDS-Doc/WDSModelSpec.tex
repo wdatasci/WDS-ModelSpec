@@ -1,7 +1,7 @@
 \documentclass[10pt]{article}
 
-\usepackage[commentary,index]{WDSTechnical}
-%\usepackage[nocommentary,index]{WDSTechnical}
+%\usepackage[commentary,index]{WDSTechnical}
+\usepackage[nocommentary,index]{WDSTechnical}
 \def\subfolder{\jobname.build/}
 
 %\usepackage[letterpaper,includeall]{geometry}
@@ -48,10 +48,10 @@
     \def\othersubtitle{Extended Documentation, History and Examples}
 \fi
 
-\def\thisversion{0.5.2}
+\def\thisversion{0.5.3}
 \def\thisfirm{Wypasek Data Science, Inc.}
-\def\thisdate{2021-08}
-\def\thiscopyright{Copyright 2019, 2020, 2021}
+\def\thisdate{2022-03}
+\def\thiscopyright{Copyright 2019, 2020, 2021, 2022}
 \def\thisauthor{Christian Wypasek}
 
 \ifcommentary
@@ -942,8 +942,8 @@ an implied recursive structure.  There are several conventions and general goals
                 child { node {Dictionary}}
                 child { node {SignatureMD}}
                 child { node [optional] {FieldExtMDs}}
-                child { node [selected1] {[Models]}
-                  child { node [selected2] {Model, @Name=Component 1}
+                child { node [selected1] {[ComponentModels]}
+                  child { node [selected2] {ComponentModel, @Name=Component 1}
                         child { node [optional] {Documentation}}		
                         child { node {Global Attributes: Model Type, Usage, and other details} } 
                         child { node {Contextual Attributes: Modeling Directives, Implementation Directives} } 
@@ -1764,25 +1764,26 @@ polynomials for non-linear effects, another example could be {\tt PrinCurBal\_Sq
 variable treatment is its own component model, it follows that each variable can have its own dictionary of source fields and
 transformations.  Each can be understood as formula based on a sequence of core sources, say $s_1, s_2,\ldots, s_N$, and possibly a sequence
 of constants, $c_1, c_2, \ldots, c_M$. More than one transformation can be applied and they will be applied in order to the previous result,
-denoted below as X. For the first transformation to be applied or the case where no transformations are applied, $X=s_1$. For a naming and
+denoted below as X.  In the case that more than one temporary result is required, X[\#], will refer the the calculation \# prior on the
+stack.  For the first transformation to be applied or the case where no transformations are applied, $X=s_1$. For a naming and
 style convention, we will use RPN, with the understanding that all zero divisors result in a $null$ value to be treated as missing or invalid data.
 
 \noindent
 \begin{tabular}{|c|c|c|c|}\hline
     Transformation &  \# Inc Srcs & \# Inc Const & Formula \tallstrut \\ \hline
     None (X)        & 1 & 0 & $s_1$ \tallstrut \\ \hline
-    X.S[\#].add    & 1 & 0 & $(X+s_{[\#]})$ \tallstrut \\ \hline
-    X.C[\#].add    & 0 & 1 & $(X+c_{[\#]})$ \tallstrut \\ \hline
-    X.S[\#].sub    & 1 & 0 & $(X-s_{[\#]})$ \tallstrut \\ \hline
-    X.C[\#].sub    & 0 & 1 & $(X-c_{[\#]})$ \tallstrut \\ \hline
-    X.S[\#].div    & 1 & 0 & $(s_{[\#]}~>~\epsilon)~?~(X/s_{[\#]})~:~null$ \tallstrut \\ \hline
-    X.S[\#].S[?].sub.div    & 1 & 0 & $(s_{[\#]}-s_{[?]}~>~\epsilon)~?~(X/(s_{[\#]}-s_{[?]}))~:~null$ \tallstrut \\ \hline
-    X.C[\#].sub.C[?].div    & 1 & 0 & $(X-c_{[\#]})/c_{[?]}$ \tallstrut \\ \hline
-    X.C[\#].mul    & 0 & 1 & $(X*c_{[\#]})$ \tallstrut \\ \hline
-    X.C[\#].min    & 0 & 1 & $min(X,c_{[\#]})$ \tallstrut \\ \hline
-    X.C[\#].max    & 0 & 1 & $max(X,c_{[\#]})$ \tallstrut \\ \hline
-    X.C[\#].pow    & 0 & 1 & $power(X,c_{[\#]})$ \tallstrut \\ \hline
-    X.S[\#].C[?].[eq|le|lt|ge|gt].nullif  & 1 & 1 & $(s_{[\#]}~[=|\le|<|\ge|>]~c_{[?]})~?~X~:~null$ \tallstrut \\ \hline
+    X[[\#]].S[\#].add    & 1 & 0 & $(X[[\#]]+s_{[\#]})$ \tallstrut \\ \hline
+    X[[\#]].C[\#].add    & 0 & 1 & $(X[[\#]]+c_{[\#]})$ \tallstrut \\ \hline
+    X[[\#]].S[\#].sub    & 1 & 0 & $(X[[\#]]-s_{[\#]})$ \tallstrut \\ \hline
+    X[[\#]].C[\#].sub    & 0 & 1 & $(X[[\#]]-c_{[\#]})$ \tallstrut \\ \hline
+    X[[\#]].S[\#].div    & 1 & 0 & $(s_{[\#]}~>~\epsilon)~?~(X[[\#]]/s_{[\#]})~:~null$ \tallstrut \\ \hline
+    X[[\#]].S[\#].S[?].sub.div    & 1 & 0 & $(s_{[\#]}-s_{[?]}~>~\epsilon)~?~(X[[\#]]/(s_{[\#]}-s_{[?]}))~:~null$ \tallstrut \\ \hline
+    X[[\#]].C[\#].sub.C[?].div    & 1 & 0 & $(X[[\#]]-c_{[\#]})/c_{[?]}$ \tallstrut \\ \hline
+    X[[\#]].C[\#].mul    & 0 & 1 & $(X[[\#]]*c_{[\#]})$ \tallstrut \\ \hline
+    X[[\#]].C[\#].min    & 0 & 1 & $min(X[[\#]],c_{[\#]})$ \tallstrut \\ \hline
+    X[[\#]].C[\#].max    & 0 & 1 & $max(X[[\#]],c_{[\#]})$ \tallstrut \\ \hline
+    X[[\#]].C[\#].pow    & 0 & 1 & $power(X[[\#]],c_{[\#]})$ \tallstrut \\ \hline
+    X[[\#]].S[\#].C[?].[eq|le|lt|ge|gt].nullif  & 1 & 1 & $(s_{[\#]}~[=|\le|<|\ge|>]~c_{[?]})~?~X[[\#]]~:~null$ \tallstrut \\ \hline
 \end{tabular}
 
 \noindent
@@ -1839,10 +1840,108 @@ A \highlight{Segmentation Variable}, in this context of this specification, will
 
 
 
+\subsection{A Detailed Example}
 
+[Under construction]
+Consider a simple {\em made-up} two variable model for competing risks.  One Example could be:
 
-
-
+\begin{Verbatim}[fontsize=\small,baselinestretch=0.75,formatcom=\color{red}]
+<?xml version="1.0"?>
+<!-- Copyright 2019, 2020, 2021, 2022, Wypasek Data Science, Inc.
+    Author: Christian Wypasek (CJW)
+-->
+<Projects xmlns:xi="http://www.w3.org/2001/XInclude">
+    <Project Name="Example1">
+        <Documentation>
+            <Version>
+                <Major>1</Major>
+                <Minor>0</Minor>
+                <Patch>2</Patch>
+            </Version>
+            <Date>2020-02-02</Date>
+            <Text><par>Simple example model of WDS-ModelSpec.</par>
+            </Text>
+        </Documentation>
+        <Dictionary><xi:include parse="xml" href="[Path to projecct space global source reference]"  
+            xpointer="FieldMDs"/></Dictionary>
+        <Models>
+            <Model Name="ExampleModel1" 
+                Handle="CRM1"
+                >
+                <SignatureMDs>
+                    <SignatureMD Name="Input">
+                    </SignatureMD>
+                    <SignatureMD Name="Output">
+                    </SignatureMD>
+                </SignatureMDs>
+                <ModelDirectives>
+                    <!--CompRiskSurv models always include:
+                            an applicability score, one value per subject
+                            a static score, one value per subject and each response
+                            a time varying conal ordering score which provides robust scoers across age 
+                                    and calendar effects, one value per subject, each response, 
+                                    and each (age, time) in requested time frame
+                            a time varying score which provides a robust score across just age effects, 
+                                    one value per subject, each response, and each (age, time) in 
+                                    requested time frame
+                            a baseline score, one value per
+                                    subject, and age in requested time frame
+                    -->
+                    <Type>CompRiskSurv</Type>
+                    <Responses>
+                        <Response>EC1</Response>
+                        <Response>EC2</Response>
+                    </Responses>
+                </ModelDirectives>
+                <ComponentModels>
+                    <!--All models have an applicability score, used to determine at run time which 
+                        model is appropriate.  The return value of an applicablity score is 
+                        0 (applicable) or negative.
+                    -->
+                    <ComponentModel Name="Applicability" Handle="App">
+                    </ComponentModel>
+                    <ComponentModel Response="Static">
+                        <Variables>
+                            <Variable Name="FICO" Handle="X">
+                                <Treatment>Hats</Treatment>
+                                <CleanLimits>
+                                    <LeftLimit>150</LeftLimit>
+                                    <RightLimit>950</RightLimit>
+                                </CleanLimits>
+                                <CriticalValues>
+                                    <CriticalValue> 600 </CriticalValue>
+                                    <CriticalValue> 650 </CriticalValue>
+                                    <CriticalValue> 700 </CriticalValue>
+                                </CriticalValues>
+                                <CoefficientSets>
+                                    <CoefficientSet Response="EC1">
+                                        <Coefficient Position="0"> 0 </Coefficient>
+                                        <Coefficient Position="1"> 0 </Coefficient>
+                                        <Coefficient Position="2"> 0 </Coefficient>
+                                        <Coefficient Position="3"> 0 </Coefficient>
+                                    </CoefficientSet>
+                                    <CoefficientSet Response="EC2">
+                                        <Coefficient Position="0"> 0 </Coefficient>
+                                        <Coefficient Position="1"> 0 </Coefficient>
+                                        <Coefficient Position="2"> 0 </Coefficient>
+                                        <Coefficient Position="3"> 0 </Coefficient>
+                                    </CoefficientSet>
+                                </CoefficientSets>
+                            </Variable>
+                        </Variables>
+                    </ComponentModel>
+                    <ComponentModel Response="TVC">
+                    </ComponentModel>
+                    <ComponentModel Response="TV">
+                    </ComponentModel>
+                    <ComponentModel Response="Baseline">
+                    </ComponentModel>
+                </ComponentModels>
+            </Model>
+        </Models>
+    </Project>
+</Projects>
+\end{Verbatim}
 
 
 
@@ -1953,6 +2052,9 @@ TODO: This is part of the problem, the PMML transformation spec is really poor
 and not easy to figure out.  
 \end{Verbatim}
 
+
+
+
 \ifHOLD
 
 \begin{figure}\label{pmml_hats_example}
@@ -2026,7 +2128,6 @@ TODO
 \subsection{Basic tools and examples}
 
 \fi
-
 
 
 

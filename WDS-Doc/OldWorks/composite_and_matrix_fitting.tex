@@ -34,21 +34,38 @@
 \def\thissubtitle{Documentation}
 \def\othersubtitle{}
 
-\def\thisversion{0.0.1}
+\def\thisversion{0.0.2}
 %\def\thisfirm{NA}
 \def\thisdate{NA}
 \def\thiscopyright{Copyright 2019-2022}
 \def\thisauthor{Christian Wypasek}
 
-\def\thisabstract{These are some really old thoughts on fitting competing risk models. I had made several significant
-improvements to the concepts including: A simple technique for tricking non-competing risk fitting software (like SAS) into fitting
-competing risks, the use of progressive conal ordering for robustness, and a baseline fitting method based on martingale residuals.  Details 
-will be in WDS-ModelSpec docs.}
+\def\thisabstract{
+
+{\em Christian Wypasek's Notes, 2022}: These are some really old thoughts on fitting competing risk models. 
+
+The concepts in this document were originally conceived and implemented in late 1999 and 2000.
+I had pursued possibly academically publishing it, however, upon further research, Sir David Cox himself had proposed the core concepts in the 1980s.
+Between 2004 and 2005, I developed a simple techinque to trick SAS's PHReg into fitting competing risks, and have used and further developed
+that basic methodology ever since.   Further developments included the use of progressive conal ordering models for robustness and 
+a baseline fitting method based on martigale residuals.  Details will be in WDS-ModelSpec docs.
+
+
+Interestingly enough, after a few years without a SAS license, it came to my attention that 
+some of the concepts were published by Fine and Gray in 1999 and some proportional hazards modeling software now have "Fine and Gray"
+extensions.  Based on Cox's precedence, I would argue that is the term should only be {\em Cox Proportional Hazards for Competing Risks}.
+
+}
+
+
+
+
 \title{\thistitle}
 \date{\thisdate}
 \author{\thisauthor}
 
 \DocumentTitlePage{\thistitle}{\thissubtitle}{Version \thisversion }{}{\thiscopyright }{\thisauthor }{\thisabstract }
+
 
 
 \section{Current Techniques}
