@@ -43,6 +43,7 @@ DateFormatRE3_2=re.compile("([01]?[0-9])([-/_.]?)([0-3]?[0-9])([-/_.]?)([12][90]
 
 DateEpoch=datetime.date(1970,1,1)
 DateEpochExcel=datetime.date(1899,12,30) #one extra day since Excel counts 1900 as a leap year
+DateTimeEpochExcel=datetime.datetime(1899,12,30) #one extra day since Excel counts 1900 as a leap year
 DateResolution=1 # in days
 DateTimeResolution=1 # in seconds
 DateUsefulMin=datetime.date(1940,1,1)
@@ -56,11 +57,22 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
     if tv is datetime.datetime: return v
     try:
         if tv in (int,float):
+            if isDateEpochExcel:
+                vt=v-int(v)
+                h=int(vt*24)
+                vt=vt-h/24.0
+                m=int(vt*60)
+                vt=vt-m/60.0
+                s=int(vt*60)
+                lv=DateTimeEpochExcel+datetime.timedelta(days=int(v),hours=h,minutes=m,seconds=s)
+                if (lv.year>2040) and toWARN:
+                    print('WARNING, in CleanDate, with isDateEpochExcel, converted int/float to a year>2040, might not be Excel Date')
+                return lv
             # check unix time
             try:
                 lv=datetime.fromtimestamp(v,tz=timezone.utc)
                 if lv.year<1900 or lv.year>2100:
-                    raise('Bad date '+str(v))
+                    raise(Exception('Bad date '+str(v)))
                 return lv
             except Exception as e:
                 pass
@@ -82,8 +94,8 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                 m=int(v-y*10000-m*100)
                 return datetime.datetime(y+1,1,1)+datetime.timedelta(day)
             elif -1200<v and v<1213:  # a MonthID
-                y=math.floor((lv-1)/12)
-                m=int(lv-12*y)
+                y=math.floor((v-1)/12)
+                m=int(v-12*y)
                 y+=2000
                 if day>0:
                     lv=datetime.datetime(y,m,day,0,0,0)
@@ -94,7 +106,7 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                         lv=datetime.date(y+1,1,1,0,0,0)+datetime.timedelta(day)
                 if toWARN: print('Friendly Warning, assumed '+str(v)+' was a MonthID in CleanDate')
                 return lv
-            raise("???? in cleandate")
+            raise Exception("???? in cleandate")
         elif tv in (str,bytes):
             lv=v if tv is str else v.decode()
             try:
@@ -138,6 +150,7 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
         raise Exception('Error in CleanDateTime: '+e.args[0]+'\n'+str(traceback.format_tb(e.__traceback__)))
     except:
         raise Exception('cannot convert '+str(v))
+    raise Exception('cannot convert '+str(v))
 
 
 def CleanDate(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
