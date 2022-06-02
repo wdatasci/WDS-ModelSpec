@@ -67,9 +67,38 @@
                                xs:string
                         '/>
     </xs:simpleType>
-
+    
     <xs:simpleType name='LOStr'>
-        <xs:list itemType='xs:token'/>
+        <xs:list itemType='Str'/>
+    </xs:simpleType>
+
+    <xs:simpleType name='VLS'>
+        <xs:union memberTypes='xs:token
+                               xs:normalizedString
+                               xs:string
+                        '/>
+    </xs:simpleType>
+
+    <xs:simpleType name='LOVLS'>
+        <xs:list itemType='VLS'/>
+    </xs:simpleType>
+
+    <xs:simpleType name='Dte'>
+        <xs:union memberTypes='xs:date
+                        '/>
+    </xs:simpleType>
+
+    <xs:simpleType name='LODte'>
+        <xs:list itemType='Dte'/>
+    </xs:simpleType>
+
+    <xs:simpleType name='DTm'>
+        <xs:union memberTypes='xs:dateTime
+                        '/>
+    </xs:simpleType>
+
+    <xs:simpleType name='LODTm'>
+        <xs:list itemType='DTm'/>
     </xs:simpleType>
 
 
