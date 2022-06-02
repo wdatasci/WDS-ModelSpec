@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     <xsl:param name="runtemplate" select="'UDTF_SQLCall'"/>
+    <xsl:param name="language" select="'C++'"/>
     <xsl:param name="pathtobuild" select="'./build'"/>
     <xsl:output method="text"/>
     <xsl:decimal-format 
@@ -103,12 +104,30 @@ drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$P
 drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> cascade;
 drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib cascade;
 
-\set libfile '\'<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>.so\'';
-create library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib as :libfile;
+<xsl:choose>
+<xsl:when test="$language='C++'">
+\set libfile '\'<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>.so\''
+\set libdepends ''
+</xsl:when>
+<xsl:when test="$language='Java'">
+\set libfile '\''`pwd`'/<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>.jar\''
+\set libdepends ''
+</xsl:when>
+<xsl:when test="$language='Python'">
+\set libfile '\'<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>.py\''
+\set libdepends ' depends \'<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>_Enums.py:<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>_Utils.py:<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>_guts.py<xsl:if test="count(Info/Python/Depends/Depend)>0" ><xsl:for-each select='Info/Python/Depends/Depend'>:<xsl:value-of select="."/></xsl:for-each></xsl:if>\''
+</xsl:when>
+</xsl:choose>
+create library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib as :libfile 
+:libdepends 
+language '<xsl:value-of select="$language"/>' 
+;
+grant all extend on all functions in schema public to dbadmin;
 grant all on library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib to dbadmin;
-grant usage on schema <xsl:value-of select="$Schema"/> to public;
+/*grant usage on schema <xsl:value-of select="$Schema"/> to public;*/
 grant usage on library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib to public;
-create transform function <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> as language 'C++' name '<xsl:value-of select="$ProjectName"/>_Factory' library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib fenced;
+create transform function <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> as name '<xsl:value-of select="$ProjectName"/>_Factory' library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib
+<xsl:if test="$language='C++'"> fenced </xsl:if>;
 grant all extend on all functions in schema public to dbadmin;
 grant execute on all functions in schema public to public;
 
@@ -151,7 +170,6 @@ comment on transform function <xsl:value-of select="$Schema"/>.<xsl:value-of sel
 \set ON_ERROR_STOP on
 */
 
-drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> cascade;
 drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> cascade;
 drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib cascade;
 

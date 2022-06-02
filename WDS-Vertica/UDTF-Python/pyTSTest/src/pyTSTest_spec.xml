@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<UDxs>
+    <UDTF Name="pyTSTest">
+        <Info>
+            <SQL>
+                <Vertica Database="verticadb" Schema="public">
+            </SQL>
+            <Cpp/>
+            <Java/>
+            <Python>
+                <Depends>
+                    <Depend>/opt/vertica/oss/python3/lib/python3.9/site-packages</Depend>
+                </Depends>
+            </Python>
+        </Info>
+        <Parameters>
+            <Column Use="P"  Name="InputBlockMaxLength" DTyp="Int" Default="100"/>
+            <Column Use="P"  Name="BlockMaxLength" DTyp="Int" Default="NULL"/>
+        </Parameters>
+        <Columns>
+            <Column Use="IO" Name="ID" DTyp="Int"  BlockID="Y" Static="Y" />
+            <Column Use="IO" Name="IDStr" DTyp="Str" Length="32"  Static="Y" />
+            <Column Use="IO"  Name="RowIndex" DTyp="Int" />
+            <Column Use="IO" Name="TestDate" DTyp="Dte"/>
+            <Column Use="O"  Name="y" DTyp="Int"/>
+            <Column Use="O"  Name="m" DTyp="Int"/>
+            <Column Use="O"  Name="d" DTyp="Int"/>
+            <Column Use="O" Name="lState" DTyp="VLS" Length="10"/>
+            <Column Use="O" Name="lState_Code" DTyp="Int"/>
+        </Columns>
+
+
+        <!-- for testing the xml-to-cpp xsl, the details of an enum-like structure to be included -->
+        <Enums>
+            <Enum Name="ExState">
+                <EnumFields>
+                    <EnumField Name="Index" DTyp="Int"/>
+                    <EnumField Name="SomeAttr0" DTyp="Int"/>
+                    <EnumField Name="SomeAttr1" DTyp="Str"/>
+                    <EnumField Name="Code" DTyp="Int"/>
+                </EnumFields>
+                <EnumValue Name="Unk" Index="-99" SomeAttr1="-99" SomeAttr0="-99" Code="-99"/>
+                <EnumValue Name="A" Index="1" SomeAttr1="1" SomeAttr0="3" Code="-1"/>
+                <EnumValue Name="Z" Index="2" SomeAttr1="2" SomeAttr0="17" Code="3"/>
+                <!--
+                <EnumValue Name="A" Index="1" SomeAttr1="hey" SomeAttr0="3" Code="-1"/>
+                <EnumValue Name="Z" Index="2" SomeAttr1="what" SomeAttr0="17" Code="3"/>
+                -->
+            </Enum>
+        </Enums>
+
+    </UDTF>
+</UDxs>
+

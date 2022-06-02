@@ -8,6 +8,17 @@
 
 drop table if exists x cascade;
 
+create local temporary table x0
+on commit preserve rows as 
+select public.Bones(ID, LengthIndex, StartingIndex using parameters EndPointInclusive=true ) over (partition by ID order by StartingIndex)
+from (
+	select 100 as ID, 3 as LengthIndex, 10 as StartingINdex
+) a
+;
+
+select * from x0;
+
+/*
 create local temporary table x
 on commit preserve rows as
 select -10 as ID,'hey1'::char(20) as JunkStr, 0 as LengthIndex, 10 as StartingIndex
@@ -15,6 +26,14 @@ order by ID, StartingIndex
 ; commit;
 insert into x values(20,'huh',5,20); commit;
 insert into x values(30,'what',8,30); commit;
+*/
+
+
+create local temporary table x
+on commit preserve rows as
+select  ID+RowIndex as ID, RowIndex as LengthIndex, 1 as StartingIndex
+from x0
+order by 1,2,3;
 
 \echo /// Test input data
 select * from x order by ID, StartingIndex, LengthIndex;
@@ -59,6 +78,41 @@ select * from xxx order by ID, RowIndex;
 \echo /// Another call.  The guts of TSTest can be general and hit external resources.
 
 select public.TSTest(ID,IDStr,RowIndex,TestDate) over (partition by ID order by RowIndex)
+from xxx
+order by ID, RowIndex;
+
+
+\echo /// Another call.  The guts of pyTSTest can be general and hit external resources.
+
+select public.pyTSTest(ID,IDStr,RowIndex,TestDate) over (partition by ID order by RowIndex)
+from xxx
+order by ID, RowIndex;
+
+
+\echo /// Another call.  The guts of pyTSTest can be general and hit external resources.
+
+select public.pyTSTest(ID,IDStr,RowIndex,TestDate) over (partition by ID order by RowIndex)
+from xxx
+order by ID, RowIndex;
+
+
+\echo /// Another call.  The guts of pyTSTest can be general and hit external resources.
+
+select public.pyTSTest(ID,IDStr,RowIndex,TestDate) over (partition by ID order by RowIndex)
+from xxx
+order by ID, RowIndex;
+
+
+\echo /// Another call.  The guts of pyTSTest can be general and hit external resources.
+
+select public.pyTSTest(ID,IDStr,RowIndex,TestDate) over (partition by ID order by RowIndex)
+from xxx
+order by ID, RowIndex;
+
+
+\echo /// Another call.  The guts of pyTSTest can be general and hit external resources.
+
+select public.pyTSTest(ID,IDStr,RowIndex,TestDate) over (partition by ID order by RowIndex)
 from xxx
 order by ID, RowIndex;
 
