@@ -21,7 +21,7 @@ VSQL=/opt/vertica/bin/vsql
 SDK_HOME?=/opt/vertica/sdk
 SDK_JAR?=/opt/vertica/
 
-LANGUAGE?=C++
+LANGUAGE?=Python
 
 CXX?=g++
 CXXFLAGS:=$(CXXFLAGS) -I $(SDK_HOME)/include -I HelperLibraries -g -Wall -Wno-unused-value -shared -fPIC -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0
@@ -57,28 +57,34 @@ WDS_VERTICA:=$(WDS_LOC)/WDS-Vertica
 CXXFLAGS:=$(CXXFLAGS) -I $(WDS_CPP)/include
 
 
-BUILD_FINAL_SOURCES = $(BUILD)/tmp/$(lUDTF).cpp
+BUILD_FINAL_SOURCES = $(BUILD)/$(lUDTF).py
 
-all:	$(BUILD) $(BUILD_TMPDIR) $(BUILD)/$(lUDTF).so
+all:	$(BUILD) $(BUILD_TMPDIR) $(BUILD_FINAL_SOURCES)
 
 dirs:	$(BUILD) $(BUILD_TMPDIR)
 
-$(BUILD) $(BUILD_TMPDIR):	
+$(BUILD) $(BUILD_TMPDIR) $(BUILD)/__init__.py:	
 	-- mkdir -p $@
+	-- echo "pass" > $(BUILD)/__init__.py
 
+$(BUILD)/$(lUDTF)_Enums.py $(lUDTF)_Enums.py:	$(BUILD) $(BUILD)/__init__.py src/$(lUDTF)_spec.xml $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl
+	xsltproc --stringparam ProcessEnums Only --stringparam ProcessUtils No -o $(BUILD)/$(lUDTF)_Enums.py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl src/$(lUDTF)_spec.xml
 
-$(lUDTF): $(BUILD) $(BUILD)/$(lUDTF).so
+$(BUILD)/$(lUDTF)_Utils.py $(lUDTF)_Utils.py:	$(BUILD) $(BUILD)/__init__.py src/$(lUDTF)_spec.xml $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl
+	xsltproc --stringparam ProcessEnums No --stringparam ProcessUtils Only -o $(BUILD)/$(lUDTF)_Utils.py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl src/$(lUDTF)_spec.xml
 
-$(BUILD)/tmp/$(lUDTF).cpp:	$(BUILD)/tmp src/$(lUDTF)_spec.xml src/$(lUDTF)_guts.cpp $(WDS_VERTICA)/XSLT/UDTFSpec2Cpp.xsl
-	xsltproc -o $(BUILD)/tmp/$(lUDTF).cpp $(WDS_VERTICA)/XSLT/UDTFSpec2Cpp.xsl src/$(lUDTF)_spec.xml
+$(BUILD)/$(lUDTF)_guts.py $(lUDTF)_guts.py:	src/$(lUDTF)_guts.py
+	cp src/$(lUDTF)_guts.py $(BUILD)/$(lUDTF)_guts.py
 
-$(BUILD)/$(lUDTF).so: src/*.cpp $(BUILD_FINAL_SOURCES) $(SDK_HOME)/include/Vertica.cpp $(SDK_HOME)/include/BuildInfo.h 
-	$(CXX) $(CXXFLAGS) -o $@ $(BUILD_FINAL_SOURCES) $(SDK_HOME)/include/Vertica.cpp 
+$(lUDTF): $(BUILD) $(BUILD_FINAL_SOURCES)
+
+$(BUILD)/$(lUDTF).py:	$(BUILD) $(BUILD)/__init__.py src/$(lUDTF)_spec.xml $(BUILD)/$(lUDTF)_guts.py $(BUILD)/$(lUDTF)_Utils.py $(BUILD)/$(lUDTF)_Enums.py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl
+	xsltproc --stringparam ProcessEnums No --stringparam ProcessUtils No -o $(BUILD)/$(lUDTF).py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl src/$(lUDTF)_spec.xml
 
 $(BUILD)/uninstall_ddl.sql uninstall_ddl.sql:	$(BUILD) $(WDS_VERTICA)/XSLT/UDTFSpec2SQLCall.xsl FORCE
 	xsltproc --stringparam language $(LANGUAGE) --stringparam runtemplate UDTF_SQLUnInstall --stringparam pathtobuild "$(BUILD)" -o $(BUILD)/uninstall_ddl.sql $(WDS_VERTICA)/XSLT/UDTFSpec2SQLCall.xsl src/$(lUDTF)_spec.xml
 
-$(BUILD)/install_ddl.sql install_ddl.sql:	$(BUILD) $(WDS_VERTICA)/XSLT/UDTFSpec2SQLCall.xsl FORCE
+$(BUILD)/install_ddl.sql install_ddl.sql:	$(BUILD) $(WDS_VERTICA)/XSLT/UDTFSpec2SQLCall.xsl $(BUILD)/$(lUDTF).py FORCE
 	xsltproc --stringparam language $(LANGUAGE) --stringparam runtemplate UDTF_SQLInstall --stringparam pathtobuild "$(BUILD)" -o $(BUILD)/install_ddl.sql $(WDS_VERTICA)/XSLT/UDTFSpec2SQLCall.xsl src/$(lUDTF)_spec.xml
 
 install:	$(BUILD)/uninstall_ddl.sql $(BUILD)/install_ddl.sql $(WDS_VERTICA)/XSLT/UDTFSpec2SQLCall.xsl

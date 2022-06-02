@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<UDxs>
+    <UDTF Name="pyBones">
+        <Info>
+            <SQL>
+                <Vertica Database="verticadb" Schema="public">
+                    <TestSourceBody>
+                        select 1::int as ID, 10::int as N, 51::int as Offset
+                    </TestSourceBody>
+                    <PanelDataSet>
+                        <!--When creting a panel dataset table, the where-clause to pull static output columns-->
+                        <OutputStaticRowIndicator>where RowIndex=51</OutputStaticRowIndicator>
+                    </PanelDataSet>
+                </Vertica>
+            </SQL>
+            <Cpp/>
+            <Java/>
+            <Python>
+                <Depends>
+                    <Depend>/opt/vertica/oss/python3/lib/python3.9/site-packages</Depend>
+                </Depends>
+            </Python>
+        </Info>
+        <Parameters>
+            <Column Use="P"  Name="InputBlockMaxLength" DTyp="Int" Default="1"/>
+            <Column Use="P"  Name="BlockMaxLength" DTyp="Int" Default="NULL"/>
+            <Column Use="P"  Name="EndPointInclusive" DTyp="Int" Default="0"/>
+            <!--Column Use="P"  Name="BeginAt" DTyp="Int" Default="0"/-->
+            <!--Column Use="P" Name="NewName" DTyp="VLS" Length="32" Defaunt="RowIndex"/-->
+        </Parameters>
+        <Columns>
+            <Column Use="IO" Name="ID" DTyp="Int" BlockID="Y" Static="Y" />
+            <Column Use="I"  Name="N" DTyp="Int" Static="Y"/>
+            <Column Use="I"  Name="Offset" DTyp="Int" Static="Y"/>
+            <Column Use="O"  Name="RowIndex" DTyp="Int" />
+        </Columns>
+    </UDTF>
+</UDxs>
+
