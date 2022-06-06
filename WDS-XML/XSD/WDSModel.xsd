@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!-- Copyright 2019, 2020, 2021, 2022, Wypasek Data Science, Inc. 
+
+    Author: Christian Wypasek (CJW)
+
+    CJW - Notes:  At the core of many statistcal models is a linear "score" or the sum of the products of 
+        cooefficients and independent variables.  Obviously, this not only includes linear regression models, but
+        also logistic (traditional credit score modeling), proportional hazards, and multiple generalized techniques..
+
+        I started using variable information bundles as both a way to both facilitate and instruct model building 
+        as well as to communicate the final model back circa 1997-1998 while working at GE Capital Mortgage Corp.
+
+        At first, these communicated in terms of SAS macros.  But, while at First Union/Wachovia, I developed 
+        a simple sequential markup pattern, called "variable packets" (very yaml-ish) which worked effectively like:
+            
+            Name: X
+            [Keyword] for [Previously Declared Name]: [Data]
+
+        Keyword information included: Source Variables, Treatments, Critical Values, Use Lists, etc.  This type of
+        variable packet file requires other
+
+        In 2005 and 2006, this markup style evolved into XML, starting for basic scoring models and competing risk models.
+    
+-->
+
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:
+
+</xs:schema>
