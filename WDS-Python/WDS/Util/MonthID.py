@@ -34,12 +34,15 @@ import dateutil.parser
 
 import math
 
-DateFormatRE1=re.compile("([12][90][0-9]{2})([-/_.]?)([01]?[0-9])([-/_.]?)([0-3]?[0-9])")  #iso
+DateFormatRE1=re.compile(  "([12][90][0-9]{2})([-/_.]?)([01]?[0-9])([-/_.]?)([0-3]?[0-9])")  #iso
 DateFormatRE1_2=re.compile("([12][90][0-9]{2})([-/_.]?)([01]?[0-9])")  #iso yyyy-mm
-DateFormatRE2=re.compile("([01]?[0-9])([-/_.]?)([0-3][0-9])([-/_.]?)([12][90][0-9]{2})")  #US Y2K
+DateFormatRE2=re.compile(  "([01]?[0-9])([-/_.]?)([0-3][0-9])([-/_.]?)([12][90][0-9]{2})")  #US Y2K
 DateFormatRE2_2=re.compile("([01]?[0-9])([-/_.]?)([0-3]?[0-9])([-/_.]?)([12][90])?([0-9]{2})")  #US m?m-d?d-yy?yy
-DateFormatRE3=re.compile("([12][90][0-9]{2})([-/.]?)([01][0-9])([-/.]?)([0-3][0-9])([tT\s])([012][0-9])(:?)([0-6][0-9])(:?)([0-6][0-9])(.[0-9]{3})([Z+-]?.+)") # iso datetime
+DateFormatRE3=re.compile(  "([12][90][0-9]{2})([-/.]?)([01][0-9])([-/.]?)([0-3][0-9])([tT\s])([012][0-9])(:?)([0-6][0-9])(:?)([0-6][0-9])(.[0-9]{3})([Z+-]?.+)") # iso datetime
 DateFormatRE3_2=re.compile("([01]?[0-9])([-/_.]?)([0-3]?[0-9])([-/_.]?)([12][90])?([0-9]{2})([tT\s])([012][0-9])(:?)([0-6][0-9])(:?)([0-6][0-9])(.[0-9]{3})([Z+-]?.+)") #US m?m-d?d-yy?yy 00:00:00
+DateFormatRE4_2=re.compile("([jJfFmMaAsSoOnNdD][aAeEpPuUeEcCoO][a-zA-Z]?)\s+([0-3]?[0-9])\s+([12]?[09]?[0-9]{2})[tT\s]+([012][0-9]):?([0-6][0-9]|[aApP][mM]):?([0-6][0-9]|[aApP][mM])?:?(.[0-9]+|[aApP][.]?[mM][.]?)?([aApP][.]?[mM][.]?)?\s*([zZ]\s*[+-][.0-9]+)?") # US MMM? d?d yy?yy 00:00[AM|PM|:00][AM|PM] [Z+-0]
+
+__months_short=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
 
 DateEpoch=datetime.date(1970,1,1)
 DateEpochExcel=datetime.date(1899,12,30) #one extra day since Excel counts 1900 as a leap year
@@ -109,11 +112,65 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
             raise Exception("???? in cleandate")
         elif tv in (str,bytes):
             lv=v if tv is str else v.decode()
+            lv=lv.strip()
             try:
-                lv=dateutil.parser.parse(lv)
-                if type(lv) is datetime: return lv
+                rv=dateutil.parser.parse(lv)
+                if type(rv) is datetime.datetime: return rv
+                if type(rv) is datetime.date: return datetime.datetime(rv.year,rv.month,rv.day)
             except Exception as e:
                 pass
+            if len(lv)>8 and lv[0].lower() in 'jfmasond':
+                prs=DateFormatRE4_2.findall(lv.lower())
+                lprs=len(prs)
+                if lprs<3 or len(prs[0])<3:
+                    raise Exception("cannot parse date[time] out of "+v)
+                m=__months_short.index(prs[0][:3])+1
+                d=int(prs[1])
+                y=int(prs[2])
+                if y<Y2KThreshold:
+                    y+=2000
+                if lprs==3:
+                    return datetime.dateime(y,m,d)
+                hh=int(prs[3])
+                if lprs==4:
+                    return datetime.dateime(y,m,d,hh)
+                if ('pm' in prs) or ('p.m.' in prs):
+                    hh+=12
+                    if lprs==5:
+                        return datetime.dateime(y,m,d,hh)
+                try:
+                    mm=int(prs[4])
+                except:
+                    if prs[4] in ('am','a.m.'):
+                        return datetime.dateime(y,m,d,hh)
+                    else:
+                        raise Exception("cannot parse date[time] out of "+v)
+                if lprs==5:
+                    return datetime.datetime(y,m,d,hh,mm)
+                try:
+                    ss=int(prs[5])
+                except:
+                    if prs[5] in ('am','a.m.','pm','p.m.'):
+                        return datetime.dateime(y,m,d,hh,mm)
+                    else:
+                        if prs[5][0]=='z':
+                            ss=0
+                            tz=prs[5]
+                            return datetime.dateime(y,m,d,hh,mm,s,0,tz)
+                        else:
+                            raise Exception("cannot parse date[time] out of "+v)
+
+                if lprs==6:
+                    return datetime.datetime(y,m,d,hh,mm,ss)
+                if prs[6][0]=='.':
+                    ms=double('0'+prs[6][0])
+                else:
+                    ms=0
+                if prs[-1][0]=='z':
+                    tz=prs[-1][0]
+                    return datetime.datetime(y,m,d,hh,mm,ss,ms,tz)
+                return datetime.datetime(y,m,d,hh,mm,ss,ms)
+
             prs=DateFormatRE3.findall(lv)
             if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]) and (prs[0][7]==prs[0][9]): 
                 try:
