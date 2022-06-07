@@ -16,18 +16,18 @@
     Released under the MIT open source license.
 '''
 
-import os,sys
-import pudb
-import argparse
+#import os,sys
+#import pudb
+#import argparse
 import traceback
 
-import time
-import os.path as osp
-import glob
-import fnmatch
+#import time
+#import os.path as osp
+#import glob
+#import fnmatch
 import re
-import string
-from enum import Enum
+#import string
+#from enum import Enum
 
 import datetime
 import dateutil.parser
@@ -78,6 +78,7 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                     raise(Exception('Bad date '+str(v)))
                 return lv
             except Exception as e:
+                raise(3)
                 pass
 
             # if value is comming in as YYYYMM or YYYYMMDD
@@ -118,6 +119,7 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                 if type(rv) is datetime.datetime: return rv
                 if type(rv) is datetime.date: return datetime.datetime(rv.year,rv.month,rv.day)
             except Exception as e:
+                raise(e)
                 pass
             if len(lv)>8 and lv[0].lower() in 'jfmasond':
                 prs=DateFormatRE4_2.findall(lv.lower())
@@ -171,7 +173,10 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                     return datetime.datetime(y,m,d,hh,mm,ss,ms,tz)
                 return datetime.datetime(y,m,d,hh,mm,ss,ms)
 
-            prs=DateFormatRE3.findall(lv)
+            try:
+                prs=DateFormatRE3.findall(lv)
+            except Exception as e:
+                raise Exception('Error in CleanDateTime, '+str(e)+', '+str(v))
             if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]) and (prs[0][7]==prs[0][9]): 
                 try:
                     lv=datetime.datetime(int(prs[0][0]),int(prs[0][2]),int(prs[0][4]),int(prs[0][6]),int(prs[0][8]),inv(prs[0][10]))
