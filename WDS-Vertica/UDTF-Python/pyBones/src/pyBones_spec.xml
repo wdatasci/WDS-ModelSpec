@@ -17,7 +17,8 @@
             <Java/>
             <Python>
                 <Depends>
-                    <Depend>/opt/vertica/oss/python3/lib/python3.9/site-packages</Depend>
+                    <Depend>/opt/vertica/oss/python3/lib/python3.9/site-packages/numpy</Depend>
+                    <Depend>/opt/vertica/oss/python3/lib/python3.9/site-packages/numpy.libs</Depend>
                 </Depends>
             </Python>
         </Info>

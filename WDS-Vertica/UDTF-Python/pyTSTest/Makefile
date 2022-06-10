@@ -65,21 +65,22 @@ dirs:	$(BUILD) $(BUILD_TMPDIR)
 
 $(BUILD) $(BUILD_TMPDIR) $(BUILD)/__init__.py:	
 	-- mkdir -p $@
-	-- echo "pass" > $(BUILD)/__init__.py
+	-- echo "pass" > $@/__init__.py
 
-$(BUILD)/$(lUDTF)_Enums.py $(lUDTF)_Enums.py:	$(BUILD) $(BUILD)/__init__.py src/$(lUDTF)_spec.xml $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl
-	xsltproc --stringparam ProcessEnums Only --stringparam ProcessUtils No -o $(BUILD)/$(lUDTF)_Enums.py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl src/$(lUDTF)_spec.xml
+$(BUILD_TMPDIR)/$(lUDTF)_Enums.py $(lUDTF)_Enums.py:	$(BUILD) $(BUILD)/__init__.py $(BUILD_TMPDIR)/__init__.py src/$(lUDTF)_spec.xml $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl
+	xsltproc --stringparam NumpyOrObject Object --stringparam ProcessEnums Only --stringparam ProcessUtils No -o $(BUILD_TMPDIR)/$(lUDTF)_Enums.py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl src/$(lUDTF)_spec.xml
 
-$(BUILD)/$(lUDTF)_Utils.py $(lUDTF)_Utils.py:	$(BUILD) $(BUILD)/__init__.py src/$(lUDTF)_spec.xml $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl
-	xsltproc --stringparam ProcessEnums No --stringparam ProcessUtils Only -o $(BUILD)/$(lUDTF)_Utils.py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl src/$(lUDTF)_spec.xml
+$(BUILD_TMPDIR)/$(lUDTF)_Utils.py $(lUDTF)_Utils.py:	$(BUILD) $(BUILD)/__init__.py $(BUILD_TMPDIR)/__init__.py src/$(lUDTF)_spec.xml $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl
+	xsltproc --stringparam NumpyOrObject Object --stringparam ProcessEnums No --stringparam ProcessUtils Only -o $(BUILD_TMPDIR)/$(lUDTF)_Utils.py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl src/$(lUDTF)_spec.xml
 
-$(BUILD)/$(lUDTF)_guts.py $(lUDTF)_guts.py:	src/$(lUDTF)_guts.py
-	cp src/$(lUDTF)_guts.py $(BUILD)/$(lUDTF)_guts.py
+$(BUILD_TMPDIR)/$(lUDTF)_guts.py $(lUDTF)_guts.py:	src/$(lUDTF)_guts.py
+	cp src/$(lUDTF)_guts.py $(BUILD_TMPDIR)/$(lUDTF)_guts.py
 
-$(lUDTF): $(BUILD) $(BUILD_FINAL_SOURCES)
 
-$(BUILD)/$(lUDTF).py:	$(BUILD) $(BUILD)/__init__.py src/$(lUDTF)_spec.xml $(BUILD)/$(lUDTF)_guts.py $(BUILD)/$(lUDTF)_Utils.py $(BUILD)/$(lUDTF)_Enums.py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl
-	xsltproc --stringparam ProcessEnums No --stringparam ProcessUtils No -o $(BUILD)/$(lUDTF).py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl src/$(lUDTF)_spec.xml
+$(lUDTF): $(BUILD_TMPDIR) $(BUILD_FINAL_SOURCES)
+
+$(BUILD)/$(lUDTF).py:	$(BUILD) $(BUILD_TMPDIR)/__init__.py src/$(lUDTF)_spec.xml $(BUILD_TMPDIR)/$(lUDTF)_guts.py $(BUILD_TMPDIR)/$(lUDTF)_doubleguts.py $(BUILD_TMPDIR)/$(lUDTF)_Utils.py $(BUILD_TMPDIR)/$(lUDTF)_Enums.py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl
+	xsltproc --stringparam NumpyOrObject Object --stringparam ProcessEnums No --stringparam ProcessUtils No -o $(BUILD)/$(lUDTF).py $(WDS_VERTICA)/XSLT/UDTFSpec2Python.xsl src/$(lUDTF)_spec.xml
 
 $(BUILD)/uninstall_ddl.sql uninstall_ddl.sql:	$(BUILD) $(WDS_VERTICA)/XSLT/UDTFSpec2SQLCall.xsl FORCE
 	xsltproc --stringparam language $(LANGUAGE) --stringparam runtemplate UDTF_SQLUnInstall --stringparam pathtobuild "$(BUILD)" -o $(BUILD)/uninstall_ddl.sql $(WDS_VERTICA)/XSLT/UDTFSpec2SQLCall.xsl src/$(lUDTF)_spec.xml

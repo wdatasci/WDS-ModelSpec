@@ -115,7 +115,7 @@ drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$P
 </xsl:when>
 <xsl:when test="$language='Python'">
 \set libfile '\'<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>.py\''
-\set libdepends ' depends \'<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>_Enums.py:<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>_Utils.py:<xsl:value-of select="$pathtobuild"/>/<xsl:value-of select="$ProjectName"/>_guts.py<xsl:if test="count(Info/Python/Depends/Depend)>0" ><xsl:for-each select='Info/Python/Depends/Depend'>:<xsl:value-of select="."/></xsl:for-each></xsl:if>\''
+\set libdepends ' depends \'<xsl:value-of select="$pathtobuild"/>/depends<xsl:if test="count(Info/Python/Depends/Depend)>0" ><xsl:for-each select='Info/Python/Depends/Depend'>:<xsl:value-of select="."/></xsl:for-each></xsl:if>\''
 </xsl:when>
 </xsl:choose>
 create library <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib as :libfile 
