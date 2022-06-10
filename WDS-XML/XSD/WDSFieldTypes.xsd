@@ -1,105 +1,70 @@
-<?xml version='1.0'?>
+<?xml version="1.0"?>
 <!-- Copyright 2019, 2020, 2021, 2022, Wypasek Data Science, Inc. 
-    Author: Christian Wypasek (CJW)
+
+Author: Christian Wypasek (CJW)
+
+see 
+
+https://github.com/wdatasci/WDS-ModelSpec
+
+for details
+
 -->
-<xs:schema attributeFormDefault='unqualified' elementFormDefault='qualified' xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+    attributeFormDefault="unqualified" 
+    elementFormDefault="qualified" 
+    targetNamespace="https://github.com/wdatasci/WDS-ModelSpec">
 
-    <xs:simpleType name='Nbr'>
-        <xs:union memberTypes='xs:decimal
-                               xs:integer
-                               xs:negativeInteger
-                               xs:nonNegativeInteger
-                               xs:positiveInteger
-                               xs:nonPositiveInteger
-                               xs:long
-                               xs:int
-                               xs:short
-                               xs:byte
-                               xs:unsignedLong
-                               xs:unsignedShort
-                               xs:unsignedInt
-                               xs:unsignedByte
-                               xs:float
-                               xs:double'/>
-    </xs:simpleType>
+<xs:simpleType name="Nbr">
+  <xs:union memberTypes="xs:decimal xs:integer xs:negativeInteger xs:nonNegativeInteger xs:positiveInteger xs:nonPositiveInteger xs:long xs:int xs:short xs:byte xs:unsignedLong xs:unsignedShort xs:unsignedInt xs:unsignedByte xs:float xs:double"/>
+</xs:simpleType>
 
+<xs:simpleType name="Int">
+  <xs:union memberTypes=" xs:integer xs:negativeInteger xs:nonNegativeInteger xs:positiveInteger xs:nonPositiveInteger xs:int xs:short xs:byte xs:unsignedShort xs:unsignedInt xs:unsignedByte "/>
+</xs:simpleType>
 
-    <xs:simpleType name='Lng'>
-        <xs:union memberTypes='
-                               xs:integer
-                               xs:negativeInteger
-                               xs:nonNegativeInteger
-                               xs:positiveInteger
-                               xs:nonPositiveInteger
-                               xs:long
-                               xs:int
-                               xs:short
-                               xs:byte
-                               xs:unsignedLong
-                               xs:unsignedShort
-                               xs:unsignedInt
-                               xs:unsignedByte
-                               '/>
-    </xs:simpleType>
+<xs:simpleType name="Lng">
+  <xs:union memberTypes=" xs:integer xs:negativeInteger xs:nonNegativeInteger xs:positiveInteger xs:nonPositiveInteger xs:long xs:int xs:short xs:byte xs:unsignedLong xs:unsignedShort xs:unsignedInt xs:unsignedByte "/>
+</xs:simpleType>
 
+<xs:simpleType name="Dbl">
+  <xs:union memberTypes="xs:decimal xs:long xs:int xs:short xs:byte xs:unsignedLong xs:unsignedShort xs:unsignedInt xs:unsignedByte xs:float xs:double"/>
+</xs:simpleType>
 
-    <xs:simpleType name='Dbl'>
-        <xs:union memberTypes='xs:decimal
-                               xs:long
-                               xs:int
-                               xs:short
-                               xs:byte
-                               xs:unsignedLong
-                               xs:unsignedShort
-                               xs:unsignedInt
-                               xs:unsignedByte
-                               xs:float
-                               xs:double'/>
-    </xs:simpleType>
+<xs:simpleType name="DblList">
+  <xs:list itemType="xs:double"/>
+</xs:simpleType>
 
-    <xs:simpleType name='LODbl'>
-        <xs:list itemType='xs:double'/>
-    </xs:simpleType>
+<xs:simpleType name="Str">
+  <xs:union memberTypes="xs:token xs:normalizedString xs:string "/>
+</xs:simpleType>
 
-    <xs:simpleType name='Str'>
-        <xs:union memberTypes='xs:token
-                               xs:normalizedString
-                               xs:string
-                        '/>
-    </xs:simpleType>
-    
-    <xs:simpleType name='LOStr'>
-        <xs:list itemType='Str'/>
-    </xs:simpleType>
+<xs:simpleType name="StrList">
+  <xs:list itemType="Str"/>
+</xs:simpleType>
 
-    <xs:simpleType name='VLS'>
-        <xs:union memberTypes='xs:token
-                               xs:normalizedString
-                               xs:string
-                        '/>
-    </xs:simpleType>
+<xs:simpleType name="VLS">
+  <xs:union memberTypes="xs:token xs:normalizedString xs:string "/>
+</xs:simpleType>
 
-    <xs:simpleType name='LOVLS'>
-        <xs:list itemType='VLS'/>
-    </xs:simpleType>
+<xs:simpleType name="VLSList">
+  <xs:list itemType="VLS"/>
+</xs:simpleType>
 
-    <xs:simpleType name='Dte'>
-        <xs:union memberTypes='xs:date
-                        '/>
-    </xs:simpleType>
+<xs:simpleType name="Dte">
+  <xs:union memberTypes="xs:date "/>
+</xs:simpleType>
 
-    <xs:simpleType name='LODte'>
-        <xs:list itemType='Dte'/>
-    </xs:simpleType>
+<xs:simpleType name="DteList">
+  <xs:list itemType="Dte"/>
+</xs:simpleType>
 
-    <xs:simpleType name='DTm'>
-        <xs:union memberTypes='xs:dateTime
-                        '/>
-    </xs:simpleType>
+<xs:simpleType name="DTm">
+  <xs:union memberTypes="xs:dateTime "/>
+</xs:simpleType>
 
-    <xs:simpleType name='LODTm'>
-        <xs:list itemType='DTm'/>
-    </xs:simpleType>
-
+<xs:simpleType name="DTmList">
+  <xs:list itemType="DTm"/>
+</xs:simpleType>
 
 </xs:schema>

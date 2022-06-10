@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<UDxs>
+    <UDTF Name="TSTest">
+        <Info>
+            <Cpp></Cpp>
+            <Java></Java>
+            <SQL>
+                <Vertica Schema="public"/>
+            </SQL>
+        </Info>
+        <Parameters>
+            <Column Name="BlockMaxLength" DTyp="Int" Default="NULL" Use="P"/>
+            <Column Name="InputBlockMaxLength" DTyp="Int" Default="100" Use="P"/>
+            <Column Name="EndPointInclusive" DTyp="Int" Default="false" Use="P"/>
+        </Parameters>
+        <Columns>
+            <Column BlockID="Y" Static="Y" Name="ID" DTyp="Int" Use="IO"/>
+            <Column Static="Y" Name="IDStr" DTyp="Str" Length="32" Use="IO"/>
+            <Column Name="RowIndex" DTyp="Int" Use="IO"/>
+            <Column Name="TestDate" DTyp="Dte" Use="IO"/>
+            <Column Name="y" DTyp="Int" Use="O"/>
+            <Column Name="m" DTyp="Int" Use="O"/>
+            <Column Name="d" DTyp="Int" Use="O"/>
+            <Column Name="lState" DTyp="VLS" Length="10" Use="O"/>
+            <Column Name="lState_Code" DTyp="Int" Use="O"/>
+        </Columns>
+        <Enums>
+            <Enum Name="ExState">
+                <EnumMD>
+                    <EnumAttrMD Name="Index" DTyp="Int"/>
+                    <EnumAttrMD Name="SomeAttr0" DTyp="Int"/>
+                    <EnumAttrMD Name="SomeAttr1" DTyp="Str"/>
+                    <EnumAttrMD Name="Code" DTyp="Int"/>
+                </EnumMD>
+                <EnumValue Index="1" SomeAttr1="hey" SomeAttr0="3" Code="-1" Name="A"/>
+                <EnumValue Index="2" SomeAttr1="what" SomeAttr0="17" Code="3" Name="Z"/>
+            </Enum>
+        </Enums>
+    </UDTF>
+</UDxs>

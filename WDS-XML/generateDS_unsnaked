@@ -1,0 +1,30 @@
+#!/usr/bin/env python3.9
+'''
+A small monkey-patch to generateDS to stop snake-casing names
+'''
+import os
+import sys
+import pathlib
+sys.path.append(str(pathlib.Path(os.popen('which generateDS').read().strip()).parent))
+
+import re
+#from generateDS import main
+import generateDS
+NameSeparationRegexList = [
+    #re.compile("(.)([A-Z][a-z]+)"),
+    #re.compile("(.)([0-9]+)"),
+    #re.compile("([0-9])([a-zA-Z])"),
+    #re.compile("([a-z])([A-Z])")
+]
+generateDS.NameSeparationRegexList = NameSeparationRegexList
+generateDS.UppercaseEnums = False
+generateDS.Force = True
+if len(sys.argv)>1:
+    sys.argv.insert(1,'-f')
+    sys.argv.insert(1,'--mixed-case-enums')
+    print(sys.argv)
+
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(generateDS.main())
+

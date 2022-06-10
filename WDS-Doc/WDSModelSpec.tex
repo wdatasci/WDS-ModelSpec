@@ -783,7 +783,8 @@ Why not use something easier like json (PFA) or yaml?  This is structured inform
 {\em Author's Note: CJW: For the general XML-based specification, those familiar with PMML might recognize several key similarities.  There are
 two reasons for this.  The first is just coincidence.  The overall structure including directives (header or extension), dictionary, and
 component models (model-elements) are natural constructs and things I have had in use for some time. However, the variable handling, especially
-for regression or score models, is substantially different.  This primarily comes the use of this specification in both model construction and
+for regression or score models, is substantially different.  This primarily comes from the use of this specification for both model
+specification/construction and
 implementation.  This will be clear later in the handling of artificial variable treatments, such as {\em Hats} below.  
 I had evaluated PMML in the past, but it was and still is inadequate for my purposes.  The second reason for similarity is the objective to generate PMML as an
 output for external communication.  If a transformation such as XSL is used to create PMML from the WDS Model Spec XML, the encapsulated
@@ -793,13 +794,14 @@ information in the XML must be a superset of the required information for the PM
 This model specification will be used for data handling, model creation, model documentation, and model implementation.  Since all required
 information is encapsulated, spec files can either be consumed directly in a model delivery engine or by a code writing engine 
 to produce compilable implementation code.
-A detail that might not be immediately apparent is that hard-written compilable 
-implementation can be produced in minimal time with minimal cost.
+
+A detail that might not be immediately apparent is that hard-written compilable implementation can be produced in minimal time with minimal cost.
 The only requirement is the appropriate algorithmic code writers based on
-the model markup.  At this point, as long as the required information is encapsulated, one should also recognize that PMML or PFA are just two
-other implementation styles. This methodology has already 
-used for to implement in SAS, C/C++, C\#/Java, R, Python, and VBA
-and others will be used.  Why so many?  The right tool at the right time, the underlying encapsulated mathematical models are the same.
+the model markup.  At this point, as long as the required information is encapsulated, one should also recognize that PMML or PFA are just
+two different implementation styles among many.
+This methodology has already 
+used for to implement in SAS, C/C++, C\#/Java, R, Python, and VBA (and 
+others will be used).  Why so many?  The right tool at the right time, the underlying encapsulated mathematical models are the same.
 
 Stepping back for a moment, suppose one has a simple model, say $Y = 3X +1$, and this is to be evaluated over some set $\{x_i, i=1,\ldots,N\}$.  
 The conceptual basis of the specification is the following:
