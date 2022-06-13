@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<!-- Copyright 2019, 2020, 2021, 2022, Wypasek Data Science, Inc.
+    Author: Christian Wypasek (CJW)
+-->
+<Projects xmlns:xi="http://www.w3.org/2001/XInclude">
+    <Project Name="Example1">
+        <Documentation>
+            <Version>
+                <Major>1</Major>
+                <Minor>0</Minor>
+                <Patch>2</Patch>
+            </Version>
+            <Date>2020-02-02</Date>
+            <Text><par>Simple example model of WDS-ModelSpec.</par>
+            </Text>
+        </Documentation>
+        <!--
+        <Dictionary><xi:include parse="xml" href="[Path to projecct space global source reference]"  xpointer="FieldMDs"/></Dictionary>
+        -->
+        <Dictionary>
+            <FieldMD Name="X" DTyp="Dbl"/>
+            <FieldMD Name="Y" DTyp="Dbl"/>
+            <FieldMD Name="Z" DTyp="Dbl"/>
+            <FieldMD Name="RV" DTyp="Dbl"/>
+        </Dictionary>
+        <Models>
+            <Model Name="ExampleModel1" Handle="CRM1">
+                <Signatures>
+                    <Signature Name="Input">
+                        <Column Name="X"/>
+                        <Column Name="Y"/>
+                    </Signature>
+                    <Signature Name="Output">
+                        <Column Name="RV"/>
+                    </Signature>
+                </Signatures>
+                <ModelDirectives>
+                    <Annotation>CompRiskSurv models always include:
+                            an applicability score, one value per subject
+                            a static score, one value per subject and each response
+                            a time varying conal ordering score which provides robust scoers across age 
+                                    and calendar effects, one value per subject, each response, 
+                                    and each (age, time) in requested time frame
+                            a time varying score which provides a robust score across just age effects, 
+                                    one value per subject, each response, and each (age, time) in 
+                                    requested time frame
+                            a baseline score, one value per
+                                    subject, and age in requested time frame
+                </Annotation>
+                    <Type>CompRiskSurv</Type>
+                    <Responses><Response>EC1</Response><Response>EC2</Response></Responses>
+                </ModelDirectives>
+                <ComponentModels>
+                    <Annotation>All models have an applicability score, used to determine at run time which 
+                        model is appropriate.  The return value of an applicablity score is 
+                        0 (applicable) or negative.
+                </Annotation>
+                    <ComponentModel Name="Applicability" Handle="App">
+                    </ComponentModel>
+                    <ComponentModel Name="Static">
+                        <Variables>
+                            <Variable Name="FICO" Handle="X">
+                                <Treatment>Hats</Treatment>
+                                <CleanLimits>
+                                    <LeftLimit>150</LeftLimit>
+                                    <RightLimit>950</RightLimit>
+                                </CleanLimits>
+                                <CriticalValues>
+                                    <CriticalValue> 600 </CriticalValue>
+                                    <CriticalValue> 650 </CriticalValue>
+                                    <CriticalValue> 700 </CriticalValue>
+                                </CriticalValues>
+                                <CoefficientSets>
+                                    <CoefficientSet Response="EC1">
+                                        <Coefficient Position="0"> 0 </Coefficient>
+                                        <Coefficient Position="1"> 0 </Coefficient>
+                                        <Coefficient Position="2"> 0 </Coefficient>
+                                        <Coefficient Position="3"> 0 </Coefficient>
+                                    </CoefficientSet>
+                                    <CoefficientSet Response="EC2">
+                                        <Coefficient Position="0"> 0 </Coefficient>
+                                        <Coefficient Position="1"> 0 </Coefficient>
+                                        <Coefficient Position="2"> 0 </Coefficient>
+                                        <Coefficient Position="3"> 0 </Coefficient>
+                                    </CoefficientSet>
+                                </CoefficientSets>
+                            </Variable>
+                        </Variables>
+                    </ComponentModel>
+                    <ComponentModel Name="TVC">
+                    </ComponentModel>
+                    <ComponentModel Name="TV">
+                    </ComponentModel>
+                    <ComponentModel Name="Baseline">
+                    </ComponentModel>
+                </ComponentModels>
+            </Model>
+        </Models>
+    </Project>
+</Projects>

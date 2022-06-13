@@ -11,6 +11,7 @@ for details
 
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+    xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"
     attributeFormDefault="unqualified" 
     elementFormDefault="qualified" 
     targetNamespace="https://github.com/wdatasci/WDS-ModelSpec">

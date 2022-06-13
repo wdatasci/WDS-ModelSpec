@@ -11,20 +11,23 @@ for details
 
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+    xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"
     attributeFormDefault="unqualified" 
-    elementFormDefault="qualified" 
+    elementFormDefault="unqualified" 
     targetNamespace="https://github.com/wdatasci/WDS-ModelSpec">
+
+<!-- core simple types -->
 
 <xs:simpleType name="Nbr">
   <xs:union memberTypes="xs:decimal xs:integer xs:negativeInteger xs:nonNegativeInteger xs:positiveInteger xs:nonPositiveInteger xs:long xs:int xs:short xs:byte xs:unsignedLong xs:unsignedShort xs:unsignedInt xs:unsignedByte xs:float xs:double"/>
 </xs:simpleType>
 
 <xs:simpleType name="Int">
-  <xs:union memberTypes=" xs:integer xs:negativeInteger xs:nonNegativeInteger xs:positiveInteger xs:nonPositiveInteger xs:int xs:short xs:byte xs:unsignedShort xs:unsignedInt xs:unsignedByte "/>
+    <xs:union memberTypes=" xs:integer xs:negativeInteger xs:nonNegativeInteger xs:positiveInteger xs:nonPositiveInteger xs:long xs:short xs:byte xs:unsignedShort xs:unsignedInt xs:unsignedByte"/>
 </xs:simpleType>
 
 <xs:simpleType name="Lng">
-  <xs:union memberTypes=" xs:integer xs:negativeInteger xs:nonNegativeInteger xs:positiveInteger xs:nonPositiveInteger xs:long xs:int xs:short xs:byte xs:unsignedLong xs:unsignedShort xs:unsignedInt xs:unsignedByte "/>
+  <xs:union memberTypes=" xs:integer xs:negativeInteger xs:nonNegativeInteger xs:positiveInteger xs:nonPositiveInteger xs:long xs:int xs:short xs:byte xs:unsignedLong xs:unsignedShort xs:unsignedInt xs:unsignedByte"/>
 </xs:simpleType>
 
 <xs:simpleType name="Dbl">
@@ -36,7 +39,7 @@ for details
 </xs:simpleType>
 
 <xs:simpleType name="Str">
-  <xs:union memberTypes="xs:token xs:normalizedString xs:string "/>
+  <xs:union memberTypes="xs:token xs:normalizedString xs:string"/>
 </xs:simpleType>
 
 <xs:simpleType name="StrList">
@@ -44,7 +47,7 @@ for details
 </xs:simpleType>
 
 <xs:simpleType name="VLS">
-  <xs:union memberTypes="xs:token xs:normalizedString xs:string "/>
+  <xs:union memberTypes="xs:token xs:normalizedString xs:string"/>
 </xs:simpleType>
 
 <xs:simpleType name="VLSList">
@@ -52,7 +55,7 @@ for details
 </xs:simpleType>
 
 <xs:simpleType name="Dte">
-  <xs:union memberTypes="xs:date "/>
+  <xs:union memberTypes="xs:date"/>
 </xs:simpleType>
 
 <xs:simpleType name="DteList">
@@ -60,11 +63,34 @@ for details
 </xs:simpleType>
 
 <xs:simpleType name="DTm">
-  <xs:union memberTypes="xs:dateTime "/>
+  <xs:union memberTypes="xs:dateTime"/>
 </xs:simpleType>
 
 <xs:simpleType name="DTmList">
   <xs:list itemType="DTm"/>
+</xs:simpleType>
+
+<xs:simpleType name="Any">
+  <xs:union memberTypes="xs:string"/>
+</xs:simpleType>
+
+<xs:simpleType name="AnyList">
+  <xs:list itemType="Any"/>
+</xs:simpleType>
+
+<xs:simpleType name="DTypType" final="restriction">
+    <xs:restriction base="xs:string">
+        <xs:enumeration value="Str"/>
+        <xs:enumeration value="VLS"/>
+        <xs:enumeration value="Dbl"/>
+        <xs:enumeration value="Int"/>
+        <xs:enumeration value="Lng"/>
+        <xs:enumeration value="Bln"/>
+        <xs:enumeration value="Dte"/>
+        <xs:enumeration value="DTm"/>
+        <xs:enumeration value="Byt"/>
+        <xs:enumeration value="Any"/>
+    </xs:restriction>
 </xs:simpleType>
 
 </xs:schema>

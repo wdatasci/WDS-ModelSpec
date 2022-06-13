@@ -69,6 +69,7 @@ class eDTyp(IntEnum):
     VLS = 7
     Byt = 8
     Bln = 9
+    Any = 9
 
 #cleaners for DTypCheck
 def CleanStr(slf,tv,v,isLengthDiscoverable,toReturn=False): 

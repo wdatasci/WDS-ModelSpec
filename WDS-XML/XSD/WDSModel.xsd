@@ -70,25 +70,58 @@ for details
     <xs:list itemType="DTm"/>
 </xs:simpleType>
 
+<xs:simpleType name="Any">
+    <xs:union memberTypes="xs:string"/>
+</xs:simpleType>
+
+<xs:simpleType name="AnyList">
+    <xs:list itemType="Any"/>
+</xs:simpleType>
+
+<xs:simpleType name="DblListOrStr">
+    <xs:union memberTypes="DblList Str"/>
+</xs:simpleType>
+
+<xs:simpleType name="DblOrStr">
+    <xs:union memberTypes="Dbl Str"/>
+</xs:simpleType>
+
+<xs:simpleType name="DTypType" final="restriction">
+    <xs:restriction base="xs:string">
+        <xs:enumeration value="Unk"/>
+        <xs:enumeration value="Dbl"/>
+        <xs:enumeration value="Lng"/>
+        <xs:enumeration value="Int"/>
+        <xs:enumeration value="Dte"/>
+        <xs:enumeration value="DTm"/>
+        <xs:enumeration value="Str"/>
+        <xs:enumeration value="VLS"/>
+        <xs:enumeration value="Byt"/>
+        <xs:enumeration value="Bln"/>
+        <xs:enumeration value="Any"/>
+    </xs:restriction>
+</xs:simpleType>
 
 <!--
     core data and signature types for data base and data transmission, 
     the remainder of the specification is for modeling meta data
 -->
 
-<xs:simpleType name="DTypType" final="restriction">
-    <xs:restriction base="xs:string">
-        <xs:enumeration value="Str"/>
-        <xs:enumeration value="VLS"/>
-        <xs:enumeration value="Dbl"/>
-        <xs:enumeration value="Int"/>
-        <xs:enumeration value="Lng"/>
-        <xs:enumeration value="Bln"/>
-        <xs:enumeration value="Dte"/>
-        <xs:enumeration value="DTm"/>
-        <xs:enumeration value="Byt"/>
-    </xs:restriction>
-</xs:simpleType>
+<xs:element name="Annotation">
+    <xs:complexType mixed="true">
+        <xs:all>
+            <xs:element name="AppInfo" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType mixed="true">
+                    <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                            <xs:attribute name="Use" type="xs:string"/>
+                        </xs:extension>
+                    </xs:simpleContent>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+</xs:element>
 
 <xs:attributeGroup name="SourceMD">
     <xs:annotation>
@@ -98,22 +131,30 @@ for details
             The length attribute is for a DTyp of Str, VLS, or Byt.
         </xs:documentation>
     </xs:annotation>
-        <xs:attribute name="Name" type="xs:string" use="required"/>
-        <xs:attribute name="DTyp" type="DTypType" use="required"/>
-        <xs:attribute name="Length" type="xs:int"/>
-        <xs:attribute name="Default" type="xs:string"/>
-        <xs:attribute name="MetaDataXRef" type="xs:string"/>
-        <xs:attribute name="Use" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>
-                    Use is determined by the application.
-                    <par>For signatures, can include I[nput], O[utput], T[emporary] (internal use only), P[arameter], or IO.</par>
-                    <par>For variable use in modeling, can include On (use it), Off (not used, but left in document for other purposes, or Controlling (Use for model, but excluded from final implementation)</par>
-                </xs:documentation>
-                <xs:appinfo>
-                </xs:appinfo>
-            </xs:annotation>
-        </xs:attribute>
+    <xs:attribute name="Name" type="xs:string" use="required"/>
+    <xs:attribute name="DTyp" type="DTypType" use="required"/>
+    <xs:attribute name="Length" type="xs:int"/>
+    <xs:attribute name="Default" type="xs:string"/>
+    <xs:attribute name="MetaDataXRef" type="xs:string"/>
+</xs:attributeGroup>
+
+<xs:attributeGroup name="NameGroup">
+    <xs:attribute name="Name" type="xs:string" />
+    <xs:attribute name="Handle" type="xs:string" />
+</xs:attributeGroup>
+
+<xs:attributeGroup name="UseGroup">
+    <xs:attribute name="Use" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>
+                Use is determined by the application.
+                <par>For signatures, can include I[nput], O[utput], T[emporary] (internal use only), P[arameter], or IO.</par>
+                <par>For variable use in modeling, can include On (use it), Off (not used, but left in document for other purposes, or Controlling (Use for model, but excluded from final implementation)</par>
+            </xs:documentation>
+            <xs:appinfo>
+            </xs:appinfo>
+        </xs:annotation>
+    </xs:attribute>
 </xs:attributeGroup>
 
 <xs:element name="Column">
@@ -124,10 +165,11 @@ for details
         <xs:appinfo>
         </xs:appinfo>
     </xs:annotation>
-        <xs:attributeGroup ref="SourceMD"/>
-        <xs:attribute name="BlockID" type="xs:string" />
-        <xs:attribute name="RowID" type="xs:string" />
-        <xs:attribute name="Static" type="xs:string" />
+    <xs:attributeGroup ref="SourceMD"/>
+    <xs:attributeGroup ref="UseGroup"/>
+    <xs:attribute name="BlockID" type="xs:string" />
+    <xs:attribute name="RowID" type="xs:string" />
+    <xs:attribute name="Static" type="xs:string" />
 </xs:element>
 
 <xs:element name="Parameter">
@@ -178,9 +220,9 @@ for details
         <xs:element name="EnumMD" minOccurs="1" maxOccurs="1">
             <xs:annotation>
                 <xs:documentation>
-The EnumMD is the unordered collection of EnumAttrMD elements for the EnumValue elements.
-Specification of EnumMD beside the EnumValues collection is for programmatic purposes of generating additional methods linked to the enum values.
-This is to balance the needs of enum code in C++/C#/Java/Python/ect where it may or may not be natural to extend a basic enum class.
+                    The EnumMD is the unordered collection of EnumAttrMD elements for the EnumValue elements.
+                    Specification of EnumMD beside the EnumValues collection is for programmatic purposes of generating additional methods linked to the enum values.
+                    This is to balance the needs of enum code in C++/C#/Java/Python/ect where it may or may not be natural to extend a basic enum class.
                 </xs:documentation>
             </xs:annotation>
             <xs:complexType>
@@ -247,6 +289,17 @@ This is to balance the needs of enum code in C++/C#/Java/Python/ect where it may
 <xs:element name="UDxs">
     <xs:complexType>
         <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="UDF">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element ref="UDxInfo" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element ref="Parameters" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element ref="Columns" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element ref="Enums" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                    <xs:attribute name="Name" type="xs:string" />
+                </xs:complexType>
+            </xs:element>
             <xs:element name="UDTF">
                 <xs:complexType>
                     <xs:sequence>
@@ -275,7 +328,7 @@ This is to balance the needs of enum code in C++/C#/Java/Python/ect where it may
     </xs:complexType>
 </xs:element>
 
-<xs:element name="Sources" minOccurs="0" maxOccurs="1">
+<xs:element name="Sources">
     <xs:complexType>
         <xs:sequence>
             <xs:element ref="Source" minOccurs="0" maxOccurs="unbounded"/>
@@ -303,7 +356,6 @@ This is to balance the needs of enum code in C++/C#/Java/Python/ect where it may
 </xs:element>
 
 
-            
 <xs:element name="FieldMD">
     <xs:annotation>
         <xs:documentation>
@@ -316,24 +368,9 @@ This is to balance the needs of enum code in C++/C#/Java/Python/ect where it may
                 <xs:element ref="Source" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element ref="Sources" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
-            <xs:choice>
-                <xs:element ref="Constant" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="Constants" minOccurs="0" maxOccurs="1"/>
-            </xs:choice>
-            <xs:choice>
-                <xs:element ref="Transformation" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="Transformations" minOccurs="0" maxOccurs="1"/>
-            </xs:choice>
         </xs:all>
     </xs:complexType>
     <xs:attributeGroup ref="SourceMD"/>
-</xs:element>
-
-
-<xs:element name="Projects">
-    <xs:sequence>
-        <xs:element name="Project" type="ProjectType" minOccurs="1" maxOccurs="unbounded"/>
-    </xs:sequence>
 </xs:element>
 
 
@@ -341,6 +378,20 @@ This is to balance the needs of enum code in C++/C#/Java/Python/ect where it may
     <xs:all>
         <xs:element ref="FieldMD" minOccurs="0" maxOccurs="unbounded"/>
     </xs:all>
+</xs:element>
+
+<xs:element name="Signature">
+    <xs:sequence>
+        <xs:element ref="Column" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="Name"/>
+    <xs:attribute name="Use"/>
+</xs:element>
+
+<xs:element name="Signatures">
+    <xs:sequence>
+        <xs:element ref="Signature" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
 </xs:element>
 
 <xs:element name="Documentation">
@@ -367,297 +418,245 @@ This is to balance the needs of enum code in C++/C#/Java/Python/ect where it may
     </xs:complexType>
 </xs:element>
 
-<xs:complexType name="ProjectType">
+<xs:element name="Projects">
     <xs:sequence>
-        <xs:element ref="Documentation" minOccurs="0" maxOccurs="unbounded"/>
-        <xs:element ref="Dictionary" minOccurs="0" maxOccurs="unbounded"/>
-        <xs:element name="Models" minOccurs="0" maxOccurs="1">
-            <xs:complexType>
-                <xs:sequence>
-                    <xs:element name="Model" minOccurs="0" maxOccurs="unbounded"/>
-                </xs:sequence>
-                <xs:attribute name="Name" type="xs:string"/>
-            </xs:complexType>
-        </xs:element>
+        <xs:element ref="Project" minOccurs="1" maxOccurs="unbounded"/>
     </xs:sequence>
-</xs:complexType>
+</xs:element>
 
-
-</xs:schema>
-
-
-
-
-<!--
-
-
-
-
-TSTest_spec.xsd
-temp.xsd
-temp_app1.xsd
-
-<?xml version="1.0" encoding="utf-8"?>
-<xs:schema id="Projects" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:app1="http://www.w3.org/2001/XInclude">
-  <xs:import namespace="http://www.w3.org/2001/XInclude" schemaLocation="temp_app1.xsd" />
-  <xs:element name="Projects" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+<xs:element name="Project">
     <xs:complexType>
-      <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="Project">
-          <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="Documentation" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Dictionary" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Models" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:attributeGroup ref="NameGroup"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="Response" type="xs:string"/>
+
+<xs:element name="Responses">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="Response" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="ModelDirectives">
+    <xs:complexType>
+        <xs:all>
+            <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="Type" type="xs:string" minOccurs="0" />
+            <xs:choice>
+                <xs:element ref="Response" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Responses" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
+        </xs:all>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="Models">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Model" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="Model">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Signatures" minOccurs="1" maxOccurs="1"/>
+            <xs:element ref="ModelDirectives" minOccurs="1" maxOccurs="1"/>
+            <xs:element ref="ComponentModels" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Variables" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" />
+        <xs:attribute name="Handle" type="xs:string" />
+        <xs:attribute name="Use" type="xs:string" />
+    </xs:complexType>
+</xs:element>
+
+
+<xs:element name="ComponentModels">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="ComponentModel" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="ComponentModel">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Signatures" minOccurs="1" maxOccurs="1"/>
+            <xs:element ref="ModelDirectives" minOccurs="1" maxOccurs="1"/>
+            <xs:element ref="Variables" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" />
+        <xs:attribute name="Handle" type="xs:string" />
+        <xs:attribute name="Use" type="xs:string" />
+    </xs:complexType>
+</xs:element>
+
+
+<xs:element name="Variables">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Variable" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="CleanLimit" type="Dbl"/>
+<xs:element name="CleanLimitList" type="DblList"/>
+<xs:element name="CleanLimitSet" type="DblList"/>
+<xs:element name="CleanLimits" minOccurs="0" maxOccurs="unbounded">
+    <xs:complexType>
+        <xs:choice>
+            <xs:element ref="CleanLimit" minOccurs="0" maxOccurs="2"/>
             <xs:sequence>
-              <xs:element name="Documentation" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="Date" type="xs:string" minOccurs="0" />
-                    <xs:element name="Version" minOccurs="0" maxOccurs="unbounded">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="Major" type="xs:string" minOccurs="0" />
-                          <xs:element name="Minor" type="xs:string" minOccurs="0" />
-                          <xs:element name="Patch" type="xs:string" minOccurs="0" />
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element name="Text" minOccurs="0" maxOccurs="unbounded">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="par" type="xs:string" minOccurs="0" />
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
-              <xs:element name="Dictionary" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element ref="app1:include" />
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
-              <xs:element name="Models" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="Model" minOccurs="0" maxOccurs="unbounded">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="SignatureMDs" minOccurs="0" maxOccurs="unbounded">
-                            <xs:complexType>
-                              <xs:sequence>
-                                <xs:element name="SignatureMD" minOccurs="0" maxOccurs="unbounded">
-                                  <xs:complexType>
-                                    <xs:attribute name="Name" type="xs:string" />
-                                  </xs:complexType>
-                                </xs:element>
-                              </xs:sequence>
-                            </xs:complexType>
-                          </xs:element>
-                          <xs:element name="ModelDirectives" minOccurs="0" maxOccurs="unbounded">
-                            <xs:complexType>
-                              <xs:sequence>
-                                <xs:element name="Type" type="xs:string" minOccurs="0" />
-                                <xs:element name="Responses" minOccurs="0" maxOccurs="unbounded">
-                                  <xs:complexType>
-                                    <xs:sequence>
-                                      <xs:element name="Response" nillable="true" minOccurs="0" maxOccurs="unbounded">
-                                        <xs:complexType>
-                                          <xs:simpleContent msdata:ColumnName="Response_Text" msdata:Ordinal="0">
-                                            <xs:extension base="xs:string">
-                                            </xs:extension>
-                                          </xs:simpleContent>
-                                        </xs:complexType>
-                                      </xs:element>
-                                    </xs:sequence>
-                                  </xs:complexType>
-                                </xs:element>
-                              </xs:sequence>
-                            </xs:complexType>
-                          </xs:element>
-                          <xs:element name="ComponentModels" minOccurs="0" maxOccurs="unbounded">
-                            <xs:complexType>
-                              <xs:sequence>
-                                <xs:element name="ComponentModel" minOccurs="0" maxOccurs="unbounded">
-                                  <xs:complexType>
-                                    <xs:sequence>
-                                      <xs:element name="Variables" minOccurs="0" maxOccurs="unbounded">
-                                        <xs:complexType>
-                                          <xs:sequence>
-                                            <xs:element name="Variable" minOccurs="0" maxOccurs="unbounded">
-                                              <xs:complexType>
-                                                <xs:sequence>
-                                                  <xs:element name="Treatment" type="xs:string" minOccurs="0" msdata:Ordinal="0" />
-                                                  <xs:element name="CleanLimits" minOccurs="0" maxOccurs="unbounded">
-                                                    <xs:complexType>
-                                                      <xs:sequence>
-                                                        <xs:element name="LeftLimit" type="xs:string" minOccurs="0" />
-                                                        <xs:element name="RightLimit" type="xs:string" minOccurs="0" />
-                                                      </xs:sequence>
-                                                    </xs:complexType>
-                                                  </xs:element>
-                                                  <xs:element name="CriticalValues" minOccurs="0" maxOccurs="unbounded">
-                                                    <xs:complexType>
-                                                      <xs:sequence>
-                                                        <xs:element name="CriticalValue" nillable="true" minOccurs="0" maxOccurs="unbounded">
-                                                          <xs:complexType>
-                                                            <xs:simpleContent msdata:ColumnName="CriticalValue_Text" msdata:Ordinal="0">
-                                                              <xs:extension base="xs:string">
-                                                              </xs:extension>
-                                                            </xs:simpleContent>
-                                                          </xs:complexType>
-                                                        </xs:element>
-                                                      </xs:sequence>
-                                                    </xs:complexType>
-                                                  </xs:element>
-                                                  <xs:element name="CoefficientSets" minOccurs="0" maxOccurs="unbounded">
-                                                    <xs:complexType>
-                                                      <xs:sequence>
-                                                        <xs:element name="CoefficientSet" minOccurs="0" maxOccurs="unbounded">
-                                                          <xs:complexType>
-                                                            <xs:sequence>
-                                                              <xs:element name="Coefficient" nillable="true" minOccurs="0" maxOccurs="unbounded">
-                                                                <xs:complexType>
-                                                                  <xs:simpleContent msdata:ColumnName="Coefficient_Text" msdata:Ordinal="1">
-                                                                    <xs:extension base="xs:string">
-                                                                      <xs:attribute name="Position" type="xs:string" />
-                                                                    </xs:extension>
-                                                                  </xs:simpleContent>
-                                                                </xs:complexType>
-                                                              </xs:element>
-                                                            </xs:sequence>
-                                                            <xs:attribute name="Response" type="xs:string" />
-                                                          </xs:complexType>
-                                                        </xs:element>
-                                                      </xs:sequence>
-                                                    </xs:complexType>
-                                                  </xs:element>
-                                                </xs:sequence>
-                                                <xs:attribute name="Name" type="xs:string" />
-                                                <xs:attribute name="Handle" type="xs:string" />
-                                              </xs:complexType>
-                                            </xs:element>
-                                          </xs:sequence>
-                                        </xs:complexType>
-                                      </xs:element>
-                                    </xs:sequence>
-                                    <xs:attribute name="Name" type="xs:string" />
-                                    <xs:attribute name="Handle" type="xs:string" />
-                                    <xs:attribute name="Response" type="xs:string" />
-                                  </xs:complexType>
-                                </xs:element>
-                              </xs:sequence>
-                            </xs:complexType>
-                          </xs:element>
-                        </xs:sequence>
-                        <xs:attribute name="Name" type="xs:string" />
-                        <xs:attribute name="Handle" type="xs:string" />
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
+                <xs:element name="LeftLimit" type="Dbl" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="RightLimit" type="Dbl" minOccurs="0" maxOccurs="1"/>
             </xs:sequence>
-            <xs:attribute name="Name" type="xs:string" />
-          </xs:complexType>
-        </xs:element>
-      </xs:choice>
+        </xs:choice>
     </xs:complexType>
-  </xs:element>
+</xs:element>
+
+<xs:element name="DropIndex" type="Int"/>
+<xs:element name="DropIndexList" type="IntList"/>
+<xs:element name="DropIndices">
+    <xs:complexType>
+        <xs:element ref="DropIndex" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="CriticalValue">
+    <xs:simpleContent>
+        <xs:extension base="Dbl">
+            <xs:attribute name="Position" type="xs:string"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+<xs:element name="CriticalValueList" type="DblList"/>
+<xs:element name="CriticalValues">
+    <xs:complexType>
+        <xs:element ref="CriticalValue" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="CriticalWord">
+    <xs:complexType mixed="true">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="dlm" type="xs:string"/>
+                <xs:attribute name="Position" type="Int"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+</xs:element>
+<xs:element name="CriticalWordList">
+    <xs:complexType mixed="true">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="dlm" type="xs:string"/>
+                <xs:attribute name="worddlm" type="xs:string"/>
+                <xs:attribute name="Position" type="Int"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+</xs:element>
+<xs:element name="CriticalWordSet">
+    <xs:complexType>
+        <xs:element ref="CriticalWord" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:complexType>
+</xs:element>
+
+
+<xs:element name="Coefficient">
+    <xs:simpleContent>
+        <xs:extension base="Dbl">
+            <xs:attribute name="Position" type="xs:string"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="CoefficientList">
+    <xs:simpleContent>
+        <xs:extension base="DblList">
+            <xs:attribute name="Response" type="xs:string"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+<xs:element name="CoefficientSet">
+    <xs:complexType>
+        <xs:element ref="Coefficient" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:complexType>
+    <xs:attribute name="Response"/>
+</xs:element>
+
+<xs:element name="CoefficientSets">
+    <xs:complexType>
+        <xs:choice>
+            <xs:element ref="CoefficientList" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="CoefficientSet" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:choice>
+        <xs:attribute name="Use"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="Variable">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element name="Treatment" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:choice>
+                <xs:element ref="Source" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Sources" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:element ref="Constant" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Constants" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:element ref="Transformation" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Transformations" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:element name="CleanLimits" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="CleanLimitList" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="CleanLimitSet" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:choice>
+                    <xs:element name="CriticalValues" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="CriticalValuesList" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="CriticalValuesSet" minOccurs="0" maxOccurs="1"/>
+                </xs:choice>
+                <xs:choice>
+                    <xs:element name="CriticalWord" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="CriticalWordList" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="CriticalWordSet" minOccurs="0" maxOccurs="1"/>
+                </xs:choice>
+            </xs:choice>
+            <xs:choice>
+                <xs:element name="DropIndex" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="DropIndexList" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="DropIndices" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+            <xs:element name="CoefficientSets" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" />
+        <xs:attribute name="Handle" type="xs:string" />
+    </xs:complexType>
+</xs:element>
+
 </xs:schema>
 
-<?xml version="1.0" encoding="utf-8"?>
-<xs:schema id="UDxs" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-  <xs:element name="Column">
-    <xs:complexType>
-      <xs:attribute name="Name" type="xs:string" />
-      <xs:attribute name="Use" type="xs:string" />
-      <xs:attribute name="DTyp" type="xs:string" />
-      <xs:attribute name="Default" type="xs:string" />
-      <xs:attribute name="BlockID" type="xs:string" />
-      <xs:attribute name="Static" type="xs:string" />
-      <xs:attribute name="Length" type="xs:string" />
-    </xs:complexType>
-  </xs:element>
-  <xs:element name="UDxs" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
-    <xs:complexType>
-      <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element ref="Column" />
-        <xs:element name="UDTF">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="Info" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="Cpp" type="xs:string" minOccurs="0" />
-                    <xs:element name="Java" type="xs:string" minOccurs="0" />
-                    <xs:element name="SQL" minOccurs="0" maxOccurs="unbounded">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="Vertica" minOccurs="0" maxOccurs="unbounded">
-                            <xs:complexType>
-                              <xs:attribute name="Schema" type="xs:string" />
-                            </xs:complexType>
-                          </xs:element>
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
-              <xs:element name="Parameters" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element ref="Column" minOccurs="0" maxOccurs="unbounded" />
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
-              <xs:element name="Columns" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element ref="Column" minOccurs="0" maxOccurs="unbounded" />
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
-              <xs:element name="Enums" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="Enum" minOccurs="0" maxOccurs="unbounded">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="EnumFields" minOccurs="0" maxOccurs="unbounded">
-                            <xs:complexType>
-                              <xs:sequence>
-                                <xs:element name="EnumField" minOccurs="0" maxOccurs="unbounded">
-                                  <xs:complexType>
-                                    <xs:attribute name="Name" type="xs:string" />
-                                    <xs:attribute name="DTyp" type="xs:string" />
-                                  </xs:complexType>
-                                </xs:element>
-                              </xs:sequence>
-                            </xs:complexType>
-                          </xs:element>
-                          <xs:element name="EnumValue" minOccurs="0" maxOccurs="unbounded">
-                            <xs:complexType>
-                              <xs:attribute name="Name" type="xs:string" />
-                              <xs:attribute name="Index" type="xs:string" />
-                              <xs:attribute name="SomeAttr1" type="xs:string" />
-                              <xs:attribute name="SomeAttr0" type="xs:string" />
-                              <xs:attribute name="Code" type="xs:string" />
-                            </xs:complexType>
-                          </xs:element>
-                        </xs:sequence>
-                        <xs:attribute name="Name" type="xs:string" />
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-            <xs:attribute name="Name" type="xs:string" />
-          </xs:complexType>
-        </xs:element>
-      </xs:choice>
-    </xs:complexType>
-  </xs:element>
-</xs:schema>
-    -->
