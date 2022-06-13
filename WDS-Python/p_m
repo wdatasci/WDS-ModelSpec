@@ -1,0 +1,30 @@
+#!/usr/bin/tcsh
+
+if ( $# == 0 ) then
+    echo "$0 is a very simple caller of python3 which facilitates linux command line calling, primarily for testing purposes."
+    echo ""
+    echo "If a given piece of python code can be call via: python3  <subdirname of the cwd of the shell>/<filename>.py"
+    echo "where subdirname is also module attainable on the PYTHONPATH,"
+    echo "then it can be called via:  python3 -m subdirname.filename"
+    echo ""
+    echo "This shell script changes:"
+    echo "     p_m subdirname/filename.py <<<<rest of command line>>>> "
+    echo "To:"
+    echo "     python3 -m subdirname.filename <<<<rest of command line>>>> "
+    echo ""
+    echo "Note: arguments that are strings with wildcards inside, will probably need to be escaped like"
+    echo "     p_m examples/Iterators.py  /WDS/dev/lib/Python --glob_pattern \'exa'*'\' --pudb "
+    echo ""
+    exit 0
+endif
+
+set arg1="${1:r:as;/;.;}"
+
+shift
+
+echo "python3 -m $arg1 $*"
+tcsh -c "python3 -m $arg1 $*"
+
+
+
+
