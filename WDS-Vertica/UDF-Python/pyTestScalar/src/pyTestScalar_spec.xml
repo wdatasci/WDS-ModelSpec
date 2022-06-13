@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<UDxs>
+    <UDF Name="pyTestScalar">
+        <Info>
+            <SQL>
+                <Vertica Database="verticadb" Schema="public">
+                    <TestSourceBody>
+                        select 1::int as ID, 10::int as N, 51::int as Offset
+                    </TestSourceBody>
+                    <PanelDataSet>
+                        <!--When creting a panel dataset table, the where-clause to pull static output columns-->
+                        <OutputStaticRowIndicator>where RowIndex=51</OutputStaticRowIndicator>
+                    </PanelDataSet>
+                </Vertica>
+            </SQL>
+            <Cpp/>
+            <Java/>
+            <Python>
+                <Depends/>
+            </Python>
+        </Info>
+        <Parameters>
+            <Column Use="P"  Name="InputBlockMaxLength" DTyp="Int" Default="1"/>
+            <!--
+            <Column Use="P"  Name="BlockMaxLength" DTyp="Int" Default="NULL"/>
+            <Column Use="P"  Name="EndPointInclusive" DTyp="Int" Default="0"/>
+            -->
+        </Parameters>
+        <Columns>
+            <Column Use="I"  Name="A" DTyp="Dbl" Static="Y" />
+            <Column Use="I"  Name="B" DTyp="Dbl" Static="Y"/>
+            <Column Use="O"  Name="rv" DTyp="Dbl" Static="Y" />
+        </Columns>
+    </UDF>
+</UDxs>
+
