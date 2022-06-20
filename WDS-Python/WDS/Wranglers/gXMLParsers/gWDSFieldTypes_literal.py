@@ -8,14 +8,14 @@
 # Command line options:
 #   ('--mixed-case-enums', '')
 #   ('-f', '')
-#   ('--export', 'write etree')
-#   ('-o', './WDS-Python/WDS/Wranglers/gXMLParsers/gWDSFieldTypes.py')
+#   ('--export', 'write literal')
+#   ('-o', './WDS-Python/WDS/Wranglers/gXMLParsers/gWDSFieldTypes_literal.py')
 #
 # Command line arguments:
 #   ./WDS-XML/XSD/WDSFieldTypes.xsd
 #
 # Command line:
-#   ./WDS-Python/scripts/generateDS_unsnaked --mixed-case-enums -f --export="write etree" -o "./WDS-Python/WDS/Wranglers/gXMLParsers/gWDSFieldTypes.py" ./WDS-XML/XSD/WDSFieldTypes.xsd
+#   ./WDS-Python/scripts/generateDS_unsnaked --mixed-case-enums -f --export="write literal" -o "./WDS-Python/WDS/Wranglers/gXMLParsers/gWDSFieldTypes_literal.py" ./WDS-XML/XSD/WDSFieldTypes.xsd
 #
 # Current working directory (os.getcwd()):
 #   master
@@ -1179,8 +1179,8 @@ def parseLiteral(inFileName, silence=False, print_warnings=True):
         doc = None
         rootNode = None
     if not silence:
-        sys.stdout.write('#from gWDSFieldTypes import *\n\n')
-        sys.stdout.write('import gWDSFieldTypes as model_\n\n')
+        sys.stdout.write('#from gWDSFieldTypes_literal import *\n\n')
+        sys.stdout.write('import gWDSFieldTypes_literal as model_\n\n')
         sys.stdout.write('rootObj = model_.rootClass(\n')
         rootObj.exportLiteral(sys.stdout, 0, name_=rootTag)
         sys.stdout.write(')\n')

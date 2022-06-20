@@ -18,13 +18,34 @@ if ( $# == 0 ) then
     exit 0
 endif
 
+set dash_i=""
 set arg1="${1:r:as;/;.;}"
+if ( ${arg1} == "-i" ) then
+    set dash_i="-i"
+    shift
+    if ( $# > 0 ) then
+        set arg1="${1:r:as;/;.;}"
+        shift
+    else
+        set arg1=""
+    endif
+endif
 
-shift
+set arg2=""
+if ( $# > 0) then
+    if ( ${arg2} == "-i" ) then
+        set dash_i="-i"
+        shift
+        if ( $# > 0 ) then
+            set arg2="${1:r:as;/;.;}"
+            shift
+        else
+            set arg2=""
+        endif
+    endif
+endif
+    
 
-echo "python3 -m $arg1 $*"
-tcsh -c "python3 -m $arg1 $*"
-
-
-
+echo "python3 ${dash_i} -m $arg1 $arg2 $*"
+tcsh -c "python3 ${dash_i} -m $arg1 $arg2 $*"
 

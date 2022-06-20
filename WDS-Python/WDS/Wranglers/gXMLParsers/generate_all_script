@@ -1,8 +1,0 @@
-#!/usr/bin/env tcsh
-
-
-
-foreach x ( ../../../../WDS-XML/XSD/*.xsd )
-    echo "./generateDS_unsnaked -o g${x:t:r}.py ${x}"
-    ./generateDS_unsnaked -o g${x:t:r}.py ${x}
-end

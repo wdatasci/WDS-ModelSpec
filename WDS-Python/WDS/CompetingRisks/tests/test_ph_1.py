@@ -4,6 +4,7 @@ import polars as pl
 import math
 from typing import *
 
+from WDS.Wranglers.gXMLParsers import gWDSModel
 
 def Bones_explode(df : pl.DataFrame,
         /,
@@ -77,6 +78,7 @@ x=x.select(['ID','EventIndex',pl.concat_list(['Signal','EventIndex']).apply(lamb
 data2=data2.join(x,on=['ID']).filter(pl.col('RowIndex') <= pl.col('EventIndex'))
 
 
+this_Project = gWDSModel.parse('../WDS-XML/XML-Examples/WDSModel-Example.xml')
 
 
 
