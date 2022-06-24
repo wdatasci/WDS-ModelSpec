@@ -14,7 +14,7 @@ import string
 from enum import IntEnum
 import datetime
 
-from WDS.Util.MonthID import *
+from WDS.util.MonthID import *
 
 
 #constant-ish objects for this module

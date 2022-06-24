@@ -8,14 +8,14 @@
 # Command line options:
 #   ('--mixed-case-enums', '')
 #   ('-f', '')
-#   ('--export', 'write etree')
-#   ('-o', './WDS-Python/WDS/Wranglers/gXMLParsers/gWDSModel.py')
+#   ('--export', 'write literal')
+#   ('-o', './WDS-Python/WDS/Wranglers/gXMLParsers/gWDSModel_literal.py')
 #
 # Command line arguments:
 #   ./WDS-XML/XSD/WDSModel.xsd
 #
 # Command line:
-#   ./WDS-Python/scripts/generateDS_unsnaked --mixed-case-enums -f --export="write etree" -o "./WDS-Python/WDS/Wranglers/gXMLParsers/gWDSModel.py" ./WDS-XML/XSD/WDSModel.xsd
+#   ./WDS-Python/scripts/generateDS_unsnaked --mixed-case-enums -f --export="write literal" -o "./WDS-Python/WDS/Wranglers/gXMLParsers/gWDSModel_literal.py" ./WDS-XML/XSD/WDSModel.xsd
 #
 # Current working directory (os.getcwd()):
 #   master
@@ -1114,18 +1114,24 @@ class Annotation(GeneratedsSuper):
         for AppInfo_ in self.AppInfo:
             namespaceprefix_ = self.AppInfo_nsprefix_ + ':' if (UseCapturedNS_ and self.AppInfo_nsprefix_) else ''
             AppInfo_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='AppInfo', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Annotation', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Annotation'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('content_ = [\n')
         for item_ in self.content_:
-            item_.to_etree(element, mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            item_.exportLiteral(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -1318,34 +1324,51 @@ class Column(GeneratedsSuper):
             outfile.write(' Use=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Use), input_name='Use')), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='Column', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='Column', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.BlockID is not None:
-            element.set('BlockID', self.gds_format_string(self.BlockID))
-        if self.RowID is not None:
-            element.set('RowID', self.gds_format_string(self.RowID))
-        if self.Static is not None:
-            element.set('Static', self.gds_format_string(self.Static))
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.DTyp is not None:
-            element.set('DTyp', self.gds_format_string(self.DTyp))
-        if self.Length is not None:
-            element.set('Length', self.gds_format_integer(self.Length))
-        if self.Default is not None:
-            element.set('Default', self.gds_format_string(self.Default))
-        if self.MetaDataXRef is not None:
-            element.set('MetaDataXRef', self.gds_format_string(self.MetaDataXRef))
-        if self.Use is not None:
-            element.set('Use', self.gds_format_string(self.Use))
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+    def exportLiteral(self, outfile, level, name_='Column'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.BlockID is not None and 'BlockID' not in already_processed:
+            already_processed.add('BlockID')
+            showIndent(outfile, level)
+            outfile.write('BlockID="%s",\n' % (self.BlockID,))
+        if self.RowID is not None and 'RowID' not in already_processed:
+            already_processed.add('RowID')
+            showIndent(outfile, level)
+            outfile.write('RowID="%s",\n' % (self.RowID,))
+        if self.Static is not None and 'Static' not in already_processed:
+            already_processed.add('Static')
+            showIndent(outfile, level)
+            outfile.write('Static="%s",\n' % (self.Static,))
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.DTyp is not None and 'DTyp' not in already_processed:
+            already_processed.add('DTyp')
+            showIndent(outfile, level)
+            outfile.write('DTyp="%s",\n' % (self.DTyp,))
+        if self.Length is not None and 'Length' not in already_processed:
+            already_processed.add('Length')
+            showIndent(outfile, level)
+            outfile.write('Length=%d,\n' % (self.Length,))
+        if self.Default is not None and 'Default' not in already_processed:
+            already_processed.add('Default')
+            showIndent(outfile, level)
+            outfile.write('Default="%s",\n' % (self.Default,))
+        if self.MetaDataXRef is not None and 'MetaDataXRef' not in already_processed:
+            already_processed.add('MetaDataXRef')
+            showIndent(outfile, level)
+            outfile.write('MetaDataXRef="%s",\n' % (self.MetaDataXRef,))
+        if self.Use is not None and 'Use' not in already_processed:
+            already_processed.add('Use')
+            showIndent(outfile, level)
+            outfile.write('Use="%s",\n' % (self.Use,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -1519,26 +1542,35 @@ class Parameter(GeneratedsSuper):
             outfile.write(' MetaDataXRef=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.MetaDataXRef), input_name='MetaDataXRef')), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='Parameter', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='Parameter', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.DTyp is not None:
-            element.set('DTyp', self.gds_format_string(self.DTyp))
-        if self.Length is not None:
-            element.set('Length', self.gds_format_integer(self.Length))
-        if self.Default is not None:
-            element.set('Default', self.gds_format_string(self.Default))
-        if self.MetaDataXRef is not None:
-            element.set('MetaDataXRef', self.gds_format_string(self.MetaDataXRef))
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+    def exportLiteral(self, outfile, level, name_='Parameter'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.DTyp is not None and 'DTyp' not in already_processed:
+            already_processed.add('DTyp')
+            showIndent(outfile, level)
+            outfile.write('DTyp="%s",\n' % (self.DTyp,))
+        if self.Length is not None and 'Length' not in already_processed:
+            already_processed.add('Length')
+            showIndent(outfile, level)
+            outfile.write('Length=%d,\n' % (self.Length,))
+        if self.Default is not None and 'Default' not in already_processed:
+            already_processed.add('Default')
+            showIndent(outfile, level)
+            outfile.write('Default="%s",\n' % (self.Default,))
+        if self.MetaDataXRef is not None and 'MetaDataXRef' not in already_processed:
+            already_processed.add('MetaDataXRef')
+            showIndent(outfile, level)
+            outfile.write('MetaDataXRef="%s",\n' % (self.MetaDataXRef,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -1657,18 +1689,27 @@ class Columns(GeneratedsSuper):
         for Column_ in self.Column:
             namespaceprefix_ = self.Column_nsprefix_ + ':' if (UseCapturedNS_ and self.Column_nsprefix_) else ''
             Column_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Column', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Columns', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Columns'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Column=[\n')
+        level += 1
         for Column_ in self.Column:
-            Column_.to_etree(element, name_='Column', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Column(\n')
+            Column_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -1790,20 +1831,39 @@ class Parameters(GeneratedsSuper):
         for Parameter_ in self.Parameter:
             namespaceprefix_ = self.Parameter_nsprefix_ + ':' if (UseCapturedNS_ and self.Parameter_nsprefix_) else ''
             Parameter_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Parameter', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Parameters', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Parameters'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Column=[\n')
+        level += 1
         for Column_ in self.Column:
-            Column_.to_etree(element, name_='Column', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Column(\n')
+            Column_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('Parameter=[\n')
+        level += 1
         for Parameter_ in self.Parameter:
-            Parameter_.to_etree(element, name_='Parameter', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Parameter(\n')
+            Parameter_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -1935,18 +1995,22 @@ class EnumValue(GeneratedsSuper):
             outfile.write(' Name=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Name), input_name='Name')), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='EnumValue', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='EnumValue', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+    def exportLiteral(self, outfile, level, name_='EnumValue'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        for name, value in self.anyAttributes_.items():
+            showIndent(outfile, level)
+            outfile.write('%s="%s",\n' % (name, value,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -2052,18 +2116,27 @@ class EnumValues(GeneratedsSuper):
         for EnumValue_ in self.EnumValue:
             namespaceprefix_ = self.EnumValue_nsprefix_ + ':' if (UseCapturedNS_ and self.EnumValue_nsprefix_) else ''
             EnumValue_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='EnumValue', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='EnumValues', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='EnumValues'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('EnumValue=[\n')
+        level += 1
         for EnumValue_ in self.EnumValue:
-            EnumValue_.to_etree(element, name_='EnumValue', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.EnumValue(\n')
+            EnumValue_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -2200,26 +2273,42 @@ class Enum(GeneratedsSuper):
         if self.EnumValues is not None:
             namespaceprefix_ = self.EnumValues_nsprefix_ + ':' if (UseCapturedNS_ and self.EnumValues_nsprefix_) else ''
             self.EnumValues.export(outfile, level, namespaceprefix_, namespacedef_='', name_='EnumValues', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Enum', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
+    def exportLiteral(self, outfile, level, name_='Enum'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+    def _exportLiteralChildren(self, outfile, level, name_):
         if self.EnumMD is not None:
-            EnumMD_ = self.EnumMD
-            EnumMD_.to_etree(element, name_='EnumMD', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('EnumMD=model_.EnumMDType(\n')
+            self.EnumMD.exportLiteral(outfile, level, name_='EnumMD')
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('EnumValue=[\n')
+        level += 1
         for EnumValue_ in self.EnumValue:
-            EnumValue_.to_etree(element, name_='EnumValue', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.EnumValue(\n')
+            EnumValue_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.EnumValues is not None:
-            EnumValues_ = self.EnumValues
-            EnumValues_.to_etree(element, name_='EnumValues', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('EnumValues=model_.EnumValues(\n')
+            self.EnumValues.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -2335,18 +2424,27 @@ class Enums(GeneratedsSuper):
         for Enum_ in self.Enum:
             namespaceprefix_ = self.Enum_nsprefix_ + ':' if (UseCapturedNS_ and self.Enum_nsprefix_) else ''
             Enum_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Enum', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Enums', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Enums'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Enum=[\n')
+        level += 1
         for Enum_ in self.Enum:
-            Enum_.to_etree(element, name_='Enum', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Enum(\n')
+            Enum_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -2472,28 +2570,33 @@ class UDxInfo(GeneratedsSuper):
         if self.SQL is not None:
             namespaceprefix_ = self.SQL_nsprefix_ + ':' if (UseCapturedNS_ and self.SQL_nsprefix_) else ''
             self.SQL.export(outfile, level, namespaceprefix_, namespacedef_='', name_='SQL', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='UDxInfo', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='UDxInfo'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
         if self.Cpp is not None:
-            Cpp_ = self.Cpp
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Cpp').text = self.gds_format_string(Cpp_)
+            showIndent(outfile, level)
+            outfile.write('Cpp=%s,\n' % self.gds_encode(quote_python(self.Cpp)))
         if self.Java is not None:
-            Java_ = self.Java
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Java').text = self.gds_format_string(Java_)
+            showIndent(outfile, level)
+            outfile.write('Java=%s,\n' % self.gds_encode(quote_python(self.Java)))
         if self.Python is not None:
-            Python_ = self.Python
-            Python_.to_etree(element, name_='Python', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('Python=model_.PythonType(\n')
+            self.Python.exportLiteral(outfile, level, name_='Python')
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.SQL is not None:
-            SQL_ = self.SQL
-            SQL_.to_etree(element, name_='SQL', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('SQL=model_.SQLType(\n')
+            self.SQL.exportLiteral(outfile, level, name_='SQL')
+            showIndent(outfile, level)
+            outfile.write('),\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -2632,20 +2735,39 @@ class UDxs(GeneratedsSuper):
         for UDTF_ in self.UDTF:
             namespaceprefix_ = self.UDTF_nsprefix_ + ':' if (UseCapturedNS_ and self.UDTF_nsprefix_) else ''
             UDTF_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='UDTF', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='UDxs', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='UDxs'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('UDF=[\n')
+        level += 1
         for UDF_ in self.UDF:
-            UDF_.to_etree(element, name_='UDF', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.UDFType(\n')
+            UDF_.exportLiteral(outfile, level, name_='UDFType')
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('UDTF=[\n')
+        level += 1
         for UDTF_ in self.UDTF:
-            UDTF_.to_etree(element, name_='UDTF', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.UDTFType(\n')
+            UDTF_.exportLiteral(outfile, level, name_='UDTFType')
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -2750,20 +2872,21 @@ class Source(GeneratedsSuper):
             outfile.write(' MetaDataXRef=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.MetaDataXRef), input_name='MetaDataXRef')), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='Source', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='Source', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.MetaDataXRef is not None:
-            element.set('MetaDataXRef', self.gds_format_string(self.MetaDataXRef))
+    def exportLiteral(self, outfile, level, name_='Source'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
         if self._hasContent():
-            element.text = self.gds_format_string(self.get_valueOf_())
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.MetaDataXRef is not None and 'MetaDataXRef' not in already_processed:
+            already_processed.add('MetaDataXRef')
+            showIndent(outfile, level)
+            outfile.write('MetaDataXRef="%s",\n' % (self.MetaDataXRef,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -2874,18 +2997,27 @@ class Sources(GeneratedsSuper):
         for Source_ in self.Source:
             namespaceprefix_ = self.Source_nsprefix_ + ':' if (UseCapturedNS_ and self.Source_nsprefix_) else ''
             Source_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Source', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Sources', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Sources'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Source=[\n')
+        level += 1
         for Source_ in self.Source:
-            Source_.to_etree(element, name_='Source', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Source(\n')
+            Source_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -2989,18 +3121,24 @@ class Transformations(GeneratedsSuper):
             namespaceprefix_ = self.Transformation_nsprefix_ + ':' if (UseCapturedNS_ and self.Transformation_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%sTransformation>%s</%sTransformation>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(Transformation_), input_name='Transformation')), namespaceprefix_ , eol_))
-    def to_etree(self, parent_element=None, name_='Transformations', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Transformations'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Transformation=[\n')
+        level += 1
         for Transformation_ in self.Transformation:
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Transformation').text = self.gds_format_string(Transformation_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('%s,\n' % self.gds_encode(quote_python(Transformation_)))
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -3105,18 +3243,24 @@ class Constants(GeneratedsSuper):
             namespaceprefix_ = self.Constant_nsprefix_ + ':' if (UseCapturedNS_ and self.Constant_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%sConstant>%s</%sConstant>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(Constant_), input_name='Constant')), namespaceprefix_ , eol_))
-    def to_etree(self, parent_element=None, name_='Constants', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Constants'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Constant=[\n')
+        level += 1
         for Constant_ in self.Constant:
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Constant').text = self.gds_format_string(Constant_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('%s,\n' % self.gds_encode(quote_python(Constant_)))
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -3291,31 +3435,52 @@ class FieldMD(GeneratedsSuper):
         if self.Sources is not None:
             namespaceprefix_ = self.Sources_nsprefix_ + ':' if (UseCapturedNS_ and self.Sources_nsprefix_) else ''
             self.Sources.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Sources', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='FieldMD', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.DTyp is not None:
-            element.set('DTyp', self.gds_format_string(self.DTyp))
-        if self.Length is not None:
-            element.set('Length', self.gds_format_integer(self.Length))
-        if self.Default is not None:
-            element.set('Default', self.gds_format_string(self.Default))
-        if self.MetaDataXRef is not None:
-            element.set('MetaDataXRef', self.gds_format_string(self.MetaDataXRef))
+    def exportLiteral(self, outfile, level, name_='FieldMD'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.DTyp is not None and 'DTyp' not in already_processed:
+            already_processed.add('DTyp')
+            showIndent(outfile, level)
+            outfile.write('DTyp="%s",\n' % (self.DTyp,))
+        if self.Length is not None and 'Length' not in already_processed:
+            already_processed.add('Length')
+            showIndent(outfile, level)
+            outfile.write('Length=%d,\n' % (self.Length,))
+        if self.Default is not None and 'Default' not in already_processed:
+            already_processed.add('Default')
+            showIndent(outfile, level)
+            outfile.write('Default="%s",\n' % (self.Default,))
+        if self.MetaDataXRef is not None and 'MetaDataXRef' not in already_processed:
+            already_processed.add('MetaDataXRef')
+            showIndent(outfile, level)
+            outfile.write('MetaDataXRef="%s",\n' % (self.MetaDataXRef,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Source=[\n')
+        level += 1
         for Source_ in self.Source:
-            Source_.to_etree(element, name_='Source', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Source(\n')
+            Source_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.Sources is not None:
-            Sources_ = self.Sources
-            Sources_.to_etree(element, name_='Sources', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('Sources=model_.Sources(\n')
+            self.Sources.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -3443,18 +3608,27 @@ class Dictionary(GeneratedsSuper):
         for FieldMD_ in self.FieldMD:
             namespaceprefix_ = self.FieldMD_nsprefix_ + ':' if (UseCapturedNS_ and self.FieldMD_nsprefix_) else ''
             FieldMD_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='FieldMD', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Dictionary', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Dictionary'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('FieldMD=[\n')
+        level += 1
         for FieldMD_ in self.FieldMD:
-            FieldMD_.to_etree(element, name_='FieldMD', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.FieldMD(\n')
+            FieldMD_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -3574,22 +3748,34 @@ class Signature(GeneratedsSuper):
         for Column_ in self.Column:
             namespaceprefix_ = self.Column_nsprefix_ + ':' if (UseCapturedNS_ and self.Column_nsprefix_) else ''
             Column_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Column', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Signature', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.Use is not None:
-            element.set('Use', self.gds_format_string(self.Use))
+    def exportLiteral(self, outfile, level, name_='Signature'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Use is not None and 'Use' not in already_processed:
+            already_processed.add('Use')
+            showIndent(outfile, level)
+            outfile.write('Use="%s",\n' % (self.Use,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Column=[\n')
+        level += 1
         for Column_ in self.Column:
-            Column_.to_etree(element, name_='Column', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Column(\n')
+            Column_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -3699,18 +3885,27 @@ class Signatures(GeneratedsSuper):
         for Signature_ in self.Signature:
             namespaceprefix_ = self.Signature_nsprefix_ + ':' if (UseCapturedNS_ and self.Signature_nsprefix_) else ''
             Signature_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Signature', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Signatures', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Signatures'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Signature=[\n')
+        level += 1
         for Signature_ in self.Signature:
-            Signature_.to_etree(element, name_='Signature', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Signature(\n')
+            Signature_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -3825,25 +4020,30 @@ class Documentation(GeneratedsSuper):
         if self.Text is not None:
             namespaceprefix_ = self.Text_nsprefix_ + ':' if (UseCapturedNS_ and self.Text_nsprefix_) else ''
             self.Text.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Text', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Documentation', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Documentation'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
         if self.Date is not None:
-            Date_ = self.Date
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Date').text = self.gds_format_string(Date_)
+            showIndent(outfile, level)
+            outfile.write('Date=%s,\n' % self.gds_encode(quote_python(self.Date)))
         if self.Version is not None:
-            Version_ = self.Version
-            Version_.to_etree(element, name_='Version', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('Version=model_.VersionType(\n')
+            self.Version.exportLiteral(outfile, level, name_='Version')
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.Text is not None:
-            Text_ = self.Text
-            Text_.to_etree(element, name_='Text', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('Text=model_.TextType(\n')
+            self.Text.exportLiteral(outfile, level, name_='Text')
+            showIndent(outfile, level)
+            outfile.write('),\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -3974,22 +4174,34 @@ class Projects(GeneratedsSuper):
         for Project_ in self.Project:
             namespaceprefix_ = self.Project_nsprefix_ + ':' if (UseCapturedNS_ and self.Project_nsprefix_) else ''
             Project_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Project', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Projects', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.Handle is not None:
-            element.set('Handle', self.gds_format_string(self.Handle))
+    def exportLiteral(self, outfile, level, name_='Projects'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Project=[\n')
+        level += 1
         for Project_ in self.Project:
-            Project_.to_etree(element, name_='Project', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Project(\n')
+            Project_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -4164,29 +4376,64 @@ class Project(GeneratedsSuper):
         for Model_ in self.Model:
             namespaceprefix_ = self.Model_nsprefix_ + ':' if (UseCapturedNS_ and self.Model_nsprefix_) else ''
             Model_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Model', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Project', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.Handle is not None:
-            element.set('Handle', self.gds_format_string(self.Handle))
+    def exportLiteral(self, outfile, level, name_='Project'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Documentation=[\n')
+        level += 1
         for Documentation_ in self.Documentation:
-            Documentation_.to_etree(element, name_='Documentation', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Documentation(\n')
+            Documentation_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('Dictionary=[\n')
+        level += 1
         for Dictionary_ in self.Dictionary:
-            Dictionary_.to_etree(element, name_='Dictionary', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Dictionary(\n')
+            Dictionary_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.Models is not None:
-            Models_ = self.Models
-            Models_.to_etree(element, name_='Models', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('Models=model_.Models(\n')
+            self.Models.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('Model=[\n')
+        level += 1
         for Model_ in self.Model:
-            Model_.to_etree(element, name_='Model', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Model(\n')
+            Model_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -4312,18 +4559,24 @@ class Responses(GeneratedsSuper):
             namespaceprefix_ = self.Response_nsprefix_ + ':' if (UseCapturedNS_ and self.Response_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%sResponse>%s</%sResponse>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(Response_), input_name='Response')), namespaceprefix_ , eol_))
-    def to_etree(self, parent_element=None, name_='Responses', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Responses'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Response=[\n')
+        level += 1
         for Response_ in self.Response:
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Response').text = self.gds_format_string(Response_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('%s,\n' % self.gds_encode(quote_python(Response_)))
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -4468,26 +4721,45 @@ class ModelDirectives(GeneratedsSuper):
         for Responses_ in self.Responses:
             namespaceprefix_ = self.Responses_nsprefix_ + ':' if (UseCapturedNS_ and self.Responses_nsprefix_) else ''
             Responses_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Responses', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='ModelDirectives', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='ModelDirectives'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Annotation=[\n')
+        level += 1
         for Annotation_ in self.Annotation:
-            Annotation_.to_etree(element, name_='Annotation', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Annotation(\n')
+            Annotation_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.Type is not None:
-            Type_ = self.Type
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Type').text = self.gds_format_string(Type_)
+            showIndent(outfile, level)
+            outfile.write('Type=%s,\n' % self.gds_encode(quote_python(self.Type)))
         if self.Response is not None:
-            Response_ = self.Response
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Response').text = self.gds_format_string(Response_)
+            showIndent(outfile, level)
+            outfile.write('Response=%s,\n' % self.gds_encode(quote_python(self.Response)))
+        showIndent(outfile, level)
+        outfile.write('Responses=[\n')
+        level += 1
         for Responses_ in self.Responses:
-            Responses_.to_etree(element, name_='Responses', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Responses(\n')
+            Responses_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -4643,24 +4915,46 @@ class Models(GeneratedsSuper):
         for Model_ in self.Model:
             namespaceprefix_ = self.Model_nsprefix_ + ':' if (UseCapturedNS_ and self.Model_nsprefix_) else ''
             Model_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Model', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Models', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.Handle is not None:
-            element.set('Handle', self.gds_format_string(self.Handle))
+    def exportLiteral(self, outfile, level, name_='Models'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Annotation=[\n')
+        level += 1
         for Annotation_ in self.Annotation:
-            Annotation_.to_etree(element, name_='Annotation', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Annotation(\n')
+            Annotation_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('Model=[\n')
+        level += 1
         for Model_ in self.Model:
-            Model_.to_etree(element, name_='Model', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Model(\n')
+            Model_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -4860,38 +5154,74 @@ class Model(GeneratedsSuper):
         if self.Variables is not None:
             namespaceprefix_ = self.Variables_nsprefix_ + ':' if (UseCapturedNS_ and self.Variables_nsprefix_) else ''
             self.Variables.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Variables', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Model', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Use is not None:
-            element.set('Use', self.gds_format_string(self.Use))
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.Handle is not None:
-            element.set('Handle', self.gds_format_string(self.Handle))
+    def exportLiteral(self, outfile, level, name_='Model'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Use is not None and 'Use' not in already_processed:
+            already_processed.add('Use')
+            showIndent(outfile, level)
+            outfile.write('Use="%s",\n' % (self.Use,))
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Annotation=[\n')
+        level += 1
         for Annotation_ in self.Annotation:
-            Annotation_.to_etree(element, name_='Annotation', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Annotation(\n')
+            Annotation_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.Signatures is not None:
-            Signatures_ = self.Signatures
-            Signatures_.to_etree(element, name_='Signatures', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('Signatures=model_.Signatures(\n')
+            self.Signatures.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.ModelDirectives is not None:
-            ModelDirectives_ = self.ModelDirectives
-            ModelDirectives_.to_etree(element, name_='ModelDirectives', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('ModelDirectives=model_.ModelDirectives(\n')
+            self.ModelDirectives.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.ComponentModels is not None:
-            ComponentModels_ = self.ComponentModels
-            ComponentModels_.to_etree(element, name_='ComponentModels', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('ComponentModels=model_.ComponentModels(\n')
+            self.ComponentModels.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('ComponentModel=[\n')
+        level += 1
         for ComponentModel_ in self.ComponentModel:
-            ComponentModel_.to_etree(element, name_='ComponentModel', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.ComponentModel(\n')
+            ComponentModel_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.Variables is not None:
-            Variables_ = self.Variables
-            Variables_.to_etree(element, name_='Variables', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('Variables=model_.Variables(\n')
+            self.Variables.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -5049,20 +5379,39 @@ class ComponentModels(GeneratedsSuper):
         for ComponentModel_ in self.ComponentModel:
             namespaceprefix_ = self.ComponentModel_nsprefix_ + ':' if (UseCapturedNS_ and self.ComponentModel_nsprefix_) else ''
             ComponentModel_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='ComponentModel', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='ComponentModels', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='ComponentModels'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Annotation=[\n')
+        level += 1
         for Annotation_ in self.Annotation:
-            Annotation_.to_etree(element, name_='Annotation', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Annotation(\n')
+            Annotation_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('ComponentModel=[\n')
+        level += 1
         for ComponentModel_ in self.ComponentModel:
-            ComponentModel_.to_etree(element, name_='ComponentModel', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.ComponentModel(\n')
+            ComponentModel_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -5245,35 +5594,68 @@ class ComponentModel(GeneratedsSuper):
         for Variable_ in self.Variable:
             namespaceprefix_ = self.Variable_nsprefix_ + ':' if (UseCapturedNS_ and self.Variable_nsprefix_) else ''
             Variable_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Variable', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='ComponentModel', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Use is not None:
-            element.set('Use', self.gds_format_string(self.Use))
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.Handle is not None:
-            element.set('Handle', self.gds_format_string(self.Handle))
+    def exportLiteral(self, outfile, level, name_='ComponentModel'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Use is not None and 'Use' not in already_processed:
+            already_processed.add('Use')
+            showIndent(outfile, level)
+            outfile.write('Use="%s",\n' % (self.Use,))
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Annotation=[\n')
+        level += 1
         for Annotation_ in self.Annotation:
-            Annotation_.to_etree(element, name_='Annotation', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Annotation(\n')
+            Annotation_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.Signatures is not None:
-            Signatures_ = self.Signatures
-            Signatures_.to_etree(element, name_='Signatures', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('Signatures=model_.Signatures(\n')
+            self.Signatures.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.ModelDirectives is not None:
-            ModelDirectives_ = self.ModelDirectives
-            ModelDirectives_.to_etree(element, name_='ModelDirectives', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('ModelDirectives=model_.ModelDirectives(\n')
+            self.ModelDirectives.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.Variables is not None:
-            Variables_ = self.Variables
-            Variables_.to_etree(element, name_='Variables', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('Variables=model_.Variables(\n')
+            self.Variables.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('Variable=[\n')
+        level += 1
         for Variable_ in self.Variable:
-            Variable_.to_etree(element, name_='Variable', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Variable(\n')
+            Variable_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -5426,20 +5808,39 @@ class Variables(GeneratedsSuper):
         for Variable_ in self.Variable:
             namespaceprefix_ = self.Variable_nsprefix_ + ':' if (UseCapturedNS_ and self.Variable_nsprefix_) else ''
             Variable_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Variable', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Variables', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Variables'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Annotation=[\n')
+        level += 1
         for Annotation_ in self.Annotation:
-            Annotation_.to_etree(element, name_='Annotation', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Annotation(\n')
+            Annotation_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('Variable=[\n')
+        level += 1
         for Variable_ in self.Variable:
-            Variable_.to_etree(element, name_='Variable', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Variable(\n')
+            Variable_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -5567,24 +5968,39 @@ class CleanLimits(GeneratedsSuper):
         if self.RightLimit is not None:
             namespaceprefix_ = self.RightLimit_nsprefix_ + ':' if (UseCapturedNS_ and self.RightLimit_nsprefix_) else ''
             self.RightLimit.export(outfile, level, namespaceprefix_, namespacedef_='', name_='RightLimit', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='CleanLimits', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='CleanLimits'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('CleanLimit=[\n')
+        level += 1
         for CleanLimit_ in self.CleanLimit:
-            CleanLimit_.to_etree(element, name_='CleanLimit', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.CleanLimit(\n')
+            CleanLimit_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.LeftLimit is not None:
-            LeftLimit_ = self.LeftLimit
-            LeftLimit_.to_etree(element, name_='LeftLimit', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('LeftLimit=model_.Dbl(\n')
+            self.LeftLimit.exportLiteral(outfile, level, name_='LeftLimit')
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.RightLimit is not None:
-            RightLimit_ = self.RightLimit
-            RightLimit_.to_etree(element, name_='RightLimit', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('RightLimit=model_.Dbl(\n')
+            self.RightLimit.exportLiteral(outfile, level, name_='RightLimit')
+            showIndent(outfile, level)
+            outfile.write('),\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -5700,18 +6116,27 @@ class DropIndices(GeneratedsSuper):
         for DropIndex_ in self.DropIndex:
             namespaceprefix_ = self.DropIndex_nsprefix_ + ':' if (UseCapturedNS_ and self.DropIndex_nsprefix_) else ''
             DropIndex_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='DropIndex', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='DropIndices', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='DropIndices'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('DropIndex=[\n')
+        level += 1
         for DropIndex_ in self.DropIndex:
-            DropIndex_.to_etree(element, name_='DropIndex', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.DropIndex(\n')
+            DropIndex_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -5814,18 +6239,27 @@ class CriticalValues(GeneratedsSuper):
         for CriticalValue_ in self.CriticalValue:
             namespaceprefix_ = self.CriticalValue_nsprefix_ + ':' if (UseCapturedNS_ and self.CriticalValue_nsprefix_) else ''
             CriticalValue_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CriticalValue', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='CriticalValues', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='CriticalValues'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('CriticalValue=[\n')
+        level += 1
         for CriticalValue_ in self.CriticalValue:
-            CriticalValue_.to_etree(element, name_='CriticalValue', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.CriticalValue(\n')
+            CriticalValue_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -5934,22 +6368,25 @@ class CriticalWord(GeneratedsSuper):
             outfile.write(' Position=%s' % (quote_attrib(self.Position), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CriticalWord', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='CriticalWord', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Dlm is not None:
-            element.set('Dlm', self.gds_format_string(self.Dlm))
-        if self.Position is not None:
-            element.set('Position', self.Position)
+    def exportLiteral(self, outfile, level, name_='CriticalWord'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
         if self._hasContent():
-            element.text = self.gds_format_string(self.get_valueOf_())
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Dlm is not None and 'Dlm' not in already_processed:
+            already_processed.add('Dlm')
+            showIndent(outfile, level)
+            outfile.write('Dlm="%s",\n' % (self.Dlm,))
+        if self.Position is not None and 'Position' not in already_processed:
+            already_processed.add('Position')
+            showIndent(outfile, level)
+            outfile.write('Position=%s,\n' % (self.Position,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -6079,24 +6516,29 @@ class CriticalWordList(GeneratedsSuper):
             outfile.write(' Position=%s' % (quote_attrib(self.Position), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CriticalWordList', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='CriticalWordList', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Dlm is not None:
-            element.set('Dlm', self.gds_format_string(self.Dlm))
-        if self.WordDlm is not None:
-            element.set('WordDlm', self.gds_format_string(self.WordDlm))
-        if self.Position is not None:
-            element.set('Position', self.Position)
+    def exportLiteral(self, outfile, level, name_='CriticalWordList'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
         if self._hasContent():
-            element.text = self.gds_format_string(self.get_valueOf_())
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Dlm is not None and 'Dlm' not in already_processed:
+            already_processed.add('Dlm')
+            showIndent(outfile, level)
+            outfile.write('Dlm="%s",\n' % (self.Dlm,))
+        if self.WordDlm is not None and 'WordDlm' not in already_processed:
+            already_processed.add('WordDlm')
+            showIndent(outfile, level)
+            outfile.write('WordDlm="%s",\n' % (self.WordDlm,))
+        if self.Position is not None and 'Position' not in already_processed:
+            already_processed.add('Position')
+            showIndent(outfile, level)
+            outfile.write('Position=%s,\n' % (self.Position,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -6215,18 +6657,27 @@ class CriticalWordSet(GeneratedsSuper):
         for CriticalWord_ in self.CriticalWord:
             namespaceprefix_ = self.CriticalWord_nsprefix_ + ':' if (UseCapturedNS_ and self.CriticalWord_nsprefix_) else ''
             CriticalWord_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CriticalWord', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='CriticalWordSet', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='CriticalWordSet'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('CriticalWord=[\n')
+        level += 1
         for CriticalWord_ in self.CriticalWord:
-            CriticalWord_.to_etree(element, name_='CriticalWord', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.CriticalWord(\n')
+            CriticalWord_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -6337,20 +6788,30 @@ class CoefficientSet(GeneratedsSuper):
         for Coefficient_ in self.Coefficient:
             namespaceprefix_ = self.Coefficient_nsprefix_ + ':' if (UseCapturedNS_ and self.Coefficient_nsprefix_) else ''
             Coefficient_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Coefficient', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='CoefficientSet', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Response is not None:
-            element.set('Response', self.gds_format_string(self.Response))
+    def exportLiteral(self, outfile, level, name_='CoefficientSet'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Response is not None and 'Response' not in already_processed:
+            already_processed.add('Response')
+            showIndent(outfile, level)
+            outfile.write('Response="%s",\n' % (self.Response,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Coefficient=[\n')
+        level += 1
         for Coefficient_ in self.Coefficient:
-            Coefficient_.to_etree(element, name_='Coefficient', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Coefficient(\n')
+            Coefficient_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -6483,22 +6944,42 @@ class CoefficientSets(GeneratedsSuper):
         for CoefficientSet_ in self.CoefficientSet:
             namespaceprefix_ = self.CoefficientSet_nsprefix_ + ':' if (UseCapturedNS_ and self.CoefficientSet_nsprefix_) else ''
             CoefficientSet_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CoefficientSet', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='CoefficientSets', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Use is not None:
-            element.set('Use', self.gds_format_string(self.Use))
+    def exportLiteral(self, outfile, level, name_='CoefficientSets'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Use is not None and 'Use' not in already_processed:
+            already_processed.add('Use')
+            showIndent(outfile, level)
+            outfile.write('Use="%s",\n' % (self.Use,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('CoefficientList=[\n')
+        level += 1
         for CoefficientList_ in self.CoefficientList:
-            CoefficientList_.to_etree(element, name_='CoefficientList', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.CoefficientList(\n')
+            CoefficientList_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('CoefficientSet=[\n')
+        level += 1
         for CoefficientSet_ in self.CoefficientSet:
-            CoefficientSet_.to_etree(element, name_='CoefficientSet', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.CoefficientSet(\n')
+            CoefficientSet_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -6869,78 +7350,157 @@ class Variable(GeneratedsSuper):
         for CoefficientSets_ in self.CoefficientSets:
             namespaceprefix_ = self.CoefficientSets_nsprefix_ + ':' if (UseCapturedNS_ and self.CoefficientSets_nsprefix_) else ''
             CoefficientSets_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CoefficientSets', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='Variable', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.Handle is not None:
-            element.set('Handle', self.gds_format_string(self.Handle))
+    def exportLiteral(self, outfile, level, name_='Variable'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
+    def _exportLiteralChildren(self, outfile, level, name_):
         if self.SegmentedBy is not None:
-            SegmentedBy_ = self.SegmentedBy
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}SegmentedBy').text = self.gds_format_string(SegmentedBy_)
+            showIndent(outfile, level)
+            outfile.write('SegmentedBy=%s,\n' % self.gds_encode(quote_python(self.SegmentedBy)))
         if self.Treatment is not None:
-            Treatment_ = self.Treatment
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Treatment').text = self.gds_format_string(Treatment_)
+            showIndent(outfile, level)
+            outfile.write('Treatment=%s,\n' % self.gds_encode(quote_python(self.Treatment)))
+        showIndent(outfile, level)
+        outfile.write('Source=[\n')
+        level += 1
         for Source_ in self.Source:
-            Source_.to_etree(element, name_='Source', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Source(\n')
+            Source_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.Sources is not None:
-            Sources_ = self.Sources
-            Sources_.to_etree(element, name_='Sources', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('Sources=model_.Sources(\n')
+            self.Sources.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('Constant=[\n')
+        level += 1
         for Constant_ in self.Constant:
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Constant').text = self.gds_format_string(Constant_)
+            showIndent(outfile, level)
+            outfile.write('%s,\n' % self.gds_encode(quote_python(Constant_)))
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.Constants is not None:
-            Constants_ = self.Constants
-            Constants_.to_etree(element, name_='Constants', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('Constants=model_.Constants(\n')
+            self.Constants.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('Transformation=[\n')
+        level += 1
         for Transformation_ in self.Transformation:
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Transformation').text = self.gds_format_string(Transformation_)
+            showIndent(outfile, level)
+            outfile.write('%s,\n' % self.gds_encode(quote_python(Transformation_)))
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.Transformations is not None:
-            Transformations_ = self.Transformations
-            Transformations_.to_etree(element, name_='Transformations', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('Transformations=model_.Transformations(\n')
+            self.Transformations.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.CleanLimits is not None:
-            CleanLimits_ = self.CleanLimits
-            CleanLimits_.to_etree(element, name_='CleanLimits', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('CleanLimits=model_.CleanLimits(\n')
+            self.CleanLimits.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.CleanLimitList is not None:
-            CleanLimitList_ = self.CleanLimitList
-            CleanLimitList_.to_etree(element, name_='CleanLimitList', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('CleanLimitList=model_.CleanLimitList(\n')
+            self.CleanLimitList.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.CleanLimitSet is not None:
-            CleanLimitSet_ = self.CleanLimitSet
-            CleanLimitSet_.to_etree(element, name_='CleanLimitSet', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('CleanLimitSet=model_.CleanLimitSet(\n')
+            self.CleanLimitSet.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.CriticalValues is not None:
-            CriticalValues_ = self.CriticalValues
-            CriticalValues_.to_etree(element, name_='CriticalValues', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('CriticalValues=model_.CriticalValues(\n')
+            self.CriticalValues.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.CriticalValuesList is not None:
-            CriticalValuesList_ = self.CriticalValuesList
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}CriticalValuesList').text = self.gds_format_string(CriticalValuesList_)
+            showIndent(outfile, level)
+            outfile.write('CriticalValuesList=%s,\n' % self.gds_encode(quote_python(self.CriticalValuesList)))
         if self.CriticalValuesSet is not None:
-            CriticalValuesSet_ = self.CriticalValuesSet
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}CriticalValuesSet').text = self.gds_format_string(CriticalValuesSet_)
+            showIndent(outfile, level)
+            outfile.write('CriticalValuesSet=%s,\n' % self.gds_encode(quote_python(self.CriticalValuesSet)))
         if self.CriticalWord is not None:
-            CriticalWord_ = self.CriticalWord
-            CriticalWord_.to_etree(element, name_='CriticalWord', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('CriticalWord=model_.CriticalWord(\n')
+            self.CriticalWord.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.CriticalWordList is not None:
-            CriticalWordList_ = self.CriticalWordList
-            CriticalWordList_.to_etree(element, name_='CriticalWordList', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('CriticalWordList=model_.CriticalWordList(\n')
+            self.CriticalWordList.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.CriticalWordSet is not None:
-            CriticalWordSet_ = self.CriticalWordSet
-            CriticalWordSet_.to_etree(element, name_='CriticalWordSet', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('CriticalWordSet=model_.CriticalWordSet(\n')
+            self.CriticalWordSet.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('DropIndex=[\n')
+        level += 1
         for DropIndex_ in self.DropIndex:
-            DropIndex_.to_etree(element, name_='DropIndex', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.DropIndex(\n')
+            DropIndex_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
         if self.DropIndexList is not None:
-            DropIndexList_ = self.DropIndexList
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}DropIndexList').text = self.gds_format_string(DropIndexList_)
+            showIndent(outfile, level)
+            outfile.write('DropIndexList=%s,\n' % self.gds_encode(quote_python(self.DropIndexList)))
         if self.DropIndices is not None:
-            DropIndices_ = self.DropIndices
-            DropIndices_.to_etree(element, name_='DropIndices', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('DropIndices=model_.DropIndices(\n')
+            self.DropIndices.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('CoefficientSets=[\n')
+        level += 1
         for CoefficientSets_ in self.CoefficientSets:
-            CoefficientSets_.to_etree(element, name_='CoefficientSets', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.CoefficientSets(\n')
+            CoefficientSets_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -7137,16 +7697,16 @@ class CleanLimitList(GeneratedsSuper):
         pass
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CleanLimitList', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='CleanLimitList', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+    def exportLiteral(self, outfile, level, name_='CleanLimitList'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -7223,16 +7783,16 @@ class CleanLimitSet(GeneratedsSuper):
         pass
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CleanLimitSet', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='CleanLimitSet', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+    def exportLiteral(self, outfile, level, name_='CleanLimitSet'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -7309,16 +7869,16 @@ class CriticalValuesList(GeneratedsSuper):
         pass
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CriticalValuesList', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='CriticalValuesList', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+    def exportLiteral(self, outfile, level, name_='CriticalValuesList'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -7395,16 +7955,16 @@ class CriticalValuesSet(GeneratedsSuper):
         pass
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CriticalValuesSet', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='CriticalValuesSet', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+    def exportLiteral(self, outfile, level, name_='CriticalValuesSet'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -7501,20 +8061,18 @@ class Dbl(GeneratedsSuper):
         pass
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='Dbl', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='Dbl', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.extensiontype_ is not None:
-            element.set('{http://www.w3.org/2001/XMLSchema-instance}type', self.extensiontype_)
+    def exportLiteral(self, outfile, level, name_='Dbl'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
         if self._hasContent():
-            element.text = self.gds_format_string(self.get_valueOf_())
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -7615,20 +8173,18 @@ class DblList(GeneratedsSuper):
         pass
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='DblList', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='DblList', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.extensiontype_ is not None:
-            element.set('{http://www.w3.org/2001/XMLSchema-instance}type', self.extensiontype_)
+    def exportLiteral(self, outfile, level, name_='DblList'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
         if self._hasContent():
-            element.text = self.gds_format_string(self.get_valueOf_())
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -7718,18 +8274,18 @@ class Int(GeneratedsSuper):
         pass
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='Int', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='Int', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='Int'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
         if self._hasContent():
-            element.text = self.gds_format_string(self.get_valueOf_())
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -7826,20 +8382,21 @@ class AppInfoType(GeneratedsSuper):
             outfile.write(' Use=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Use), input_name='Use')), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='AppInfoType', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='AppInfoType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Use is not None:
-            element.set('Use', self.gds_format_string(self.Use))
+    def exportLiteral(self, outfile, level, name_='AppInfoType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
         if self._hasContent():
-            element.text = self.gds_format_string(self.get_valueOf_())
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Use is not None and 'Use' not in already_processed:
+            already_processed.add('Use')
+            showIndent(outfile, level)
+            outfile.write('Use="%s",\n' % (self.Use,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -7956,18 +8513,27 @@ class EnumMDType(GeneratedsSuper):
         for EnumAttrMD_ in self.EnumAttrMD:
             namespaceprefix_ = self.EnumAttrMD_nsprefix_ + ':' if (UseCapturedNS_ and self.EnumAttrMD_nsprefix_) else ''
             EnumAttrMD_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='EnumAttrMD', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='EnumMDType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='EnumMDType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('EnumAttrMD=[\n')
+        level += 1
         for EnumAttrMD_ in self.EnumAttrMD:
-            EnumAttrMD_.to_etree(element, name_='EnumAttrMD', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.EnumAttrMDType(\n')
+            EnumAttrMD_.exportLiteral(outfile, level, name_='EnumAttrMDType')
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -8078,20 +8644,23 @@ class EnumAttrMDType(GeneratedsSuper):
             outfile.write(' DTyp=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.DTyp), input_name='DTyp')), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='EnumAttrMDType', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='EnumAttrMDType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
-        if self.DTyp is not None:
-            element.set('DTyp', self.gds_format_string(self.DTyp))
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+    def exportLiteral(self, outfile, level, name_='EnumAttrMDType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.DTyp is not None and 'DTyp' not in already_processed:
+            already_processed.add('DTyp')
+            showIndent(outfile, level)
+            outfile.write('DTyp="%s",\n' % (self.DTyp,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -8189,19 +8758,21 @@ class PythonType(GeneratedsSuper):
         if self.depends is not None:
             namespaceprefix_ = self.depends_nsprefix_ + ':' if (UseCapturedNS_ and self.depends_nsprefix_) else ''
             self.depends.export(outfile, level, namespaceprefix_, namespacedef_='', name_='depends', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='PythonType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='PythonType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
         if self.depends is not None:
-            depends_ = self.depends
-            depends_.to_etree(element, name_='depends', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('depends=model_.dependsType(\n')
+            self.depends.exportLiteral(outfile, level, name_='depends')
+            showIndent(outfile, level)
+            outfile.write('),\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -8305,18 +8876,24 @@ class dependsType(GeneratedsSuper):
             namespaceprefix_ = self.depend_nsprefix_ + ':' if (UseCapturedNS_ and self.depend_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%sdepend>%s</%sdepend>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(depend_), input_name='depend')), namespaceprefix_ , eol_))
-    def to_etree(self, parent_element=None, name_='dependsType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='dependsType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('depend=[\n')
+        level += 1
         for depend_ in self.depend:
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}depend').text = self.gds_format_string(depend_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('%s,\n' % self.gds_encode(quote_python(depend_)))
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -8411,19 +8988,21 @@ class SQLType(GeneratedsSuper):
         if self.Vertica is not None:
             namespaceprefix_ = self.Vertica_nsprefix_ + ':' if (UseCapturedNS_ and self.Vertica_nsprefix_) else ''
             self.Vertica.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Vertica', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='SQLType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='SQLType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
         if self.Vertica is not None:
-            Vertica_ = self.Vertica
-            Vertica_.to_etree(element, name_='Vertica', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('Vertica=model_.VerticaType(\n')
+            self.Vertica.exportLiteral(outfile, level, name_='Vertica')
+            showIndent(outfile, level)
+            outfile.write('),\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -8512,18 +9091,19 @@ class VerticaType(GeneratedsSuper):
             outfile.write(' Schema=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Schema), input_name='Schema')), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='VerticaType', fromsubclass_=False, pretty_print=True):
         pass
-    def to_etree(self, parent_element=None, name_='VerticaType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Schema is not None:
-            element.set('Schema', self.gds_format_string(self.Schema))
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+    def exportLiteral(self, outfile, level, name_='VerticaType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Schema is not None and 'Schema' not in already_processed:
+            already_processed.add('Schema')
+            showIndent(outfile, level)
+            outfile.write('Schema="%s",\n' % (self.Schema,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -8690,26 +9270,66 @@ class UDFType(GeneratedsSuper):
         for Enums_ in self.Enums:
             namespaceprefix_ = self.Enums_nsprefix_ + ':' if (UseCapturedNS_ and self.Enums_nsprefix_) else ''
             Enums_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Enums', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='UDFType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
+    def exportLiteral(self, outfile, level, name_='UDFType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('UDxInfo=[\n')
+        level += 1
         for UDxInfo_ in self.UDxInfo:
-            UDxInfo_.to_etree(element, name_='UDxInfo', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.UDxInfo(\n')
+            UDxInfo_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('Parameters=[\n')
+        level += 1
         for Parameters_ in self.Parameters:
-            Parameters_.to_etree(element, name_='Parameters', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Parameters(\n')
+            Parameters_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('Columns=[\n')
+        level += 1
         for Columns_ in self.Columns:
-            Columns_.to_etree(element, name_='Columns', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Columns(\n')
+            Columns_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('Enums=[\n')
+        level += 1
         for Enums_ in self.Enums:
-            Enums_.to_etree(element, name_='Enums', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Enums(\n')
+            Enums_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -8895,26 +9515,66 @@ class UDTFType(GeneratedsSuper):
         for Enums_ in self.Enums:
             namespaceprefix_ = self.Enums_nsprefix_ + ':' if (UseCapturedNS_ and self.Enums_nsprefix_) else ''
             Enums_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Enums', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='UDTFType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Name is not None:
-            element.set('Name', self.gds_format_string(self.Name))
+    def exportLiteral(self, outfile, level, name_='UDTFType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('UDxInfo=[\n')
+        level += 1
         for UDxInfo_ in self.UDxInfo:
-            UDxInfo_.to_etree(element, name_='UDxInfo', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.UDxInfo(\n')
+            UDxInfo_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('Parameters=[\n')
+        level += 1
         for Parameters_ in self.Parameters:
-            Parameters_.to_etree(element, name_='Parameters', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Parameters(\n')
+            Parameters_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('Columns=[\n')
+        level += 1
         for Columns_ in self.Columns:
-            Columns_.to_etree(element, name_='Columns', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+            showIndent(outfile, level)
+            outfile.write('model_.Columns(\n')
+            Columns_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        showIndent(outfile, level)
+        outfile.write('Enums=[\n')
+        level += 1
         for Enums_ in self.Enums:
-            Enums_.to_etree(element, name_='Enums', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('model_.Enums(\n')
+            Enums_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -9049,25 +9709,24 @@ class VersionType(GeneratedsSuper):
             namespaceprefix_ = self.Patch_nsprefix_ + ':' if (UseCapturedNS_ and self.Patch_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%sPatch>%s</%sPatch>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.Patch), input_name='Patch')), namespaceprefix_ , eol_))
-    def to_etree(self, parent_element=None, name_='VersionType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='VersionType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
         if self.Major is not None:
-            Major_ = self.Major
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Major').text = self.gds_format_string(Major_)
+            showIndent(outfile, level)
+            outfile.write('Major=%s,\n' % self.gds_encode(quote_python(self.Major)))
         if self.Minor is not None:
-            Minor_ = self.Minor
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Minor').text = self.gds_format_string(Minor_)
+            showIndent(outfile, level)
+            outfile.write('Minor=%s,\n' % self.gds_encode(quote_python(self.Minor)))
         if self.Patch is not None:
-            Patch_ = self.Patch
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Patch').text = self.gds_format_string(Patch_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('Patch=%s,\n' % self.gds_encode(quote_python(self.Patch)))
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -9184,18 +9843,24 @@ class TextType(GeneratedsSuper):
             namespaceprefix_ = self.par_nsprefix_ + ':' if (UseCapturedNS_ and self.par_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%spar>%s</%spar>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(par_), input_name='par')), namespaceprefix_ , eol_))
-    def to_etree(self, parent_element=None, name_='TextType', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+    def exportLiteral(self, outfile, level, name_='TextType'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        pass
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('par=[\n')
+        level += 1
         for par_ in self.par:
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}par').text = self.gds_format_string(par_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            showIndent(outfile, level)
+            outfile.write('%s,\n' % self.gds_encode(quote_python(par_)))
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -9293,17 +9958,23 @@ class CoefficientList(DblList):
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CoefficientList', fromsubclass_=False, pretty_print=True):
         super(CoefficientList, self)._exportChildren(outfile, level, namespaceprefix_, namespacedef_, name_, True, pretty_print=pretty_print)
         pass
-    def to_etree(self, parent_element=None, name_='CoefficientList', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        element = super(CoefficientList, self).to_etree(parent_element, name_, mapping_, reverse_mapping_, nsmap_)
-        if self.Response is not None:
-            element.set('Response', self.gds_format_string(self.Response))
+    def exportLiteral(self, outfile, level, name_='CoefficientList'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
         if self._hasContent():
-            element.text = self.gds_format_string(self.get_valueOf_())
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Response is not None and 'Response' not in already_processed:
+            already_processed.add('Response')
+            showIndent(outfile, level)
+            outfile.write('Response="%s",\n' % (self.Response,))
+        super(CoefficientList, self)._exportLiteralAttributes(outfile, level, already_processed, name_)
+    def _exportLiteralChildren(self, outfile, level, name_):
+        super(CoefficientList, self)._exportLiteralChildren(outfile, level, name_)
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -9401,17 +10072,23 @@ class Coefficient(Dbl):
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='Coefficient', fromsubclass_=False, pretty_print=True):
         super(Coefficient, self)._exportChildren(outfile, level, namespaceprefix_, namespacedef_, name_, True, pretty_print=pretty_print)
         pass
-    def to_etree(self, parent_element=None, name_='Coefficient', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        element = super(Coefficient, self).to_etree(parent_element, name_, mapping_, reverse_mapping_, nsmap_)
-        if self.Position is not None:
-            element.set('Position', self.gds_format_string(self.Position))
+    def exportLiteral(self, outfile, level, name_='Coefficient'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
         if self._hasContent():
-            element.text = self.gds_format_string(self.get_valueOf_())
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Position is not None and 'Position' not in already_processed:
+            already_processed.add('Position')
+            showIndent(outfile, level)
+            outfile.write('Position="%s",\n' % (self.Position,))
+        super(Coefficient, self)._exportLiteralAttributes(outfile, level, already_processed, name_)
+    def _exportLiteralChildren(self, outfile, level, name_):
+        super(Coefficient, self)._exportLiteralChildren(outfile, level, name_)
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -9509,17 +10186,23 @@ class CriticalValue(Dbl):
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CriticalValue', fromsubclass_=False, pretty_print=True):
         super(CriticalValue, self)._exportChildren(outfile, level, namespaceprefix_, namespacedef_, name_, True, pretty_print=pretty_print)
         pass
-    def to_etree(self, parent_element=None, name_='CriticalValue', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        element = super(CriticalValue, self).to_etree(parent_element, name_, mapping_, reverse_mapping_, nsmap_)
-        if self.Position is not None:
-            element.set('Position', self.gds_format_string(self.Position))
+    def exportLiteral(self, outfile, level, name_='CriticalValue'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
         if self._hasContent():
-            element.text = self.gds_format_string(self.get_valueOf_())
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
+            self._exportLiteralChildren(outfile, level, name_)
+        showIndent(outfile, level)
+        outfile.write('valueOf_ = """%s""",\n' % (self.valueOf_,))
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Position is not None and 'Position' not in already_processed:
+            already_processed.add('Position')
+            showIndent(outfile, level)
+            outfile.write('Position="%s",\n' % (self.Position,))
+        super(CriticalValue, self)._exportLiteralAttributes(outfile, level, already_processed, name_)
+    def _exportLiteralChildren(self, outfile, level, name_):
+        super(CriticalValue, self)._exportLiteralChildren(outfile, level, name_)
+        pass
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -9711,8 +10394,8 @@ def parseLiteral(inFileName, silence=False, print_warnings=True):
         doc = None
         rootNode = None
     if not silence:
-        sys.stdout.write('#from gWDSModel import *\n\n')
-        sys.stdout.write('import gWDSModel as model_\n\n')
+        sys.stdout.write('#from gWDSModel_literal import *\n\n')
+        sys.stdout.write('import gWDSModel_literal as model_\n\n')
         sys.stdout.write('rootObj = model_.rootClass(\n')
         rootObj.exportLiteral(sys.stdout, 0, name_=rootTag)
         sys.stdout.write(')\n')

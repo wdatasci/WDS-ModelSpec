@@ -8,7 +8,7 @@ examples and topics include:
 <li>FieldMD</li>  Field meta data utility.
 </ul>
 
-## WDS.Util
+## WDS.util
 General utilities.  Some examples and topics include:
 <ul>
 <li>MonthID</li>  A simple month based identifier, 12(y-2000)+m, and some general utilities.

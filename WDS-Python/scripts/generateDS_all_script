@@ -1,0 +1,10 @@
+#!/usr/bin/env tcsh
+
+
+#called from parent of WDS-Python
+
+foreach x ( ./WDS-XML/XSD/*.xsd )
+    echo "./WDS-Python/scripts/generateDS_unsnaked -o ./WDS-Python/WDS/Wranglers/gXMLParsers/g${x:t:r}.py ${x}"
+    ./WDS-Python/scripts/generateDS_unsnaked --export="write etree" -o ./WDS-Python/WDS/Wranglers/gXMLParsers/g${x:t:r}.py ${x}
+    ./WDS-Python/scripts/generateDS_unsnaked --export="write literal" -o ./WDS-Python/WDS/Wranglers/gXMLParsers/g${x:t:r}_literal.py ${x}
+end
