@@ -123,6 +123,11 @@ for details
     </xs:complexType>
 </xs:element>
 
+<xs:attributeGroup name="NameGroup">
+    <xs:attribute name="Name" type="xs:string" />
+    <xs:attribute name="Handle" type="xs:string" />
+</xs:attributeGroup>
+
 <xs:attributeGroup name="SourceMD">
     <xs:annotation>
         <xs:documentation>
@@ -132,15 +137,12 @@ for details
         </xs:documentation>
     </xs:annotation>
     <xs:attribute name="Name" type="xs:string" use="required"/>
+    <xs:attribute name="Handle" type="xs:string" />
     <xs:attribute name="DTyp" type="DTypType" use="required"/>
     <xs:attribute name="Length" type="xs:int"/>
     <xs:attribute name="Default" type="xs:string"/>
     <xs:attribute name="MetaDataXRef" type="xs:string"/>
-</xs:attributeGroup>
-
-<xs:attributeGroup name="NameGroup">
-    <xs:attribute name="Name" type="xs:string" />
-    <xs:attribute name="Handle" type="xs:string" />
+    <xs:attribute name="ProjectHandleXRef" type="xs:string"/>
 </xs:attributeGroup>
 
 <xs:attributeGroup name="UseGroup">
@@ -373,6 +375,27 @@ for details
     <xs:attributeGroup ref="SourceMD"/>
 </xs:element>
 
+<xs:element name="FieldExtMD">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:choice>
+                <xs:element ref="Source" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Sources" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:element ref="Constant" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Constants" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:element ref="Transformation" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Transformations" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+        </xs:sequence>
+    <xs:attributeGroup ref="SourceMD"/>
+        <xs:attribute name="Name" type="xs:string" />
+        <xs:attribute name="Handle" type="xs:string" />
+    </xs:complexType>
+</xs:element>
 
 <xs:element name="Dictionary">
     <xs:all>
@@ -479,12 +502,16 @@ for details
         <xs:sequence>
             <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element ref="Signatures" minOccurs="1" maxOccurs="1"/>
+            <xs:element ref="Dictionary" minOccurs="0" maxOccurs="1"/>
             <xs:element ref="ModelDirectives" minOccurs="1" maxOccurs="1"/>
             <xs:choice>
-            <xs:element ref="ComponentModels" minOccurs="0" maxOccurs="1"/>
-            <xs:element ref="ComponentModel" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:choice>
-            <xs:element ref="Variables" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="ComponentModels" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="ComponentModel" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:element ref="Variables" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="Variable" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
         </xs:sequence>
         <xs:attributeGroup ref="NameGroup"/>
         <xs:attribute name="Use" type="xs:string" />
@@ -671,4 +698,3 @@ for details
 </xs:element>
 
 </xs:schema>
-

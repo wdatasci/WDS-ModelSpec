@@ -68,3 +68,5 @@ WDS-Cs/WDS/XLL/WDS-ModelUtil-XLL-packed.xll
 WDS-R/.Rhistory
 *checkpoint*
 
+WDS-Python/WDS/Comp/ArtificialsCythonWrapped.c
+WDS-Python/WDS/Comp/ArtificialsCythonWrapped.h

@@ -86,14 +86,14 @@ cpdef _fArtificials_Numeric(np.ndarray[double, ndim=2] SourceValue
     cdef wchar_t* warg=Treatment
     cdef int nrows=SourceValue.shape[0]
     cdef int nArts=_nArtificialCount(CriticalValues.shape[1], Treatment) 
-    #cdef double[::1,:] rv=np.ndarray((nrows, nArts),dtype=np.double,order="F")
     cdef double[:,::1] rv=np.ndarray((nrows, nArts),dtype=np.double)
     cdef double* CL=NULL
     cdef int nCL=0
     if CleanLimits.shape[1]>0: 
         CL=&CleanLimits[0,0]
         nCL=CleanLimits.shape[1]
-    cdef int rc= fArtificials_Numeric(&SourceValue[0,0]
+    cdef int rc = 0
+    rc = fArtificials_Numeric(&SourceValue[0,0]
                             , nrows
                             , eTreatmentClean(warg, len(Treatment))
                             , &CriticalValues[0,0]
@@ -110,16 +110,18 @@ cpdef _fArtificials_Numeric(np.ndarray[double, ndim=2] SourceValue
     if rc!=0: raise("Error in fArtificials_Numeric")
     return rv.base
 
+
 cpdef _fArtificialsScored_Numeric(np.ndarray[double, ndim=2] SourceValue
                             , str Treatment
                             , np.ndarray[double, ndim=2] CriticalValues
                             , np.ndarray[double, ndim=2] CleanLimits
-                            , np.ndarray[double, ndim=2] Coefficients):
+                            , np.ndarray[double, ndim=2] Coefficients
+                            ):
     cdef wchar_t* warg=Treatment
     cdef int nrows=SourceValue.shape[0]
     cdef int nArts=nArtificialCount(CriticalValues.shape[2], eTreatmentClean(warg, len(Treatment))) 
     cdef int nScores=Coefficients.shape[0]
-    cdef double[:,::1] rv=np.empty((nrows, nScores)) #,dtype=double)
+    cdef double[:,::1] rv=np.empty((nrows, nScores))
     cdef double* CL=NULL
     cdef int nCL=0
     if CleanLimits.shape[1]>0: 
@@ -142,8 +144,9 @@ cpdef _fArtificialsScored_Numeric(np.ndarray[double, ndim=2] SourceValue
                             , 0
                             , 0
                             , True) 
-    if rc!=0: raise("Error in fArtificialsScored_Numeri")
+    if rc!=0: raise(Exception("Error in fArtificialsScored_Numeric"))
     return rv.base
+
 
 
 cpdef _fArtificials_CategoricalNumeric(np.ndarray[double, ndim=2] SourceValue
@@ -189,7 +192,8 @@ cpdef _fArtificialsScored_CategoricalNumeric(np.ndarray[double, ndim=2] SourceVa
                             , str Treatment
                             , list _CriticalValues
                             , np.ndarray[double, ndim=2] CleanLimits
-                            , np.ndarray[double, ndim=2] Coefficients):
+                            , np.ndarray[double, ndim=2] Coefficients
+                            ):
     cdef int* nCritVals   = <int *> malloc((len(_CriticalValues)+1)*sizeof(int))
     nCritVals[0]=len(_CriticalValues)
     cdef double **CriticalValues = <double **> malloc(nCritVals[0]*sizeof(double *))
@@ -227,7 +231,7 @@ cpdef _fArtificialsScored_CategoricalNumeric(np.ndarray[double, ndim=2] SourceVa
                             , 0
                             , 0
                             , True) 
-    return np.asarray(rv)
+    return rv.base
 
 
 
@@ -273,13 +277,14 @@ cpdef _fArtificials_Categorical(np.ndarray[str, ndim=2] SourceValue
 cpdef _fArtificialsScored_Categorical(np.ndarray[str, ndim=2] SourceValue
                             , str Treatment
                             , list _CriticalValues
-                            , np.ndarray[double, ndim=2] Coefficients):
+                            , np.ndarray[double, ndim=2] Coefficients
+                            ):
     cdef int* nCritVals   = <int *> malloc((len(_CriticalValues)+1)*sizeof(int))
     nCritVals[0]=len(_CriticalValues)
     cdef wchar_t ***CriticalValues = <wchar_t ***> malloc(nCritVals[0]*sizeof(wchar_t **))
     cdef int i
     cdef int j
-    cdef double z=0.0;
+    cdef double z=0.0
     for i in range(0,nCritVals[0]):
         nCritVals[i+1]=len(_CriticalValues[i])
         CriticalValues[i]=<wchar_t **> malloc(nCritVals[i+1]*sizeof(wchar_t *))
@@ -292,6 +297,7 @@ cpdef _fArtificialsScored_Categorical(np.ndarray[str, ndim=2] SourceValue
     cdef double[:,::1] rv=np.empty((nrows, nScores))
     cdef wchar_t* arg
     cdef int rc
+
     for i in range(0,nrows):
         arg=SourceValue[i]
         rc= fArtificialsScored_Categorical(&arg
@@ -311,41 +317,78 @@ cpdef _fArtificialsScored_Categorical(np.ndarray[str, ndim=2] SourceValue
                             , 0
                             , 0
                             , True) 
-    return np.asarray(rv)
+    return rv.base
 
 
-cpdef fArtificials(arg0=None, arg1=None, arg2=None, arg3=None):
-    if arg0 is None or arg1 is None or arg2 is None: raise("Insufficient arguments to fArtificials")
-    cdef str trt=_eTreatmentClean(arg1);
+cpdef fArtificials(Source=None
+        , Treatment=None
+        , CriticalValues=None
+        , CleanLimits=None
+        , str LabelBase='Art'
+        , str LabelConnector='_'
+        , str LabelSuffix=""
+        ):
+    if Source is None or Treatment is None or CriticalValues is None: raise("Insufficient arguments to fArtificials")
+    cdef str trt=_eTreatmentClean(Treatment);
+    rv=None
     if trt=="Categorical":
-        return _fArtificials_Categorical(arg0,arg1,arg2)
-    if trt=="CategoricalNumeric":
-        if arg3 is None:
-            return _fArtificials_CategoricalNumeric(arg0,arg1,arg2,np.ndarray((0,0),dtype=np.double))
+        rv = _fArtificials_Categorical(Source,trt,CriticalValues)
+    elif trt=="CategoricalNumeric":
+        if CleanLimits is None:
+            rv = _fArtificials_CategoricalNumeric(Source,trt,CriticalValues,np.ndarray((0,0),dtype=np.double))
         else:
-            return _fArtificials_CategoricalNumeric(arg0,arg1,arg2,arg3)
-    if arg3 is None:
-        return _fArtificials_Numeric(arg0,arg1,arg2,np.ndarray((0,0),dtype=np.double))
+            rv = _fArtificials_CategoricalNumeric(Source,trt,CriticalValues,CleanLimits)
     else:
-        return _fArtificials_Numeric(arg0,arg1,arg2,arg3)
+        if CleanLimits is None:
+            rv = _fArtificials_Numeric(Source,trt,CriticalValues,np.ndarray((0,0),dtype=np.double))
+        else:
+            rv = _fArtificials_Numeric(Source,trt,CriticalValues,CleanLimits)
+    rv.dtype = [(lbl,np.double) for lbl in fArtificialLabels(CriticalValues.shape[1]
+                                                , Treatment
+                                                , LabelBase=LabelBase
+                                                , LabelConnector=LabelConnector
+                                                , LabelSuffix=LabelSuffix
+                                                )]
+    return rv.view(np.recarray)
 
-cpdef fArtificialsScored(arg0=None, arg1=None, arg2=None, arg3=None, arg4=None):
-    if arg0 is None or arg1 is None or arg2 is None: raise("Insufficient arguments to fArtificials")
-    cdef str trt=_eTreatmentClean(arg1);
+
+cpdef fArtificialsScored(Source=None
+                            , Treatment=None
+                            , CriticalValues=None
+                            , CleanLimits=None
+                            , CoefficientSets=None
+                            , str LabelBase='Score'
+                            , str LabelConnector='_'
+                            , str LabelSuffix=""
+                            , int LabelStart=1
+                            ):
+    if Source is None or Treatment is None or CriticalValues is None: raise("Insufficient arguments to fArtificials")
+    cdef str trt=_eTreatmentClean(Treatment);
+    cdef int nrows=Source.shape[0]
+    cdef int nScores=CoefficientSets.shape[0]
+    cdef double[:,::1] rv # =np.empty((nrows, nScores))
     if trt=="Categorical":
-        if arg3 is None: raise("Insufficient arguments to fArtificials")
-        return _fArtificialsScored_Categorical(arg0,arg1,arg2,arg3)
-    if arg4 is None: raise("Insufficient arguments to fArtificials")
-    if trt=="CategoricalNumeric":
-        if arg3 is None:
-            return _fArtificialsScored_CategoricalNumeric(arg0,arg1,arg2,np.ndarray((0,0),dtype=np.double),arg4)
-        else:
-            return _fArtificialsScored_CategoricalNumeric(arg0,arg1,arg2,arg3,arg4)
-    if arg3 is None:
-        return _fArtificialsScored_Numeric(arg0,arg1,arg2,np.ndarray((0,0),dtype=np.double),arg4)
+        if CleanLimits is None: raise("Insufficient arguments to fArtificials")
+        rv = _fArtificialsScored_Categorical(Source,trt,CriticalValues,CleanLimits)
     else:
-        return _fArtificialsScored_Numeric(arg0,arg1,arg2,arg3,arg4)
-
+        if CoefficientSets is None: raise("Insufficient arguments to fArtificials")
+        if trt=="CategoricalNumeric":
+            if CleanLimits is None:
+                rv = _fArtificialsScored_CategoricalNumeric(Source,trt,CriticalValues,np.ndarray((0,0),dtype=np.double),CoefficientSets)
+            else:
+                rv = _fArtificialsScored_CategoricalNumeric(Source,trt,CriticalValues,CleanLimits,CoefficientSets)
+        else:
+            if CleanLimits is None:
+                rv = _fArtificialsScored_Numeric(Source,trt,CriticalValues,np.ndarray((0,0),dtype=np.double),CoefficientSets)
+            else:
+                rv = _fArtificialsScored_Numeric(Source,trt,CriticalValues,CleanLimits,CoefficientSets)
+    rv.base.dtype = [(lbl,np.double) for lbl in fArtificialsScoredLabels(nScores
+                                                , LabelStart=LabelStart
+                                                , LabelBase=LabelBase
+                                                , LabelConnector=LabelConnector
+                                                , LabelSuffix=LabelSuffix
+                                                )]
+    return rv.base.view(np.recarray)
 
 cpdef fArtificialLabels(int nCriticalValues, str sTreatment, str LabelBase="X", str LabelConnector="", str LabelSuffix=""):
     cdef int n=_nArtificialCount(nCriticalValues, sTreatment)

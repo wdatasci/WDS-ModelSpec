@@ -15,12 +15,16 @@ import datetime
 from WDS.Wranglers.gXMLParsers import gWDSModel
 from WDS.Wranglers.gXMLParsers import gWDSModel_literal
 
+from WDS.Comp.WDSModelPrep import WDSModel
+
+
 from WDS.util.history import *
 history_init(globals())
 
 # for testing purposes when -i is used
 rv = None
 rv_literal = None
+rvmo = None
 
 def main(args=None):
     if not args:
@@ -65,6 +69,8 @@ def main(args=None):
     if rv.gds_elementtree_node_.xpath('count(./Models/Model/ComponentModels/ComponentModel[@Name="Applicability"])'):
         m = rv.Models.Model[0].ComponentModels
 
+    global rvmo
+    rvmo = WDSModel(args.xml)
 
 
 if __name__=='__main__':

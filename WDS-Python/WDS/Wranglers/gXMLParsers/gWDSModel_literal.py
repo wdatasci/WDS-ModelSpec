@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Generated Mon Jun 20 11:53:18 2022 by generateDS.py version 2.40.13.
+# Generated Thu Jun 23 07:35:30 2022 by generateDS.py version 2.40.13.
 # Python 3.9.5 (default, Nov 23 2021, 15:27:38)  [GCC 9.3.0]
 #
 # Command line options:
@@ -1177,7 +1177,7 @@ class Column(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, BlockID=None, RowID=None, Static=None, Name=None, DTyp=None, Length=None, Default=None, MetaDataXRef=None, Use=None, gds_collector_=None, **kwargs_):
+    def __init__(self, BlockID=None, RowID=None, Static=None, Name=None, Handle=None, DTyp=None, Length=None, Default=None, MetaDataXRef=None, ProjectHandleXRef=None, Use=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
@@ -1191,6 +1191,8 @@ class Column(GeneratedsSuper):
         self.Static_nsprefix_ = None
         self.Name = _cast(None, Name)
         self.Name_nsprefix_ = None
+        self.Handle = _cast(None, Handle)
+        self.Handle_nsprefix_ = None
         self.DTyp = _cast(None, DTyp)
         self.DTyp_nsprefix_ = None
         self.Length = _cast(int, Length)
@@ -1199,6 +1201,8 @@ class Column(GeneratedsSuper):
         self.Default_nsprefix_ = None
         self.MetaDataXRef = _cast(None, MetaDataXRef)
         self.MetaDataXRef_nsprefix_ = None
+        self.ProjectHandleXRef = _cast(None, ProjectHandleXRef)
+        self.ProjectHandleXRef_nsprefix_ = None
         self.Use = _cast(None, Use)
         self.Use_nsprefix_ = None
     def factory(*args_, **kwargs_):
@@ -1232,6 +1236,10 @@ class Column(GeneratedsSuper):
         return self.Name
     def set_Name(self, Name):
         self.Name = Name
+    def get_Handle(self):
+        return self.Handle
+    def set_Handle(self, Handle):
+        self.Handle = Handle
     def get_DTyp(self):
         return self.DTyp
     def set_DTyp(self, DTyp):
@@ -1248,6 +1256,10 @@ class Column(GeneratedsSuper):
         return self.MetaDataXRef
     def set_MetaDataXRef(self, MetaDataXRef):
         self.MetaDataXRef = MetaDataXRef
+    def get_ProjectHandleXRef(self):
+        return self.ProjectHandleXRef
+    def set_ProjectHandleXRef(self, ProjectHandleXRef):
+        self.ProjectHandleXRef = ProjectHandleXRef
     def get_Use(self):
         return self.Use
     def set_Use(self, Use):
@@ -1307,6 +1319,9 @@ class Column(GeneratedsSuper):
         if self.Name is not None and 'Name' not in already_processed:
             already_processed.add('Name')
             outfile.write(' Name=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Name), input_name='Name')), ))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            outfile.write(' Handle=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Handle), input_name='Handle')), ))
         if self.DTyp is not None and 'DTyp' not in already_processed:
             already_processed.add('DTyp')
             outfile.write(' DTyp=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.DTyp), input_name='DTyp')), ))
@@ -1319,6 +1334,9 @@ class Column(GeneratedsSuper):
         if self.MetaDataXRef is not None and 'MetaDataXRef' not in already_processed:
             already_processed.add('MetaDataXRef')
             outfile.write(' MetaDataXRef=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.MetaDataXRef), input_name='MetaDataXRef')), ))
+        if self.ProjectHandleXRef is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            outfile.write(' ProjectHandleXRef=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.ProjectHandleXRef), input_name='ProjectHandleXRef')), ))
         if self.Use is not None and 'Use' not in already_processed:
             already_processed.add('Use')
             outfile.write(' Use=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Use), input_name='Use')), ))
@@ -1347,6 +1365,10 @@ class Column(GeneratedsSuper):
             already_processed.add('Name')
             showIndent(outfile, level)
             outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
         if self.DTyp is not None and 'DTyp' not in already_processed:
             already_processed.add('DTyp')
             showIndent(outfile, level)
@@ -1363,6 +1385,10 @@ class Column(GeneratedsSuper):
             already_processed.add('MetaDataXRef')
             showIndent(outfile, level)
             outfile.write('MetaDataXRef="%s",\n' % (self.MetaDataXRef,))
+        if self.ProjectHandleXRef is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            showIndent(outfile, level)
+            outfile.write('ProjectHandleXRef="%s",\n' % (self.ProjectHandleXRef,))
         if self.Use is not None and 'Use' not in already_processed:
             already_processed.add('Use')
             showIndent(outfile, level)
@@ -1397,6 +1423,10 @@ class Column(GeneratedsSuper):
         if value is not None and 'Name' not in already_processed:
             already_processed.add('Name')
             self.Name = value
+        value = find_attr_value_('Handle', node)
+        if value is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            self.Handle = value
         value = find_attr_value_('DTyp', node)
         if value is not None and 'DTyp' not in already_processed:
             already_processed.add('DTyp')
@@ -1414,6 +1444,10 @@ class Column(GeneratedsSuper):
         if value is not None and 'MetaDataXRef' not in already_processed:
             already_processed.add('MetaDataXRef')
             self.MetaDataXRef = value
+        value = find_attr_value_('ProjectHandleXRef', node)
+        if value is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            self.ProjectHandleXRef = value
         value = find_attr_value_('Use', node)
         if value is not None and 'Use' not in already_processed:
             already_processed.add('Use')
@@ -1431,7 +1465,7 @@ class Parameter(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, Name=None, DTyp=None, Length=None, Default=None, MetaDataXRef=None, gds_collector_=None, **kwargs_):
+    def __init__(self, Name=None, Handle=None, DTyp=None, Length=None, Default=None, MetaDataXRef=None, ProjectHandleXRef=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
@@ -1439,6 +1473,8 @@ class Parameter(GeneratedsSuper):
         self.ns_prefix_ = None
         self.Name = _cast(None, Name)
         self.Name_nsprefix_ = None
+        self.Handle = _cast(None, Handle)
+        self.Handle_nsprefix_ = None
         self.DTyp = _cast(None, DTyp)
         self.DTyp_nsprefix_ = None
         self.Length = _cast(int, Length)
@@ -1447,6 +1483,8 @@ class Parameter(GeneratedsSuper):
         self.Default_nsprefix_ = None
         self.MetaDataXRef = _cast(None, MetaDataXRef)
         self.MetaDataXRef_nsprefix_ = None
+        self.ProjectHandleXRef = _cast(None, ProjectHandleXRef)
+        self.ProjectHandleXRef_nsprefix_ = None
     def factory(*args_, **kwargs_):
         if CurrentSubclassModule_ is not None:
             subclass = getSubclassFromModule_(
@@ -1466,6 +1504,10 @@ class Parameter(GeneratedsSuper):
         return self.Name
     def set_Name(self, Name):
         self.Name = Name
+    def get_Handle(self):
+        return self.Handle
+    def set_Handle(self, Handle):
+        self.Handle = Handle
     def get_DTyp(self):
         return self.DTyp
     def set_DTyp(self, DTyp):
@@ -1482,6 +1524,10 @@ class Parameter(GeneratedsSuper):
         return self.MetaDataXRef
     def set_MetaDataXRef(self, MetaDataXRef):
         self.MetaDataXRef = MetaDataXRef
+    def get_ProjectHandleXRef(self):
+        return self.ProjectHandleXRef
+    def set_ProjectHandleXRef(self, ProjectHandleXRef):
+        self.ProjectHandleXRef = ProjectHandleXRef
     def validate_DTypType(self, value):
         # Validate type DTypType, a restriction on xs:string.
         if value is not None and Validate_simpletypes_ and self.gds_collector_ is not None:
@@ -1528,6 +1574,9 @@ class Parameter(GeneratedsSuper):
         if self.Name is not None and 'Name' not in already_processed:
             already_processed.add('Name')
             outfile.write(' Name=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Name), input_name='Name')), ))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            outfile.write(' Handle=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Handle), input_name='Handle')), ))
         if self.DTyp is not None and 'DTyp' not in already_processed:
             already_processed.add('DTyp')
             outfile.write(' DTyp=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.DTyp), input_name='DTyp')), ))
@@ -1540,6 +1589,9 @@ class Parameter(GeneratedsSuper):
         if self.MetaDataXRef is not None and 'MetaDataXRef' not in already_processed:
             already_processed.add('MetaDataXRef')
             outfile.write(' MetaDataXRef=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.MetaDataXRef), input_name='MetaDataXRef')), ))
+        if self.ProjectHandleXRef is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            outfile.write(' ProjectHandleXRef=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.ProjectHandleXRef), input_name='ProjectHandleXRef')), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='Parameter', fromsubclass_=False, pretty_print=True):
         pass
     def exportLiteral(self, outfile, level, name_='Parameter'):
@@ -1553,6 +1605,10 @@ class Parameter(GeneratedsSuper):
             already_processed.add('Name')
             showIndent(outfile, level)
             outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
         if self.DTyp is not None and 'DTyp' not in already_processed:
             already_processed.add('DTyp')
             showIndent(outfile, level)
@@ -1569,6 +1625,10 @@ class Parameter(GeneratedsSuper):
             already_processed.add('MetaDataXRef')
             showIndent(outfile, level)
             outfile.write('MetaDataXRef="%s",\n' % (self.MetaDataXRef,))
+        if self.ProjectHandleXRef is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            showIndent(outfile, level)
+            outfile.write('ProjectHandleXRef="%s",\n' % (self.ProjectHandleXRef,))
     def _exportLiteralChildren(self, outfile, level, name_):
         pass
     def build(self, node, gds_collector_=None):
@@ -1587,6 +1647,10 @@ class Parameter(GeneratedsSuper):
         if value is not None and 'Name' not in already_processed:
             already_processed.add('Name')
             self.Name = value
+        value = find_attr_value_('Handle', node)
+        if value is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            self.Handle = value
         value = find_attr_value_('DTyp', node)
         if value is not None and 'DTyp' not in already_processed:
             already_processed.add('DTyp')
@@ -1604,6 +1668,10 @@ class Parameter(GeneratedsSuper):
         if value is not None and 'MetaDataXRef' not in already_processed:
             already_processed.add('MetaDataXRef')
             self.MetaDataXRef = value
+        value = find_attr_value_('ProjectHandleXRef', node)
+        if value is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            self.ProjectHandleXRef = value
     def _buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
         pass
 # end class Parameter
@@ -3292,7 +3360,7 @@ class FieldMD(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, Name=None, DTyp=None, Length=None, Default=None, MetaDataXRef=None, Source=None, Sources=None, gds_collector_=None, **kwargs_):
+    def __init__(self, Name=None, Handle=None, DTyp=None, Length=None, Default=None, MetaDataXRef=None, ProjectHandleXRef=None, Source=None, Sources=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
@@ -3300,6 +3368,8 @@ class FieldMD(GeneratedsSuper):
         self.ns_prefix_ = None
         self.Name = _cast(None, Name)
         self.Name_nsprefix_ = None
+        self.Handle = _cast(None, Handle)
+        self.Handle_nsprefix_ = None
         self.DTyp = _cast(None, DTyp)
         self.DTyp_nsprefix_ = None
         self.Length = _cast(int, Length)
@@ -3308,6 +3378,8 @@ class FieldMD(GeneratedsSuper):
         self.Default_nsprefix_ = None
         self.MetaDataXRef = _cast(None, MetaDataXRef)
         self.MetaDataXRef_nsprefix_ = None
+        self.ProjectHandleXRef = _cast(None, ProjectHandleXRef)
+        self.ProjectHandleXRef_nsprefix_ = None
         if Source is None:
             self.Source = []
         else:
@@ -3348,6 +3420,10 @@ class FieldMD(GeneratedsSuper):
         return self.Name
     def set_Name(self, Name):
         self.Name = Name
+    def get_Handle(self):
+        return self.Handle
+    def set_Handle(self, Handle):
+        self.Handle = Handle
     def get_DTyp(self):
         return self.DTyp
     def set_DTyp(self, DTyp):
@@ -3364,6 +3440,10 @@ class FieldMD(GeneratedsSuper):
         return self.MetaDataXRef
     def set_MetaDataXRef(self, MetaDataXRef):
         self.MetaDataXRef = MetaDataXRef
+    def get_ProjectHandleXRef(self):
+        return self.ProjectHandleXRef
+    def set_ProjectHandleXRef(self, ProjectHandleXRef):
+        self.ProjectHandleXRef = ProjectHandleXRef
     def validate_DTypType(self, value):
         # Validate type DTypType, a restriction on xs:string.
         if value is not None and Validate_simpletypes_ and self.gds_collector_ is not None:
@@ -3412,6 +3492,9 @@ class FieldMD(GeneratedsSuper):
         if self.Name is not None and 'Name' not in already_processed:
             already_processed.add('Name')
             outfile.write(' Name=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Name), input_name='Name')), ))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            outfile.write(' Handle=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Handle), input_name='Handle')), ))
         if self.DTyp is not None and 'DTyp' not in already_processed:
             already_processed.add('DTyp')
             outfile.write(' DTyp=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.DTyp), input_name='DTyp')), ))
@@ -3424,6 +3507,9 @@ class FieldMD(GeneratedsSuper):
         if self.MetaDataXRef is not None and 'MetaDataXRef' not in already_processed:
             already_processed.add('MetaDataXRef')
             outfile.write(' MetaDataXRef=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.MetaDataXRef), input_name='MetaDataXRef')), ))
+        if self.ProjectHandleXRef is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            outfile.write(' ProjectHandleXRef=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.ProjectHandleXRef), input_name='ProjectHandleXRef')), ))
     def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='FieldMD', fromsubclass_=False, pretty_print=True):
         if pretty_print:
             eol_ = '\n'
@@ -3446,6 +3532,10 @@ class FieldMD(GeneratedsSuper):
             already_processed.add('Name')
             showIndent(outfile, level)
             outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
         if self.DTyp is not None and 'DTyp' not in already_processed:
             already_processed.add('DTyp')
             showIndent(outfile, level)
@@ -3462,6 +3552,10 @@ class FieldMD(GeneratedsSuper):
             already_processed.add('MetaDataXRef')
             showIndent(outfile, level)
             outfile.write('MetaDataXRef="%s",\n' % (self.MetaDataXRef,))
+        if self.ProjectHandleXRef is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            showIndent(outfile, level)
+            outfile.write('ProjectHandleXRef="%s",\n' % (self.ProjectHandleXRef,))
     def _exportLiteralChildren(self, outfile, level, name_):
         showIndent(outfile, level)
         outfile.write('Source=[\n')
@@ -3497,6 +3591,10 @@ class FieldMD(GeneratedsSuper):
         if value is not None and 'Name' not in already_processed:
             already_processed.add('Name')
             self.Name = value
+        value = find_attr_value_('Handle', node)
+        if value is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            self.Handle = value
         value = find_attr_value_('DTyp', node)
         if value is not None and 'DTyp' not in already_processed:
             already_processed.add('DTyp')
@@ -3514,6 +3612,10 @@ class FieldMD(GeneratedsSuper):
         if value is not None and 'MetaDataXRef' not in already_processed:
             already_processed.add('MetaDataXRef')
             self.MetaDataXRef = value
+        value = find_attr_value_('ProjectHandleXRef', node)
+        if value is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            self.ProjectHandleXRef = value
     def _buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
         if nodeName_ == 'Source':
             obj_ = Source.factory(parent_object_=self)
@@ -3526,6 +3628,426 @@ class FieldMD(GeneratedsSuper):
             self.Sources = obj_
             obj_.original_tagname_ = 'Sources'
 # end class FieldMD
+
+
+class FieldExtMD(GeneratedsSuper):
+    __hash__ = GeneratedsSuper.__hash__
+    subclass = None
+    superclass = None
+    def __init__(self, Name=None, Handle=None, DTyp=None, Length=None, Default=None, MetaDataXRef=None, ProjectHandleXRef=None, Source=None, Sources=None, Constant=None, Constants=None, Transformation=None, Transformations=None, gds_collector_=None, **kwargs_):
+        self.gds_collector_ = gds_collector_
+        self.gds_elementtree_node_ = None
+        self.original_tagname_ = None
+        self.parent_object_ = kwargs_.get('parent_object_')
+        self.ns_prefix_ = None
+        self.Name = _cast(None, Name)
+        self.Name_nsprefix_ = None
+        self.Handle = _cast(None, Handle)
+        self.Handle_nsprefix_ = None
+        self.Name = _cast(None, Name)
+        self.Name_nsprefix_ = None
+        self.Handle = _cast(None, Handle)
+        self.Handle_nsprefix_ = None
+        self.DTyp = _cast(None, DTyp)
+        self.DTyp_nsprefix_ = None
+        self.Length = _cast(int, Length)
+        self.Length_nsprefix_ = None
+        self.Default = _cast(None, Default)
+        self.Default_nsprefix_ = None
+        self.MetaDataXRef = _cast(None, MetaDataXRef)
+        self.MetaDataXRef_nsprefix_ = None
+        self.ProjectHandleXRef = _cast(None, ProjectHandleXRef)
+        self.ProjectHandleXRef_nsprefix_ = None
+        if Source is None:
+            self.Source = []
+        else:
+            self.Source = Source
+        self.Source_nsprefix_ = None
+        self.Sources = Sources
+        self.Sources_nsprefix_ = None
+        if Constant is None:
+            self.Constant = []
+        else:
+            self.Constant = Constant
+        self.Constant_nsprefix_ = None
+        self.Constants = Constants
+        self.Constants_nsprefix_ = None
+        if Transformation is None:
+            self.Transformation = []
+        else:
+            self.Transformation = Transformation
+        self.Transformation_nsprefix_ = None
+        self.Transformations = Transformations
+        self.Transformations_nsprefix_ = None
+    def factory(*args_, **kwargs_):
+        if CurrentSubclassModule_ is not None:
+            subclass = getSubclassFromModule_(
+                CurrentSubclassModule_, FieldExtMD)
+            if subclass is not None:
+                return subclass(*args_, **kwargs_)
+        if FieldExtMD.subclass:
+            return FieldExtMD.subclass(*args_, **kwargs_)
+        else:
+            return FieldExtMD(*args_, **kwargs_)
+    factory = staticmethod(factory)
+    def get_ns_prefix_(self):
+        return self.ns_prefix_
+    def set_ns_prefix_(self, ns_prefix):
+        self.ns_prefix_ = ns_prefix
+    def get_Source(self):
+        return self.Source
+    def set_Source(self, Source):
+        self.Source = Source
+    def add_Source(self, value):
+        self.Source.append(value)
+    def insert_Source_at(self, index, value):
+        self.Source.insert(index, value)
+    def replace_Source_at(self, index, value):
+        self.Source[index] = value
+    def get_Sources(self):
+        return self.Sources
+    def set_Sources(self, Sources):
+        self.Sources = Sources
+    def get_Constant(self):
+        return self.Constant
+    def set_Constant(self, Constant):
+        self.Constant = Constant
+    def add_Constant(self, value):
+        self.Constant.append(value)
+    def insert_Constant_at(self, index, value):
+        self.Constant.insert(index, value)
+    def replace_Constant_at(self, index, value):
+        self.Constant[index] = value
+    def get_Constants(self):
+        return self.Constants
+    def set_Constants(self, Constants):
+        self.Constants = Constants
+    def get_Transformation(self):
+        return self.Transformation
+    def set_Transformation(self, Transformation):
+        self.Transformation = Transformation
+    def add_Transformation(self, value):
+        self.Transformation.append(value)
+    def insert_Transformation_at(self, index, value):
+        self.Transformation.insert(index, value)
+    def replace_Transformation_at(self, index, value):
+        self.Transformation[index] = value
+    def get_Transformations(self):
+        return self.Transformations
+    def set_Transformations(self, Transformations):
+        self.Transformations = Transformations
+    def get_Name(self):
+        return self.Name
+    def set_Name(self, Name):
+        self.Name = Name
+    def get_Handle(self):
+        return self.Handle
+    def set_Handle(self, Handle):
+        self.Handle = Handle
+    def get_Name(self):
+        return self.Name
+    def set_Name(self, Name):
+        self.Name = Name
+    def get_Handle(self):
+        return self.Handle
+    def set_Handle(self, Handle):
+        self.Handle = Handle
+    def get_DTyp(self):
+        return self.DTyp
+    def set_DTyp(self, DTyp):
+        self.DTyp = DTyp
+    def get_Length(self):
+        return self.Length
+    def set_Length(self, Length):
+        self.Length = Length
+    def get_Default(self):
+        return self.Default
+    def set_Default(self, Default):
+        self.Default = Default
+    def get_MetaDataXRef(self):
+        return self.MetaDataXRef
+    def set_MetaDataXRef(self, MetaDataXRef):
+        self.MetaDataXRef = MetaDataXRef
+    def get_ProjectHandleXRef(self):
+        return self.ProjectHandleXRef
+    def set_ProjectHandleXRef(self, ProjectHandleXRef):
+        self.ProjectHandleXRef = ProjectHandleXRef
+    def validate_DTypType(self, value):
+        # Validate type DTypType, a restriction on xs:string.
+        if value is not None and Validate_simpletypes_ and self.gds_collector_ is not None:
+            if not isinstance(value, str):
+                lineno = self.gds_get_node_lineno_()
+                self.gds_collector_.add_message('Value "%(value)s"%(lineno)s is not of the correct base simple type (str)' % {"value": value, "lineno": lineno, })
+                return False
+            value = value
+            enumerations = ['Unk', 'Dbl', 'Lng', 'Int', 'Dte', 'DTm', 'Str', 'VLS', 'Byt', 'Bln', 'Any']
+            if value not in enumerations:
+                lineno = self.gds_get_node_lineno_()
+                self.gds_collector_.add_message('Value "%(value)s"%(lineno)s does not match xsd enumeration restriction on DTypType' % {"value" : encode_str_2_3(value), "lineno": lineno} )
+                result = False
+    def _hasContent(self):
+        if (
+            self.Source or
+            self.Sources is not None or
+            self.Constant or
+            self.Constants is not None or
+            self.Transformation or
+            self.Transformations is not None
+        ):
+            return True
+        else:
+            return False
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='FieldExtMD', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('FieldExtMD')
+        if imported_ns_def_ is not None:
+            namespacedef_ = imported_ns_def_
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        if self.original_tagname_ is not None and name_ == 'FieldExtMD':
+            name_ = self.original_tagname_
+        if UseCapturedNS_ and self.ns_prefix_:
+            namespaceprefix_ = self.ns_prefix_ + ':'
+        showIndent(outfile, level, pretty_print)
+        outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
+        already_processed = set()
+        self._exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='FieldExtMD')
+        if self._hasContent():
+            outfile.write('>%s' % (eol_, ))
+            self._exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='FieldExtMD', pretty_print=pretty_print)
+            showIndent(outfile, level, pretty_print)
+            outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
+        else:
+            outfile.write('/>%s' % (eol_, ))
+    def _exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='FieldExtMD'):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            outfile.write(' Name=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Name), input_name='Name')), ))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            outfile.write(' Handle=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Handle), input_name='Handle')), ))
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            outfile.write(' Name=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Name), input_name='Name')), ))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            outfile.write(' Handle=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Handle), input_name='Handle')), ))
+        if self.DTyp is not None and 'DTyp' not in already_processed:
+            already_processed.add('DTyp')
+            outfile.write(' DTyp=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.DTyp), input_name='DTyp')), ))
+        if self.Length is not None and 'Length' not in already_processed:
+            already_processed.add('Length')
+            outfile.write(' Length="%s"' % self.gds_format_integer(self.Length, input_name='Length'))
+        if self.Default is not None and 'Default' not in already_processed:
+            already_processed.add('Default')
+            outfile.write(' Default=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Default), input_name='Default')), ))
+        if self.MetaDataXRef is not None and 'MetaDataXRef' not in already_processed:
+            already_processed.add('MetaDataXRef')
+            outfile.write(' MetaDataXRef=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.MetaDataXRef), input_name='MetaDataXRef')), ))
+        if self.ProjectHandleXRef is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            outfile.write(' ProjectHandleXRef=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.ProjectHandleXRef), input_name='ProjectHandleXRef')), ))
+    def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='FieldExtMD', fromsubclass_=False, pretty_print=True):
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        for Source_ in self.Source:
+            namespaceprefix_ = self.Source_nsprefix_ + ':' if (UseCapturedNS_ and self.Source_nsprefix_) else ''
+            Source_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Source', pretty_print=pretty_print)
+        if self.Sources is not None:
+            namespaceprefix_ = self.Sources_nsprefix_ + ':' if (UseCapturedNS_ and self.Sources_nsprefix_) else ''
+            self.Sources.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Sources', pretty_print=pretty_print)
+        for Constant_ in self.Constant:
+            namespaceprefix_ = self.Constant_nsprefix_ + ':' if (UseCapturedNS_ and self.Constant_nsprefix_) else ''
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%sConstant>%s</%sConstant>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(Constant_), input_name='Constant')), namespaceprefix_ , eol_))
+        if self.Constants is not None:
+            namespaceprefix_ = self.Constants_nsprefix_ + ':' if (UseCapturedNS_ and self.Constants_nsprefix_) else ''
+            self.Constants.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Constants', pretty_print=pretty_print)
+        for Transformation_ in self.Transformation:
+            namespaceprefix_ = self.Transformation_nsprefix_ + ':' if (UseCapturedNS_ and self.Transformation_nsprefix_) else ''
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%sTransformation>%s</%sTransformation>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(Transformation_), input_name='Transformation')), namespaceprefix_ , eol_))
+        if self.Transformations is not None:
+            namespaceprefix_ = self.Transformations_nsprefix_ + ':' if (UseCapturedNS_ and self.Transformations_nsprefix_) else ''
+            self.Transformations.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Transformations', pretty_print=pretty_print)
+    def exportLiteral(self, outfile, level, name_='FieldExtMD'):
+        level += 1
+        already_processed = set()
+        self._exportLiteralAttributes(outfile, level, already_processed, name_)
+        if self._hasContent():
+            self._exportLiteralChildren(outfile, level, name_)
+    def _exportLiteralAttributes(self, outfile, level, already_processed, name_):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            showIndent(outfile, level)
+            outfile.write('Name="%s",\n' % (self.Name,))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            showIndent(outfile, level)
+            outfile.write('Handle="%s",\n' % (self.Handle,))
+        if self.DTyp is not None and 'DTyp' not in already_processed:
+            already_processed.add('DTyp')
+            showIndent(outfile, level)
+            outfile.write('DTyp="%s",\n' % (self.DTyp,))
+        if self.Length is not None and 'Length' not in already_processed:
+            already_processed.add('Length')
+            showIndent(outfile, level)
+            outfile.write('Length=%d,\n' % (self.Length,))
+        if self.Default is not None and 'Default' not in already_processed:
+            already_processed.add('Default')
+            showIndent(outfile, level)
+            outfile.write('Default="%s",\n' % (self.Default,))
+        if self.MetaDataXRef is not None and 'MetaDataXRef' not in already_processed:
+            already_processed.add('MetaDataXRef')
+            showIndent(outfile, level)
+            outfile.write('MetaDataXRef="%s",\n' % (self.MetaDataXRef,))
+        if self.ProjectHandleXRef is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            showIndent(outfile, level)
+            outfile.write('ProjectHandleXRef="%s",\n' % (self.ProjectHandleXRef,))
+    def _exportLiteralChildren(self, outfile, level, name_):
+        showIndent(outfile, level)
+        outfile.write('Source=[\n')
+        level += 1
+        for Source_ in self.Source:
+            showIndent(outfile, level)
+            outfile.write('model_.Source(\n')
+            Source_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        if self.Sources is not None:
+            showIndent(outfile, level)
+            outfile.write('Sources=model_.Sources(\n')
+            self.Sources.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('Constant=[\n')
+        level += 1
+        for Constant_ in self.Constant:
+            showIndent(outfile, level)
+            outfile.write('%s,\n' % self.gds_encode(quote_python(Constant_)))
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        if self.Constants is not None:
+            showIndent(outfile, level)
+            outfile.write('Constants=model_.Constants(\n')
+            self.Constants.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('Transformation=[\n')
+        level += 1
+        for Transformation_ in self.Transformation:
+            showIndent(outfile, level)
+            outfile.write('%s,\n' % self.gds_encode(quote_python(Transformation_)))
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
+        if self.Transformations is not None:
+            showIndent(outfile, level)
+            outfile.write('Transformations=model_.Transformations(\n')
+            self.Transformations.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+    def build(self, node, gds_collector_=None):
+        self.gds_collector_ = gds_collector_
+        if SaveElementTreeNode:
+            self.gds_elementtree_node_ = node
+        already_processed = set()
+        self.ns_prefix_ = node.prefix
+        self._buildAttributes(node, node.attrib, already_processed)
+        for child in node:
+            nodeName_ = Tag_pattern_.match(child.tag).groups()[-1]
+            self._buildChildren(child, node, nodeName_, gds_collector_=gds_collector_)
+        return self
+    def _buildAttributes(self, node, attrs, already_processed):
+        value = find_attr_value_('Name', node)
+        if value is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            self.Name = value
+        value = find_attr_value_('Handle', node)
+        if value is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            self.Handle = value
+        value = find_attr_value_('Name', node)
+        if value is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            self.Name = value
+        value = find_attr_value_('Handle', node)
+        if value is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            self.Handle = value
+        value = find_attr_value_('DTyp', node)
+        if value is not None and 'DTyp' not in already_processed:
+            already_processed.add('DTyp')
+            self.DTyp = value
+            self.validate_DTypType(self.DTyp)    # validate type DTypType
+        value = find_attr_value_('Length', node)
+        if value is not None and 'Length' not in already_processed:
+            already_processed.add('Length')
+            self.Length = self.gds_parse_integer(value, node, 'Length')
+        value = find_attr_value_('Default', node)
+        if value is not None and 'Default' not in already_processed:
+            already_processed.add('Default')
+            self.Default = value
+        value = find_attr_value_('MetaDataXRef', node)
+        if value is not None and 'MetaDataXRef' not in already_processed:
+            already_processed.add('MetaDataXRef')
+            self.MetaDataXRef = value
+        value = find_attr_value_('ProjectHandleXRef', node)
+        if value is not None and 'ProjectHandleXRef' not in already_processed:
+            already_processed.add('ProjectHandleXRef')
+            self.ProjectHandleXRef = value
+    def _buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
+        if nodeName_ == 'Source':
+            obj_ = Source.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.Source.append(obj_)
+            obj_.original_tagname_ = 'Source'
+        elif nodeName_ == 'Sources':
+            obj_ = Sources.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.Sources = obj_
+            obj_.original_tagname_ = 'Sources'
+        elif nodeName_ == 'Constant':
+            value_ = child_.text
+            value_ = self.gds_parse_string(value_, node, 'Constant')
+            value_ = self.gds_validate_string(value_, node, 'Constant')
+            self.Constant.append(value_)
+            self.Constant_nsprefix_ = child_.prefix
+        elif nodeName_ == 'Constants':
+            obj_ = Constants.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.Constants = obj_
+            obj_.original_tagname_ = 'Constants'
+        elif nodeName_ == 'Transformation':
+            value_ = child_.text
+            value_ = self.gds_parse_string(value_, node, 'Transformation')
+            value_ = self.gds_validate_string(value_, node, 'Transformation')
+            self.Transformation.append(value_)
+            self.Transformation_nsprefix_ = child_.prefix
+        elif nodeName_ == 'Transformations':
+            obj_ = Transformations.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.Transformations = obj_
+            obj_.original_tagname_ = 'Transformations'
+# end class FieldExtMD
 
 
 class Dictionary(GeneratedsSuper):
@@ -4993,7 +5515,7 @@ class Model(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, Use=None, Name=None, Handle=None, Annotation=None, Signatures=None, ModelDirectives=None, ComponentModels=None, ComponentModel=None, Variables=None, gds_collector_=None, **kwargs_):
+    def __init__(self, Use=None, Name=None, Handle=None, Annotation=None, Signatures=None, Dictionary=None, ModelDirectives=None, ComponentModels=None, ComponentModel=None, Variables=None, Variable=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
@@ -5012,6 +5534,8 @@ class Model(GeneratedsSuper):
         self.Annotation_nsprefix_ = None
         self.Signatures = Signatures
         self.Signatures_nsprefix_ = None
+        self.Dictionary = Dictionary
+        self.Dictionary_nsprefix_ = None
         self.ModelDirectives = ModelDirectives
         self.ModelDirectives_nsprefix_ = None
         self.ComponentModels = ComponentModels
@@ -5023,6 +5547,11 @@ class Model(GeneratedsSuper):
         self.ComponentModel_nsprefix_ = None
         self.Variables = Variables
         self.Variables_nsprefix_ = None
+        if Variable is None:
+            self.Variable = []
+        else:
+            self.Variable = Variable
+        self.Variable_nsprefix_ = None
     def factory(*args_, **kwargs_):
         if CurrentSubclassModule_ is not None:
             subclass = getSubclassFromModule_(
@@ -5052,6 +5581,10 @@ class Model(GeneratedsSuper):
         return self.Signatures
     def set_Signatures(self, Signatures):
         self.Signatures = Signatures
+    def get_Dictionary(self):
+        return self.Dictionary
+    def set_Dictionary(self, Dictionary):
+        self.Dictionary = Dictionary
     def get_ModelDirectives(self):
         return self.ModelDirectives
     def set_ModelDirectives(self, ModelDirectives):
@@ -5074,6 +5607,16 @@ class Model(GeneratedsSuper):
         return self.Variables
     def set_Variables(self, Variables):
         self.Variables = Variables
+    def get_Variable(self):
+        return self.Variable
+    def set_Variable(self, Variable):
+        self.Variable = Variable
+    def add_Variable(self, value):
+        self.Variable.append(value)
+    def insert_Variable_at(self, index, value):
+        self.Variable.insert(index, value)
+    def replace_Variable_at(self, index, value):
+        self.Variable[index] = value
     def get_Use(self):
         return self.Use
     def set_Use(self, Use):
@@ -5090,10 +5633,12 @@ class Model(GeneratedsSuper):
         if (
             self.Annotation or
             self.Signatures is not None or
+            self.Dictionary is not None or
             self.ModelDirectives is not None or
             self.ComponentModels is not None or
             self.ComponentModel or
-            self.Variables is not None
+            self.Variables is not None or
+            self.Variable
         ):
             return True
         else:
@@ -5142,6 +5687,9 @@ class Model(GeneratedsSuper):
         if self.Signatures is not None:
             namespaceprefix_ = self.Signatures_nsprefix_ + ':' if (UseCapturedNS_ and self.Signatures_nsprefix_) else ''
             self.Signatures.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Signatures', pretty_print=pretty_print)
+        if self.Dictionary is not None:
+            namespaceprefix_ = self.Dictionary_nsprefix_ + ':' if (UseCapturedNS_ and self.Dictionary_nsprefix_) else ''
+            self.Dictionary.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Dictionary', pretty_print=pretty_print)
         if self.ModelDirectives is not None:
             namespaceprefix_ = self.ModelDirectives_nsprefix_ + ':' if (UseCapturedNS_ and self.ModelDirectives_nsprefix_) else ''
             self.ModelDirectives.export(outfile, level, namespaceprefix_, namespacedef_='', name_='ModelDirectives', pretty_print=pretty_print)
@@ -5154,6 +5702,9 @@ class Model(GeneratedsSuper):
         if self.Variables is not None:
             namespaceprefix_ = self.Variables_nsprefix_ + ':' if (UseCapturedNS_ and self.Variables_nsprefix_) else ''
             self.Variables.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Variables', pretty_print=pretty_print)
+        for Variable_ in self.Variable:
+            namespaceprefix_ = self.Variable_nsprefix_ + ':' if (UseCapturedNS_ and self.Variable_nsprefix_) else ''
+            Variable_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Variable', pretty_print=pretty_print)
     def exportLiteral(self, outfile, level, name_='Model'):
         level += 1
         already_processed = set()
@@ -5192,6 +5743,12 @@ class Model(GeneratedsSuper):
             self.Signatures.exportLiteral(outfile, level)
             showIndent(outfile, level)
             outfile.write('),\n')
+        if self.Dictionary is not None:
+            showIndent(outfile, level)
+            outfile.write('Dictionary=model_.Dictionary(\n')
+            self.Dictionary.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
         if self.ModelDirectives is not None:
             showIndent(outfile, level)
             outfile.write('ModelDirectives=model_.ModelDirectives(\n')
@@ -5222,6 +5779,18 @@ class Model(GeneratedsSuper):
             self.Variables.exportLiteral(outfile, level)
             showIndent(outfile, level)
             outfile.write('),\n')
+        showIndent(outfile, level)
+        outfile.write('Variable=[\n')
+        level += 1
+        for Variable_ in self.Variable:
+            showIndent(outfile, level)
+            outfile.write('model_.Variable(\n')
+            Variable_.exportLiteral(outfile, level)
+            showIndent(outfile, level)
+            outfile.write('),\n')
+        level -= 1
+        showIndent(outfile, level)
+        outfile.write('],\n')
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -5257,6 +5826,11 @@ class Model(GeneratedsSuper):
             obj_.build(child_, gds_collector_=gds_collector_)
             self.Signatures = obj_
             obj_.original_tagname_ = 'Signatures'
+        elif nodeName_ == 'Dictionary':
+            obj_ = Dictionary.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.Dictionary = obj_
+            obj_.original_tagname_ = 'Dictionary'
         elif nodeName_ == 'ModelDirectives':
             obj_ = ModelDirectives.factory(parent_object_=self)
             obj_.build(child_, gds_collector_=gds_collector_)
@@ -5277,6 +5851,11 @@ class Model(GeneratedsSuper):
             obj_.build(child_, gds_collector_=gds_collector_)
             self.Variables = obj_
             obj_.original_tagname_ = 'Variables'
+        elif nodeName_ == 'Variable':
+            obj_ = Variable.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.Variable.append(obj_)
+            obj_.original_tagname_ = 'Variable'
 # end class Model
 
 
@@ -10516,6 +11095,7 @@ __all__ = [
     "EnumValue",
     "EnumValues",
     "Enums",
+    "FieldExtMD",
     "FieldMD",
     "Int",
     "Model",
