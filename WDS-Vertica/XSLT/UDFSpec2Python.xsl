@@ -40,12 +40,10 @@ if not bUsingVerticaSDK:
 <xsl:if test="$ProcessEnums != 'Only' and $ProcessUtils != 'Only'">
 try:
     from depends.<xsl:value-of select="@Name"/>_Utils import *
-    from depends.<xsl:value-of select="@Name"/>_guts import *
-    #from depends.<xsl:value-of select="@Name"/>_Enums import *
+    import depends.<xsl:value-of select="@Name"/>_guts as <xsl:value-of select="@Name"/>_guts
 except:
     from build.depends.<xsl:value-of select="@Name"/>_Utils import *
-    from build.depends.<xsl:value-of select="@Name"/>_guts import *
-    #from build.depends.<xsl:value-of select="@Name"/>_Enums import *
+    import build.depends.<xsl:value-of select="@Name"/>_guts as <xsl:value-of select="@Name"/>_guts
 
 import numpy as np
 
@@ -59,6 +57,10 @@ _isoparser=dateutil.parser.isoparser()
 <xsl:if test="$ProcessUtils='Yes' or $ProcessUtils='Only'">
 
 import numpy as np
+import math
+
+import datetime
+import dateutil.parser
 
 import sys
 import datetime
@@ -80,6 +82,23 @@ Dte_null=datetime.datetime(1970,1,1,0,0,0) # UnixEpoch
 
 #DTm_null=np.datetime64('NaT','s')
 DTm_null=datetime.datetime(1970,1,1,0,0,0) # UnixEpoch
+
+def IsDTmNULL(arg):
+    if arg is None: return True
+    if issubclass(type(arg),datetime.date):
+        return (arg.year &lt; 1970)
+    try:
+        if math.isnan(arg): return True
+        return (arg&lt;=0)
+    except:
+        try:
+            if type(arg) is not str:
+                rv=str(arg)
+                if rv.lower() in ('none','na','nan','nat'): return True
+            rv=dateutil.parser.parse(str(arg))
+            return (rv.year &lt; 1970)
+        except:
+            return True
 
 Str_null=""
 VLS_null=""
@@ -171,7 +190,7 @@ class ParameterObject(object):
 
 class StaticObject(object):
      def __init__(self):<xsl:for-each select="./Columns/Column[@Use='I' ]">
-     <xsl:if test="translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1'"><xsl:text>
+     <xsl:if test="@Use!= 'Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:text>
          </xsl:text><xsl:value-of select="@Name"/> = <xsl:choose><xsl:when test="@InitValue!='NULL'">
              <xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">"<xsl:value-of select="@InitValue"/>"</xsl:when>
              <xsl:otherwise><xsl:value-of select="@InitValue"/></xsl:otherwise></xsl:choose></xsl:when>
@@ -182,7 +201,7 @@ class StaticObject(object):
          vars(self).pop('self')
 
      def From(self<xsl:for-each select="./Columns/Column[@Use='I' ]">
-     <xsl:if test="translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1'"><xsl:text>
+     <xsl:if test="@Use!='Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">
          ,</xsl:text><xsl:value-of select="@Name"/></xsl:if></xsl:for-each>
          ):
          vars(self).update(locals())
@@ -199,13 +218,21 @@ class StaticObject(object):
 </xsl:if>
 
 
- 
+
+</xsl:if>
+
+<xsl:if test="$ProcessEnums='Yes' or $ProcessEnums='Only'">
+
+</xsl:if>
+
+<xsl:if test="$ProcessEnums !='Only' and $ProcessUtils !='Only'">
+
+
 
 class <xsl:value-of select="$ProjectName"/>(vertica_sdk.ScalarFunction):
 
     def __init__(self, srvInterface):
         #//Localized parameters
-        self.local_parameters=ParameterObject()
 <xsl:if test="count(./Parameters/Column)>0">
 <xsl:choose>
 <xsl:when test="$NumpyOrObject != 'Object'">
@@ -295,7 +322,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.ScalarFunction):
                 </xsl:when>
                 </xsl:choose></xsl:if></xsl:for-each>
 
-                    rv=<xsl:value-of select="$ProjectName"/>_guts(static)
+                    rv=<xsl:value-of select="$ProjectName"/>_guts.<xsl:value-of select="$ProjectName"/>_return_value(static)
 
 
                     
@@ -323,26 +350,19 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.ScalarFunction):
                     </xsl:when>
                     <xsl:when test="@DTyp='Dte'">
                     try:
-                        if rv is None or type(rv) is not datetime.datetime or rv &lt;=Dte_null:
+                        if IsDTmNULL(rf):
                             outputWriter.setNull()
                         else:
-                            if (tmp_str == 'None') or (tmp_str == 'NaT'):
-                                outputWriter.setNull()
-                            else:
-                                outputWriter.setDate(rv.date())
+                            outputWriter.setDate(rv.date())
                     except Exception as e:
                         raise e
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
                     try:
-                        if rv is None or type(rv) is not datetime.datetime or rv&lt;=Dte_null:
+                        if IsDTmNULL(rv):
                             outputWriter.setNull()
                         else:
-                            tmp_str=str(rv)
-                            if (tmp_str == 'None') or (tmp_str == 'NaT'):
-                                outputWriter.setNull()
-                            else:
-                                outputWriter.setTimestamp(rv)
+                            outputWriter.setTimestamp(rv)
                     except Exception as e:
                         raise e
                     </xsl:when>
@@ -442,7 +462,7 @@ class <xsl:value-of select="$ProjectName"/>_Factory(vertica_sdk.ScalarFunctionFa
                         outputTypes.addDate("<xsl:value-of select="@Name"/>")
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
-                        outputTypes.addTimestamp(6,"<xsl:value-of select="@Name"/>")
+                        outputTypes.addTimestamp("<xsl:value-of select="@Name"/>")
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         outputTypes.addBool("<xsl:value-of select="@Name"/>")
@@ -476,9 +496,6 @@ class <xsl:value-of select="$ProjectName"/>_Factory(vertica_sdk.ScalarFunctionFa
     #////// required part, but of a constant form
     def createScalarFunction(cls, srvInterface):
         return <xsl:value-of select="$ProjectName"/>(srvInterface) 
-
-
-
 
 </xsl:if>
 

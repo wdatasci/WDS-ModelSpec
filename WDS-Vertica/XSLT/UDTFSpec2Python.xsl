@@ -40,12 +40,12 @@ if not bUsingVerticaSDK:
 <xsl:if test="$ProcessEnums != 'Only' and $ProcessUtils != 'Only'">
 try:
     from depends.<xsl:value-of select="@Name"/>_Utils import *
-    from depends.<xsl:value-of select="@Name"/>_guts import *
     from depends.<xsl:value-of select="@Name"/>_Enums import *
+    import depends.<xsl:value-of select="@Name"/>_guts as <xsl:value-of select="@Name"/>_guts
 except:
     from build.depends.<xsl:value-of select="@Name"/>_Utils import *
-    from build.depends.<xsl:value-of select="@Name"/>_guts import *
     from build.depends.<xsl:value-of select="@Name"/>_Enums import *
+    import build.depends.<xsl:value-of select="@Name"/>_guts as <xsl:value-of select="@Name"/>_guts
 
 import numpy as np
 
@@ -59,10 +59,17 @@ _isoparser=dateutil.parser.isoparser()
 <xsl:if test="$ProcessUtils='Yes' or $ProcessUtils='Only'">
 
 import numpy as np
+import math
+
+import datetime
+import dateutil.parser
 
 import sys
 import datetime
 import math
+
+from WDS.Util.namespaceop import namespaceop
+
 
 vint_null=-sys.maxsize
 Int_null=vint_null
@@ -75,11 +82,30 @@ Bln_null=False
 vbool_false=False
 vbool_true=True
 
-#Dte_null=np.datetime64('NaT','s')
-Dte_null=datetime.datetime(1970,1,1,0,0,0) # UnixEpoch
+# using Unix epoch just because of negative as null
+Dte_null=datetime.datetime(1970,1,1)
+Dte_null=Dte_null.replace(tzinfo=None) # UnixEpoch
+DTm_null=Dte_null
 
-#DTm_null=np.datetime64('NaT','s')
-DTm_null=datetime.datetime(1970,1,1,0,0,0) # UnixEpoch
+
+def IsDTmNULL(arg):
+    if arg is None: return True
+    if issubclass(type(arg),datetime.datetime):
+        return (arg.replace(tzinfo=None) &lt;= DTm_null)
+    if issubclass(type(arg),datetime.date):
+        return (arg.year &lt; 1970 ) or (datetime.date(arg.year, arg.month, arg.day) == datetime.date(1970,1,1))
+    try:
+        if math.isnan(arg): return True
+        return (arg&lt;=0)
+    except:
+        try:
+            if type(arg) is not str:
+                rv=str(arg)
+                if rv.lower() in ('none','na','nan','nat'): return True
+            rv=dateutil.parser.parse(str(arg))
+            return (rv.year &lt; 1970)
+        except:
+            return True
 
 Str_null=""
 VLS_null=""
@@ -170,31 +196,59 @@ class ParameterObject(object):
 
 
 class EnvObject(object):
+     @namespaceop
      def __init__(self):<xsl:for-each select="./Columns/Column"><xsl:choose>
-     <xsl:when test="translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1'"><xsl:text>
-         </xsl:text><xsl:value-of select="@Name"/> = <xsl:choose>
+     <xsl:when test="@Use!= 'Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:text>
+        </xsl:text><xsl:value-of select="@Name"/> = <xsl:choose>
                 <xsl:when test="@Default!='NULL'">
                     <xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">"<xsl:value-of select="@Default"/>"</xsl:when>
                     <xsl:otherwise><xsl:value-of select="@Default"/></xsl:otherwise></xsl:choose>
                 </xsl:when>
                 <xsl:otherwise><xsl:value-of select='@DTyp'/>_null</xsl:otherwise></xsl:choose>
-     </xsl:when><xsl:otherwise><xsl:text>
-         </xsl:text><xsl:value-of select="@Name"/> = <xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">np.array([["<xsl:value-of select="@Default"/>"]],dtype="O")</xsl:when>
+        </xsl:when><xsl:otherwise><xsl:text>
+        </xsl:text>#<xsl:value-of select="@Name"/> = <xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">np.array([["<xsl:value-of select="@Default"/>"]],dtype="O")</xsl:when>
                     <xsl:when test="@DTyp='Int' or @DTyp='Lng'">np.array([[<xsl:if test="@Default='NULL'">vint_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if>]],dtype=np.int64)</xsl:when>
                     <xsl:when test="@DTyp='Dbl'">np.array([[<xsl:if test="@Default='NULL'">vfloat_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if>]],dtype=np.float64)</xsl:when>
                     <xsl:when test="@DTyp='Dte' or @DTyp='DTm'">np.array([[<xsl:if test="@Default='NULL'">Dte_null</xsl:if><xsl:if test="@Default != 'NULL'">_isoparser.parse_isodate("<xsl:value-of select="@Default"/>")</xsl:if>]],dtype=datetime.datetime)</xsl:when>
-                    <xsl:when test="@DTyp='Bln'">np.array([[<xsl:if test="@Default='NULL'">vbool_null</xsl:if><xsl:if test="@Default != 'NULL'">vbool_<xsl:value-of select="@Default"/></xsl:if>]],dtype=np.bool)</xsl:when>
+                    <xsl:when test="@DTyp='Bln'">np.array([[<xsl:if test="@Default='NULL'">vbool_null</xsl:if><xsl:if test="@Default != 'NULL'">vbool_<xsl:value-of select="@Default"/></xsl:if>]],dtype=np.bool)</xsl:when></xsl:choose><xsl:text>
+        </xsl:text><xsl:value-of select="@Name"/> = <xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">["<xsl:value-of select="@Default"/>"]</xsl:when>
+                    <xsl:when test="@DTyp='Int' or @DTyp='Lng'">[<xsl:if test="@Default='NULL'">vint_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if>]</xsl:when>
+                    <xsl:when test="@DTyp='Dbl'">[<xsl:if test="@Default='NULL'">vfloat_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if>]</xsl:when>
+                    <xsl:when test="@DTyp='Dte' or @DTyp='DTm'">[<xsl:if test="@Default='NULL'">Dte_null</xsl:if><xsl:if test="@Default != 'NULL'">_isoparser.parse_isodate("<xsl:value-of select="@Default"/>")</xsl:if>]</xsl:when>
+                    <xsl:when test="@DTyp='Bln'">[<xsl:if test="@Default='NULL'">vbool_null</xsl:if><xsl:if test="@Default != 'NULL'">vbool_<xsl:value-of select="@Default"/></xsl:if>]</xsl:when>
                 </xsl:choose>
         </xsl:otherwise></xsl:choose>
         </xsl:for-each>
-         vars(self).update(locals())
-         vars(self).pop('self')
 
-     def resize(self,N):<xsl:for-each select="./Columns/Column"><xsl:choose>
-     <xsl:when test="translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1'">
+     def push_back(self,n=1):<xsl:for-each select="./Columns/Column"><xsl:choose>
+     <xsl:when test="@Use!= 'Off' and not (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:text>
+        </xsl:text>self.<xsl:value-of select="@Name"/>.extend(<xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">["<xsl:value-of select="@Default"/>" for i in range(0,n)]</xsl:when>
+                    <xsl:when test="@DTyp='Int' or @DTyp='Lng'">[<xsl:if test="@Default='NULL'">vint_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if> for i in range(0,n)]</xsl:when>
+                    <xsl:when test="@DTyp='Dbl'">[<xsl:if test="@Default='NULL'">vfloat_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if> for i in range(0,n)]</xsl:when>
+                    <xsl:when test="@DTyp='Dte' or @DTyp='DTm'">[<xsl:if test="@Default='NULL'">Dte_null</xsl:if><xsl:if test="@Default != 'NULL'">_isoparser.parse_isodate("<xsl:value-of select="@Default"/>")</xsl:if> for i in range(0,n)]</xsl:when>
+                    <xsl:when test="@DTyp='Bln'">[<xsl:if test="@Default='NULL'">vbool_null</xsl:if><xsl:if test="@Default != 'NULL'">vbool_<xsl:value-of select="@Default"/></xsl:if> for i in range(0,n)]</xsl:when>
+                </xsl:choose>)
+        </xsl:when></xsl:choose>
+        </xsl:for-each>
+
+     #def resize(self,N):<xsl:for-each select="./Columns/Column"><xsl:choose>
+     <xsl:when test="@Use!='Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">
      </xsl:when><xsl:otherwise><xsl:text>
-         </xsl:text>self.<xsl:value-of select="@Name"/>.resize(N, refcheck=False)
+        </xsl:text>#self.<xsl:value-of select="@Name"/>.resize(N, refcheck=False)
         </xsl:otherwise></xsl:choose>
+        </xsl:for-each>
+
+     def resize(self,n):<xsl:for-each select="./Columns/Column"><xsl:choose>
+     <xsl:when test="@Use!= 'Off' and not (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:text>
+        </xsl:text>k=len(self.<xsl:value-of select="@Name"/>)
+        if k &lt; n:
+            self.<xsl:value-of select="@Name"/>.extend(<xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">["<xsl:value-of select="@Default"/>" for i in range(0,n-k)]</xsl:when>
+                    <xsl:when test="@DTyp='Int' or @DTyp='Lng'">[<xsl:if test="@Default='NULL'">vint_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if> for i in range(0,n-k)]</xsl:when>
+                    <xsl:when test="@DTyp='Dbl'">[<xsl:if test="@Default='NULL'">vfloat_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if> for i in range(0,n-k)]</xsl:when>
+                    <xsl:when test="@DTyp='Dte' or @DTyp='DTm'">[<xsl:if test="@Default='NULL'">Dte_null</xsl:if><xsl:if test="@Default != 'NULL'">_isoparser.parse_isodate("<xsl:value-of select="@Default"/>")</xsl:if> for i in range(0,n-k)]</xsl:when>
+                    <xsl:when test="@DTyp='Bln'">[<xsl:if test="@Default='NULL'">vbool_null</xsl:if><xsl:if test="@Default != 'NULL'">vbool_<xsl:value-of select="@Default"/></xsl:if> for i in range(0,n-k)]</xsl:when>
+                </xsl:choose>)
+        </xsl:when></xsl:choose>
         </xsl:for-each>
 
      def __getitem__(self, x):
@@ -208,7 +262,7 @@ class EnvObject(object):
                 else:
                     return self2.self.__dict__[fld]
             <xsl:for-each select="./Columns/Column"><xsl:choose>
-            <xsl:when test="translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1'"><xsl:text>
+            <xsl:when test="@Use!='Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:text>
             </xsl:text>@property
             def <xsl:value-of select="@Name"/>(self2):
                     return self2.self.<xsl:value-of select="@Name"/>
@@ -230,15 +284,48 @@ class EnvObject(object):
             </xsl:for-each>
         return __EnvObjectGobble(x)
 
-     def From(self<xsl:for-each select="./Columns/Column"><xsl:text>
-         ,</xsl:text><xsl:value-of select="@Name"/></xsl:for-each>
-         ):
+     def From(self<xsl:for-each select="./Columns/Column"><xsl:choose>
+     <xsl:when test="@Use!= 'Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:text>
+        </xsl:text>, <xsl:value-of select="@Name"/> = <xsl:choose>
+                <xsl:when test="@Default!='NULL'">
+                    <xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">"<xsl:value-of select="@Default"/>"</xsl:when>
+                    <xsl:otherwise><xsl:value-of select="@Default"/></xsl:otherwise></xsl:choose>
+                </xsl:when>
+                <xsl:otherwise><xsl:value-of select='@DTyp'/>_null</xsl:otherwise></xsl:choose>
+        </xsl:when><xsl:otherwise><xsl:text>
+        </xsl:text>, <xsl:value-of select="@Name"/> = <xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">["<xsl:value-of select="@Default"/>"]</xsl:when>
+                    <xsl:when test="@DTyp='Int' or @DTyp='Lng'">[<xsl:if test="@Default='NULL'">vint_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if>]</xsl:when>
+                    <xsl:when test="@DTyp='Dbl'">[<xsl:if test="@Default='NULL'">vfloat_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if>]</xsl:when>
+                    <xsl:when test="@DTyp='Dte' or @DTyp='DTm'">[<xsl:if test="@Default='NULL'">Dte_null</xsl:if><xsl:if test="@Default != 'NULL'">_isoparser.parse_isodate("<xsl:value-of select="@Default"/>")</xsl:if>]</xsl:when>
+                    <xsl:when test="@DTyp='Bln'">[<xsl:if test="@Default='NULL'">vbool_null</xsl:if><xsl:if test="@Default != 'NULL'">vbool_<xsl:value-of select="@Default"/></xsl:if>]</xsl:when>
+                </xsl:choose>
+        </xsl:otherwise></xsl:choose>
+        </xsl:for-each>):
          vars(self).update(locals())
          vars(self).pop('self')
          return self
  
+    #Example call
+    #def EnvObject(self<xsl:for-each select="./Columns/Column"><xsl:choose>
+     <xsl:when test="@Use!= 'Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:text>
+         </xsl:text>#, <xsl:choose>
+                <xsl:when test="@Default!='NULL'">
+                    <xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">"<xsl:value-of select="@Default"/>"</xsl:when>
+                    <xsl:otherwise><xsl:value-of select="@Default"/></xsl:otherwise></xsl:choose>
+                </xsl:when>
+                <xsl:otherwise><xsl:value-of select='@DTyp'/>_null</xsl:otherwise></xsl:choose> # <xsl:value-of select="@Name"/>
+        </xsl:when><xsl:otherwise><xsl:text>
+         </xsl:text>#, <xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">["<xsl:value-of select="@Default"/>"]</xsl:when>
+                    <xsl:when test="@DTyp='Int' or @DTyp='Lng'">[<xsl:if test="@Default='NULL'">vint_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if>]</xsl:when>
+                    <xsl:when test="@DTyp='Dbl'">[<xsl:if test="@Default='NULL'">vfloat_null</xsl:if><xsl:if test="@Default != 'NULL'"><xsl:value-of select="@Default"/></xsl:if>]</xsl:when>
+                    <xsl:when test="@DTyp='Dte' or @DTyp='DTm'">[<xsl:if test="@Default='NULL'">Dte_null</xsl:if><xsl:if test="@Default != 'NULL'">_isoparser.parse_isodate("<xsl:value-of select="@Default"/>")</xsl:if>]</xsl:when>
+                    <xsl:when test="@DTyp='Bln'">[<xsl:if test="@Default='NULL'">vbool_null</xsl:if><xsl:if test="@Default != 'NULL'">vbool_<xsl:value-of select="@Default"/></xsl:if>]</xsl:when>
+                </xsl:choose> # <xsl:value-of select="@Name"/>
+        </xsl:otherwise></xsl:choose>
+        </xsl:for-each>)
+
      def __repr__(self):
-        return ('EnvObject'<xsl:for-each select="./Columns/Column">
+        return ('EnvObject'<xsl:for-each select="./Columns/Column[@Use!='Off']">
          +', <xsl:value-of select="@Name"/>:'+str(self.<xsl:value-of select="@Name"/>)</xsl:for-each>)
  
 
@@ -247,11 +334,10 @@ class EnvObject(object):
 
 
 
-
 </xsl:if>
 
-
 <xsl:if test="$ProcessEnums='Yes' or $ProcessEnums='Only'">
+
 try:
     from depends.<xsl:value-of select="@Name"/>_Utils import *
 except:
@@ -452,6 +538,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
             self.local_parameters.<xsl:value-of select="@Name"/> = paramReader.getTimestamp("<xsl:value-of select="@Name"/>") 
+            self.local_parameters.<xsl:value-of select="@Name"/> = self.local_parameters.<xsl:value-of select="@Name"/>.replace(tzinfo=None)
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
             self.local_parameters.<xsl:value-of select="@Name"/> = paramReader.getBool("<xsl:value-of select="@Name"/>") 
@@ -479,7 +566,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
 <xsl:choose>
 <xsl:when test="$NumpyOrObject != 'Object'">
             static = df_row_ref(np.recarray((1,), dtype=[<xsl:for-each select="./Columns/Column[@Use='IO' or @Use='I' or @Use='T']">
-            <xsl:if test="translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1'"><xsl:choose>
+            <xsl:if test="@Use!='Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:choose>
                     <xsl:when test="@DTyp='Int' or @DTyp='Lng'">
                         ("<xsl:value-of select="@Name"/>", np.int64), </xsl:when>
                     <xsl:when test="@DTyp='Dbl'">
@@ -496,7 +583,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                         , 0)
 
             <xsl:for-each select="./Columns/Column[@Use='IO' or @Use='I' or @Use='O' or @Use='T']">
-            <xsl:if test="translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1'">
+            <xsl:if test="@Use!='Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">
             static.<xsl:value-of select="@Name"/> = <xsl:choose><xsl:when test="@InitValue!='NULL'">
                         <xsl:choose><xsl:when test="@DTyp='Str' or @DTyp='VLS'">"<xsl:value-of select="@InitValue"/>"</xsl:when>
                         <xsl:otherwise><xsl:value-of select="@InitValue"/></xsl:otherwise></xsl:choose></xsl:when>
@@ -535,7 +622,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
 <xsl:when test="$NumpyOrObject = 'Object'">
             this_EnvObject = EnvObject()
             <xsl:for-each select="./Columns/Column">
-            <xsl:if test="count(@Static)>0 or translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1'">
+            <xsl:if test="@Use!='Off' and (count(@Static)>0 or translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">
             this_EnvObject.<xsl:value-of select="@Name"/> = <xsl:choose>
                     <xsl:when test="@DTyp='Int' or @DTyp='Lng'">vint_null</xsl:when>
                     <xsl:when test="@DTyp='Dbl'">vfloat_null</xsl:when>
@@ -543,8 +630,8 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                     <xsl:when test="@DTyp='Bln'">None</xsl:when>
                     <xsl:when test="@DTyp='Str' or @DTyp='VLS'">""</xsl:when></xsl:choose>
             </xsl:if>
-            <xsl:if test="count(@Static)=0 or not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">
-            this_EnvObject.<xsl:value-of select="@Name"/> = np.empty((inputReader.getNumRows(),),dtype=<xsl:choose>
+            <xsl:if test="@Use!='Off' and (count(@Static)=0 or not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1'))">
+            #this_EnvObject.<xsl:value-of select="@Name"/> = np.empty((inputReader.getNumRows(),),dtype=<xsl:choose>
                     <xsl:when test="@DTyp='Int' or @DTyp='Lng'">np.int64</xsl:when>
                     <xsl:when test="@DTyp='Dbl'">np.float64</xsl:when>
                     <xsl:when test="@DTyp='Dte' or @DTyp='DTm'">datetime.datetime</xsl:when>
@@ -552,8 +639,10 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                     <xsl:when test="@DTyp='Str' or @DTyp='VLS'">'O'</xsl:when></xsl:choose>)
             </xsl:if>
             </xsl:for-each>
+            #this_EnvObject.resize(inputReader.getNumRows())
             static = this_EnvObject
             tv = this_EnvObject
+            this_EnvObject.this_EnvObject = this_EnvObject
 </xsl:when>
 </xsl:choose>
 
@@ -583,12 +672,14 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                             static.<xsl:value-of select="@Name"/> = Dte_null
                         else:
                             static.<xsl:value-of select="@Name"/> = inputReader.getDate(<xsl:value-of select="position()-1"/>)
+                            static.<xsl:value-of select="@Name"/> = static.<xsl:value-of select="@Name"/>.replace(tzinfo=None)
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
                         if inputReader.isNull(<xsl:value-of select="position()-1"/>):
-                                static.<xsl:value-of select="@Name"/> = DTm_null
+                            static.<xsl:value-of select="@Name"/> = DTm_null
                         else:
-                                static.<xsl:value-of select="@Name"/> = inputReader.getTimestamp(<xsl:value-of select="position()-1"/>)
+                            static.<xsl:value-of select="@Name"/> = inputReader.getTimestamp(<xsl:value-of select="position()-1"/>)
+                            static.<xsl:value-of select="@Name"/> = static.<xsl:value-of select="@Name"/>.replace(tzinfo=None)
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
                         static.<xsl:value-of select="@Name"/> = inputReader.getBool(<xsl:value-of select="position()-1"/>)
@@ -605,6 +696,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                     #} 
                     else:# {
 
+                        tv.push_back(n=1)
                         row_to_output.append(True)
                         row_index_next[rowM1]=row
                         row_index_last.append(rowM1)
@@ -617,31 +709,33 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                 <xsl:for-each select="./Columns/Column[@Use='IO' or @Use='I']">
                 <xsl:if test="count(@Static)=0 or not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:choose>
                     <xsl:when test="@DTyp='Int' or @DTyp='Lng'">
-                    tv[row].<xsl:value-of select="@Name"/> = inputReader.getInt(<xsl:value-of select="position()-1"/>)
+                    tv.<xsl:value-of select="@Name"/>[row] = inputReader.getInt(<xsl:value-of select="position()-1"/>)
                     </xsl:when>
                     <xsl:when test="@DTyp='Dbl'">
-                    tv[row].<xsl:value-of select="@Name"/> = inputReader.getFloat(<xsl:value-of select="position()-1"/>)
+                    tv.<xsl:value-of select="@Name"/>[row] = inputReader.getFloat(<xsl:value-of select="position()-1"/>)
                     </xsl:when>
                     <xsl:when test="@DTyp='Dte'">
                     if inputReader.isNull(<xsl:value-of select="position()-1"/>):
                             tmp_dte = Dte_null
                     else:
-                            tmp_dte  = inputReader.getDate(<xsl:value-of select="position()-1"/>)
-                    tv[row].<xsl:value-of select="@Name"/> = tmp_dte
+                            tmp_dte = inputReader.getDate(<xsl:value-of select="position()-1"/>)
+                            tmp_dte = tmp_dte.replace(tzinfo=None)
+                    tv.<xsl:value-of select="@Name"/>[row] = tmp_dte
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
                     if inputReader.isNull(<xsl:value-of select="position()-1"/>):
                             tmp_dtm = DTm_null
                     else:
                             tmp_dtm  = inputReader.getTimestamp(<xsl:value-of select="position()-1"/>)
-                    tv[row].<xsl:value-of select="@Name"/> = tmp_dtm
+                            tmp_dtm = tmp_dtm.replace(tzinfo=None)
+                    tv.<xsl:value-of select="@Name"/>[row] = tmp_dtm
                     </xsl:when>
                     <xsl:when test="@DTyp='Bln'">
-                    tv[row].<xsl:value-of select="@Name"/> = inputReader.getBool(<xsl:value-of select="position()-1"/>)
+                    tv.<xsl:value-of select="@Name"/>[row] = inputReader.getBool(<xsl:value-of select="position()-1"/>)
                     </xsl:when>
                     <xsl:when test="@DTyp='Str' or @DTyp='VLS'">
                     tmp_vstring  = inputReader.getString(<xsl:value-of select="position()-1"/>)
-                    tv[row].<xsl:value-of select="@Name"/> = tmp_vstring
+                    tv.<xsl:value-of select="@Name"/>[row] = tmp_vstring
                     </xsl:when>
                 </xsl:choose></xsl:if></xsl:for-each>
             </xsl:if>
@@ -664,11 +758,22 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
 
 <xsl:choose>
 <xsl:when test="$NumpyOrObject != 'Object'">
-            ##include "../../src/<xsl:value-of select="$ProjectName"/>_guts.cpp"
             first_row, last_row=<xsl:value-of select="$ProjectName"/>_guts(self.local_parameters, first_row, last_row, row_to_output, row_index_last, row_index_next, static, tv, tv_empty_copy)
 </xsl:when>
 <xsl:when test="$NumpyOrObject = 'Object'">
-            first_row, last_row=<xsl:value-of select="$ProjectName"/>_guts(self.local_parameters, first_row, last_row, row_to_output, row_index_last, row_index_next, this_EnvObject)
+            #first_row, last_row=<xsl:value-of select="$ProjectName"/>_guts(self.local_parameters, first_row, last_row, row_to_output, row_index_last, row_index_next, this_EnvObject)
+            this_EnvObject.local_parameters = self.local_parameters
+            this_EnvObject.first_row = first_row
+            this_EnvObject.last_row = last_row
+            this_EnvObject.row_to_output = row_to_output
+            this_EnvObject.row_index_last = row_index_last
+            this_EnvObject.row_index_next = row_index_next
+            <xsl:value-of select="$ProjectName"/>_guts.<xsl:value-of select="$ProjectName"/>_localop(this_EnvObject)
+            first_row=this_EnvObject.first_row
+            last_row=this_EnvObject.last_row
+            row_to_output=this_EnvObject.row_to_output
+            row_index_last=this_EnvObject.row_index_last
+            row_index_next=this_EnvObject.row_index_next
 </xsl:when>
 </xsl:choose>
 
@@ -683,7 +788,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                 <xsl:if test="translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1'"><xsl:choose>
                     <xsl:when test="@DTyp='Int' or @DTyp='Lng'">
                     try:
-                        if static.<xsl:value-of select="@Name"/> is None:
+                        if static.<xsl:value-of select="@Name"/> is None or math.isnan(static.<xsl:value-of select="@Name"/>) or static.<xsl:value-of select="@Name"/> is vint_null:
                             outputWriter.setNull(<xsl:value-of select="position()-1"/>)
                         else:
                             outputWriter.setInt(<xsl:value-of select="position()-1"/>, static.<xsl:value-of select="@Name"/>)
@@ -692,7 +797,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                     </xsl:when>
                     <xsl:when test="@DTyp='Dbl'">
                     try:
-                        if static.<xsl:value-of select="@Name"/> is None:
+                        if static.<xsl:value-of select="@Name"/> is None or math.isnan(static.<xsl:value-of select="@Name"/>):
                             outputWriter.setNull(<xsl:value-of select="position()-1"/>)
                         else:
                             outputWriter.setFloat(<xsl:value-of select="position()-1"/>, static.<xsl:value-of select="@Name"/>)
@@ -701,27 +806,19 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                     </xsl:when>
                     <xsl:when test="@DTyp='Dte'">
                     try:
-                        if static.<xsl:value-of select="@Name"/> is None or type(static.<xsl:value-of select="@Name"/>) is not datetime.datetime or static.<xsl:value-of select="@Name"/>&lt;=Dte_null:
+                        if IsDTmNULL(static.<xsl:value-of select="@Name"/>):
                             outputWriter.setNull(<xsl:value-of select="position()-1"/>)
                         else:
-                            tmp_str=str(static.<xsl:value-of select="@Name"/>)
-                            if (tmp_str == 'None') or (tmp_str == 'NaT'):
-                                outputWriter.setNull(<xsl:value-of select="position()-1"/>)
-                            else:
-                                outputWriter.setDate(<xsl:value-of select="position()-1"/>, static.<xsl:value-of select="@Name"/>.date())
+                            outputWriter.setDate(<xsl:value-of select="position()-1"/>, static.<xsl:value-of select="@Name"/>.date())
                     except Exception as e:
                         raise e
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
                     try:
-                        if static.<xsl:value-of select="@Name"/> is None or type(static.<xsl:value-of select="@Name"/>) is not datetime.datetime or static.<xsl:value-of select="@Name"/>&lt;=DTm_null:
+                        if IsDTmNULL(static.<xsl:value-of select="@Name"/>):
                             outputWriter.setNull(<xsl:value-of select="position()-1"/>)
                         else:
-                            tmp_str=str(static.<xsl:value-of select="@Name"/>)
-                            if (tmp_str == 'None') or (tmp_str == 'NaT'):
-                                outputWriter.setNull(<xsl:value-of select="position()-1"/>)
-                            else:
-                                outputWriter.setTimestamp(<xsl:value-of select="position()-1"/>, static.<xsl:value-of select="@Name"/>)
+                            outputWriter.setTimestamp(<xsl:value-of select="position()-1"/>, static.<xsl:value-of select="@Name"/>)
                     except Exception as e:
                         raise e
                     </xsl:when>
@@ -738,8 +835,11 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                     try:
                         if static.<xsl:value-of select="@Name"/> is None:
                             outputWriter.setNull(<xsl:value-of select="position()-1"/>)
+                        rv = str(static.<xsl:value-of select="@Name"/>)
+                        if len(rv)==0:
+                            outputWriter.setNull(<xsl:value-of select="position()-1"/>)
                         else:
-                            outputWriter.setString(<xsl:value-of select="position()-1"/>, static.<xsl:value-of select="@Name"/>)
+                            outputWriter.setString(<xsl:value-of select="position()-1"/>, rv)
                     except Exception as e:
                         raise e
                     </xsl:when>
@@ -747,7 +847,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                 <xsl:if test="count(@Static)=0 or not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:choose>
                     <xsl:when test="@DTyp='Int' or @DTyp='Lng'">
                     try:
-                        if tv.<xsl:value-of select="@Name"/>[row] is None tv.<xsl:value-of select="@Name"/>[row] == vint_null:
+                        if tv.<xsl:value-of select="@Name"/>[row] is None or math.isnan(tv.<xsl:value-of select="@Name"/>[row]) or tv.<xsl:value-of select="@Name"/>[row] == vint_null:
                             outputWriter.setNull(<xsl:value-of select="position()-1"/>)
                         else:
                             outputWriter.setInt(<xsl:value-of select="position()-1"/>, tv.<xsl:value-of select="@Name"/>[row])
@@ -765,7 +865,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                     </xsl:when>
                     <xsl:when test="@DTyp='Dte'">
                     try:
-                        if tv.<xsl:value-of select="@Name"/>[row] is None or type(tv.<xsl:value-of select="@Name"/>[row]) is not datetime.datetime or tv.<xsl:value-of select="@Name"/>[row]&lt;=Dte_null:
+                        if IsDTmNULL(tv.<xsl:value-of select="@Name"/>[row]):
                             outputWriter.setNull(<xsl:value-of select="position()-1"/>)
                         else:
                             tmp_str=str(tv.<xsl:value-of select="@Name"/>[row])
@@ -778,7 +878,7 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                     </xsl:when>
                     <xsl:when test="@DTyp='DTm'">
                     try:
-                        if tv.<xsl:value-of select="@Name"/>[row] is None or tv.<xsl:value-of select="@Name"/>[row]&lt;=DTm_null or type(tv.<xsl:value-of select="@Name"/>[row]) is not datetime.datetime:
+                        if IsDTmNULL(tv.<xsl:value-of select="@Name"/>[row]):
                             outputWriter.setNull(<xsl:value-of select="position()-1"/>)
                         else:
                             tmp_str=str(tv.<xsl:value-of select="@Name"/>[row])
@@ -800,10 +900,13 @@ class <xsl:value-of select="$ProjectName"/>(vertica_sdk.TransformFunction):
                     </xsl:when>
                     <xsl:when test="@DTyp='Str' or @DTyp='VLS'">
                     try:
-                        if tv.<xsl:value-of select="@Name"/>[row] is None or len(tv.<xsl:value-of select="@Name"/>[row])==0:
+                        if tv.<xsl:value-of select="@Name"/>[row] is None:
+                            outputWriter.setNull(<xsl:value-of select="position()-1"/>)
+                        rv = str(tv.<xsl:value-of select="@Name"/>[row])
+                        if len(rv) == 0:
                             outputWriter.setNull(<xsl:value-of select="position()-1"/>)
                         else:
-                            outputWriter.setString(<xsl:value-of select="position()-1"/>, tv.<xsl:value-of select="@Name"/>[row])
+                            outputWriter.setString(<xsl:value-of select="position()-1"/>, rv)
                     except Exception as e:
                         raise e
                     </xsl:when>

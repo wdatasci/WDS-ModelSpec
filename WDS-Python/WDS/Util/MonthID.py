@@ -44,11 +44,12 @@ DateFormatRE4_2=re.compile("([jJfFmMaAsSoOnNdD][aAeEpPuUeEcCoO][a-zA-Z]?)\s+([0-
 
 __months_short=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
 
-UnixEpoch=datetime.datetime(1970,1,1,0,0,0)
+UnixEpoch=datetime.datetime(1970,1,1,0,0,0,0,tzinfo=None)
 
 DateEpoch=datetime.date(1970,1,1)
 DateEpochExcel=datetime.date(1899,12,30) #one extra day since Excel counts 1900 as a leap year
-DateTimeEpochExcel=datetime.datetime(1899,12,30) #one extra day since Excel counts 1900 as a leap year
+DateTimeEpochExcel=datetime.datetime(1899,12,30)
+DateTimeEpochExcel=DateTimeEpochExcel.replace(tzinfo=None) #one extra day since Excel counts 1900 as a leap year
 DateResolution=1 # in days
 DateTimeResolution=1 # in seconds
 DateUsefulMin=datetime.date(1940,1,1)
@@ -56,10 +57,14 @@ DateUsefulMax=datetime.date(2100,1,1)
 
 Y2KThreshold=70 # for flipping yy years to 1900+yy or 2000+yy
 
-def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
+def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True,zap_tz=True):
     if tv is None: 
         tv=type(v)
-    if tv is datetime.datetime: return v
+    if tv is datetime.datetime: 
+        if zap_tz:
+            rv=v.replace(tzinfo=None)
+        else:
+            return v
     try:
         if tv in (int,float):
             if isDateEpochExcel:
@@ -70,12 +75,16 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                 vt=vt-m/60.0
                 s=int(vt*60)
                 lv=DateTimeEpochExcel+datetime.timedelta(days=int(v),hours=h,minutes=m,seconds=s)
+                if zap_tz:
+                    lv=lv.replace(tzinfo=None)
                 if (lv.year>2040) and toWARN:
                     print('WARNING, in CleanDate, with isDateEpochExcel, converted int/float to a year>2040, might not be Excel Date')
                 return lv
             # check unix time
             try:
                 lv=datetime.fromtimestamp(v,tz=timezone.utc)
+                if zap_tz:
+                    lv=lv.replace(tzinfo=None)
                 if lv.year<1900 or lv.year>2100:
                     raise(Exception('Bad date '+str(v)))
                 return lv
@@ -84,42 +93,50 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                 pass
 
             # if value is comming in as YYYYMM or YYYYMMDD
+            rv = None
             if 190000<v and v<210000:
                 y=int(v/100)
                 m=int(v-y*100)
                 if day>0:
-                    return datetime.datetime(y,m,day,0,0,0)
+                    rv = datetime.datetime(y,m,day,0,0,0,0,tzinfo=None)
                 else:
                     if m<12:
-                        return datetime.datetime(y,m+1,1,0,0,0)+datetime.timedelta(day)
+                        rv = datetime.datetime(y,m+1,1,0,0,0,0,tzinfo=None)+datetime.timedelta(day)
                     else:
-                        return datetime.date(y+1,1,1,0,0,0)+datetime.timedelta(day)
+                        rv = datetime.date(y+1,1,1,0,0,0,0,tzinfo=None)+datetime.timedelta(day)
             elif 19000000<v and v<21000000:
                 y=int(v/10000)
                 m=int((v-y*10000)/100)
                 m=int(v-y*10000-m*100)
-                return datetime.datetime(y+1,1,1)+datetime.timedelta(day)
+                rv = datetime.datetime(y+1,1,1,0,tzinfo=None)+datetime.timedelta(day)
             elif -1200<v and v<1213:  # a MonthID
                 y=math.floor((v-1)/12)
                 m=int(v-12*y)
                 y+=2000
                 if day>0:
-                    lv=datetime.datetime(y,m,day,0,0,0)
+                    rv=datetime.datetime(y,m,day,0,0,0,0,tzinfo=None)
                 else:
                     if m<12:
-                        lv=datetime.datetime(y,m+1,1,0,0,0)+datetime.timedelta(day)
+                        rv=datetime.datetime(y,m+1,1,0,0,0,0,tzinfo=None)+datetime.timedelta(day)
                     else:
-                        lv=datetime.date(y+1,1,1,0,0,0)+datetime.timedelta(day)
+                        rv=datetime.date(y+1,1,1,0,0,0,0,tzinfo=None)+datetime.timedelta(day)
                 if toWARN: print('Friendly Warning, assumed '+str(v)+' was a MonthID in CleanDate')
-                return lv
+            if rv:
+                if zap_tz:
+                    rv=rv.repace(tzinfo=None)
+                return rv
             raise Exception("???? in cleandate")
         elif tv in (str,bytes):
             lv=v if tv is str else v.decode()
             lv=lv.strip()
             try:
                 rv=dateutil.parser.parse(lv)
-                if type(rv) is datetime.datetime: return rv
-                if type(rv) is datetime.date: return datetime.datetime(rv.year,rv.month,rv.day)
+                #if type(rv) is datetime.datetime: return rv
+                if type(rv) is datetime.date: 
+                    rv = datetime.datetime(rv.year,rv.month,rv.day)
+                if zap_tz:
+                    rv = rv.replace(tzinfo=None)
+                return rv
             except Exception as e:
                 raise(e)
                 pass
@@ -134,46 +151,66 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                 if y<Y2KThreshold:
                     y+=2000
                 if lprs==3:
-                    return datetime.dateime(y,m,d)
+                    rv = datetime.dateime(y,m,d)
+                    if zap_tz: rv=rv.replace(tzinfo=None)
+                    return rv
                 hh=int(prs[3])
                 if lprs==4:
-                    return datetime.dateime(y,m,d,hh)
+                    rv = datetime.dateime(y,m,d,hh)
+                    if zap_tz: rv=rv.replace(tzinfo=None)
+                    return rv
                 if ('pm' in prs) or ('p.m.' in prs):
                     hh+=12
                     if lprs==5:
-                        return datetime.dateime(y,m,d,hh)
+                        rv = datetime.dateime(y,m,d,hh)
+                        if zap_tz: rv=rv.replace(tzinfo=None)
+                        return rv
                 try:
                     mm=int(prs[4])
                 except:
                     if prs[4] in ('am','a.m.'):
-                        return datetime.dateime(y,m,d,hh)
+                        rv = datetime.dateime(y,m,d,hh)
+                        if zap_tz: rv=rv.replace(tzinfo=None)
+                        return rv
                     else:
                         raise Exception("cannot parse date[time] out of "+v)
                 if lprs==5:
-                    return datetime.datetime(y,m,d,hh,mm)
+                    rv = datetime.datetime(y,m,d,hh,mm,0,0,tzinfo=None)
+                    if zap_tz: rv=rv.replace(tzinfo=None)
+                    return rv
                 try:
                     ss=int(prs[5])
                 except:
                     if prs[5] in ('am','a.m.','pm','p.m.'):
-                        return datetime.dateime(y,m,d,hh,mm)
+                        rv = datetime.dateime(y,m,d,hh,mm,0,0,tzinfo=None)
+                        if zap_tz: rv=rv.replace(tzinfo=None)
+                        return rv
                     else:
                         if prs[5][0]=='z':
                             ss=0
                             tz=prs[5]
-                            return datetime.dateime(y,m,d,hh,mm,s,0,tz)
+                            rv = datetime.dateime(y,m,d,hh,mm,s,0,tz)
+                            if zap_tz: rv=rv.replace(tzinfo=None)
+                            return rv
                         else:
                             raise Exception("cannot parse date[time] out of "+v)
 
                 if lprs==6:
-                    return datetime.datetime(y,m,d,hh,mm,ss)
+                    rv = datetime.datetime(y,m,d,hh,mm,ss,0,tzinfo=None)
+                    if zap_tz: rv=rv.replace(tzinfo=None)
+                    return rv
                 if prs[6][0]=='.':
                     ms=double('0'+prs[6][0])
                 else:
                     ms=0
                 if prs[-1][0]=='z':
                     tz=prs[-1][0]
-                    return datetime.datetime(y,m,d,hh,mm,ss,ms,tz)
-                return datetime.datetime(y,m,d,hh,mm,ss,ms)
+                    rv = datetime.datetime(y,m,d,hh,mm,ss,ms,tz)
+                    if zap_tz: rv=rv.replace(tzinfo=None)
+                    return rv
+                rv = datetime.datetime(y,m,d,hh,mm,ss,ms,tzinfo=None)
+                if zap_tz: rv=rv.replace(tzinfo=None)
+                return rv
 
             try:
                 prs=DateFormatRE3.findall(lv)
@@ -181,14 +218,14 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                 raise Exception('Error in CleanDateTime, '+str(e)+', '+str(v))
             if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]) and (prs[0][7]==prs[0][9]): 
                 try:
-                    lv=datetime.datetime(int(prs[0][0]),int(prs[0][2]),int(prs[0][4]),int(prs[0][6]),int(prs[0][8]),inv(prs[0][10]))
+                    lv=datetime.datetime(int(prs[0][0]),int(prs[0][2]),int(prs[0][4]),int(prs[0][6]),int(prs[0][8]),inv(prs[0][10]),0,tzinfo=None)
                 except:
                     lv=None
             else:
                 prs=DateFormatRE3_2.findall(lv)
                 if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]) and (prs[0][7]==prs[0][9]): 
                     try:
-                        lv=datetime.datetime(int(prs[0][4]),int(prs[0][0]),int(prs[0][2]),int(prs[0][6]),int(prs[0][8]),inv(prs[0][10]))
+                        lv=datetime.datetime(int(prs[0][4]),int(prs[0][0]),int(prs[0][2]),int(prs[0][6]),int(prs[0][8]),inv(prs[0][10]),0,tzinfo=None)
                     except:
                         lv=None
                 else:
@@ -196,7 +233,7 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                     prs=f.findall(DateFormatRE1)
                     if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]): 
                         try:
-                            lv=datetime.datetime(int(prs[0][0]),int(prs[0][2]),int(prs[0][4]),0,0,0)
+                            lv=datetime.datetime(int(prs[0][0]),int(prs[0][2]),int(prs[0][4]),0,0,0,0,tzinfo=None)
                             found=True
                         except Exception as e:
                             lv=None
@@ -204,12 +241,17 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                         prs=f.findall(DateFormatRE2)
                         if (len(prs)==1) and (len(prs[0])>=5) and (prs[0][1]==prs[0][3]): 
                             try:
-                                lv=datetime.datetime(int(prs[4][0]),int(prs[0][0]),int(prs[0][2]),0,0,0)
+                                lv=datetime.datetime(int(prs[4][0]),int(prs[0][0]),int(prs[0][2]),0,0,0,0,tzinfo=None)
                                 found=True
                             except Exception as e:
                                 lv=None
                     if not found:
                         lv=None
+            if lv is None:
+                return None
+            if zap_tz:
+                lv=lv.replace(tzinfo=None)
+            return lv
     except Exception as e:
         raise Exception('Error in CleanDateTime: '+e.args[0]+'\n'+str(traceback.format_tb(e.__traceback__)))
     except:
@@ -353,23 +395,20 @@ def MonthID2Date(v,day=1):
 
 def MonthID2DateTime(v,day=1):
     try:
-        tv=type(v)
-        if tv not in (int, float):
-            lv=int(v)
-        else:
-            lv=v
-        y=math.floor((lv-1)/12)
-        m=int(lv-12*y)
-        y+=2000
+        lv=int(v)
+        m = int( ( (lv-1) % 12 ) +1 )
+        y = int( (lv -m)/12 +2000 )
         if day>0:
-            return datetime.datetime(y,m,day)
+            rv = datetime.datetime(y,m,day)
         else:
             if m<12:
-                return datetime.datetime(y,m+1,1)+datetime.timedelta(day)
+                rv = datetime.datetime(y,m+1,1)+datetime.timedelta(day)
             else:
-                return datetime.datetime(y+1,1,1)+datetime.timedelta(day)
-    except:
-        raise Exception('Cannot convert '+str(v)+' (with day='+str(day)+') in MonthID2DateTime')
+                rv = datetime.datetime(y+1,1,1)+datetime.timedelta(day)
+        rv=rv.replace(tzinfo=None)
+        return rv
+    except Exception as e:
+        raise Exception('Cannot convert '+str(v)+' (with day='+str(day)+') in MonthID2DateTime,' + str(e))
 
 
 #the USFederalHolidayList was generated by the formula based on 

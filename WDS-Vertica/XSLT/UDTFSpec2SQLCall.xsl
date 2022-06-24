@@ -90,9 +90,53 @@ segmented by hash(<xsl:value-of select="$BlockID"/>) all nodes
 
 ;
 
+-- Example call for <xsl:value-of select="$ProjectName"/>
+
+/*
+select 'this_EnvObject = EnvObject().From('<xsl:for-each select="./Columns/Column[@Use='IO' or @Use='I']"><xsl:text>
+        </xsl:text><xsl:if test="position()>1">|| ', ' </xsl:if>
+        <xsl:choose><xsl:when test="count(@Static)>0">|| '<xsl:value-of select="@Name"/>=' || </xsl:when><xsl:otherwise>|| '<xsl:value-of select="@Name"/>=[' ||</xsl:otherwise></xsl:choose>
+        <xsl:choose>
+            <xsl:when test="@DTyp='Int' or @DTyp='Lng'">ifNotNullIntAsVarChar(<xsl:value-of select="@Name"/>, 'NULL'::varchar)</xsl:when>
+            <xsl:when test="@DTyp='Dbl'">ifNotNullDblAsVarChar(<xsl:value-of select="@Name"/> , 'NaN'::varchar)</xsl:when>
+            <xsl:when test="@DTyp='Dte'">'datetime.date.fromisoformat(' || ifNotNullDteAsVarChar(<xsl:value-of select="@Name"/>::date , '1900-01-01'::varchar) || ')'</xsl:when>
+            <xsl:when test="@DTyp='DTm'">'datetime.datetime.fromisoformat(' || ifNotNullDTmAsVarChar(<xsl:value-of select="@Name"/>::timestamp , '1900-01-01 00:00:00'::varchar) || ')'</xsl:when>
+            <xsl:when test="@DTyp='Bln'">ifNotNullBlnAsVarChar(<xsl:value-of select="@Name"/> , 'NaB'::varchar)</xsl:when>
+            <xsl:when test="@DTyp='Str' or @DTyp='VLS'">'"' || ifNotNullVarCharAsVarChar(trim(<xsl:value-of select="@Name"/>)::varchar, ''::varchar) ||'"'</xsl:when>
+            </xsl:choose>
+            <xsl:choose><xsl:when test="count(@Static)>0"></xsl:when><xsl:otherwise>|| ']'</xsl:otherwise></xsl:choose>
+            </xsl:for-each>|| ') '
+from (
+   <xsl:value-of select="Info/SQL/Vertica/TestSourceBody"/>
+
+   ) a
 
 
-    </xsl:template>
+-----other wrap up code-----
+a order by <xsl:value-of select="$BlockID"/>, <xsl:value-of select="$RowID"/>
+;
+
+<xsl:value-of select="$ProjectName"/>_local_env = EnvObject.From(<xsl:for-each select="./Columns/Column[@Use='IO' or @Use='I']"><xsl:text>
+        </xsl:text><xsl:if test="position()>1">, </xsl:if><xsl:value-of select="@Name"/> = <xsl:choose>
+                    <xsl:when test="@DTyp='Int' or @DTyp='Lng'">Int_null</xsl:when>
+                    <xsl:when test="@DTyp='Dbl'">Dbl_null</xsl:when>
+                    <xsl:when test="@DTyp='Dte'">Dte_null</xsl:when>
+                    <xsl:when test="@DTyp='DTm'">DTm_null</xsl:when>
+                    <xsl:when test="@DTyp='Bln'">Bln_null</xsl:when>
+                    <xsl:when test="@DTyp='Str'">""</xsl:when>
+                    <xsl:when test="@DTyp='VLS'">""</xsl:when>
+            </xsl:choose></xsl:for-each>
+<xsl:if test="count(./Parameters/Column)>0">
+    using parameters <xsl:for-each select="./Parameters/Column"><xsl:text>
+        </xsl:text><xsl:if test="position()>1">, </xsl:if><xsl:choose>
+        <xsl:when test="@DTyp='Int' or @DTyp='Lng' or @DTyp='Dbl' or @DTyp='Bln'"><xsl:value-of select="@Name"/>=(<xsl:value-of select="@Default"/>)</xsl:when>
+        <xsl:when test="@DTyp='Str' or @DTyp='VLS'"><xsl:value-of select="@Name"/>="<xsl:value-of select="@Default"/>"</xsl:when></xsl:choose>
+</xsl:for-each>
+</xsl:if>
+)
+*/
+
+</xsl:template>
 
 <xsl:template name="UDTF_SQLInstall">
         <!--Pull local parameters BEGIN-->
