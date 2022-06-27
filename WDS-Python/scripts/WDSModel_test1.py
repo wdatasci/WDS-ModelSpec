@@ -15,7 +15,7 @@ import datetime
 from WDS.Wranglers.gXMLParsers import gWDSModel
 from WDS.Wranglers.gXMLParsers import gWDSModel_literal
 
-from WDS.Comp.WDSModelPrep import WDSModel
+from WDS.Comp.WDSModelPrep import *
 
 
 from WDS.util.history import *

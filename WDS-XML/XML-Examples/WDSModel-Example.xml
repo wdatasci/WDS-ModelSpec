@@ -35,16 +35,16 @@ Author: Christian Wypasek (CJW)
                 <ModelDirectives>
                     <Annotation>
                         CompRiskSurv models always include:
-                        an applicability score, one value per subject
-                        a static score, one value per subject and each response
-                        a time varying conal ordering score which provides robust scoers across age 
-                        and calendar effects, one value per subject, each response, 
-                        and each (age, time) in requested time frame
-                        a time varying score which provides a robust score across just age effects, 
-                        one value per subject, each response, and each (age, time) in 
-                        requested time frame
-                        a baseline score, one value per
-                        subject, and age in requested time frame
+                        -  an applicability score, one value per subject
+                        -  a static score, one value per subject and each response
+                        -  a time varying conal ordering score which provides robust scoers across age 
+                        -    and calendar effects, one value per subject, each response, 
+                        -    and each (age, time) in requested time frame
+                        -  a time varying score which provides a robust score across just age effects, 
+                        -    one value per subject, each response, and each (age, time) in 
+                        -    requested time frame
+                        -  a baseline score, one value per
+                        -    subject, and age in requested time frame
                     </Annotation>
                     <Type>CompRiskSurv</Type>
                     <Responses>
@@ -63,28 +63,21 @@ Author: Christian Wypasek (CJW)
                     <Variables>
                         <Variable Name="FICO" Handle="X">
                             <Treatment>Hats</Treatment>
-                            <CleanLimits>
-                                <LeftLimit>150</LeftLimit>
-                                <RightLimit>950</RightLimit>
-                            </CleanLimits>
-                            <CriticalValues>
-                                <CriticalValue>600</CriticalValue>
-                                <CriticalValue>650</CriticalValue>
-                                <CriticalValue>700</CriticalValue>
-                            </CriticalValues>
+                            <CleanLimitList>150 950</CleanLimitList>
+                            <CriticalValueList>600 650 700</CriticalValueList>
                             <CoefficientSets>
-                                <CoefficientSet Response="EC1">
+                                <Coefficients Response="EC2">
+                                    <Coefficient Position="0"> 0 </Coefficient>
+                                    <Coefficient Position="1"> 12 </Coefficient>
+                                    <Coefficient Position="2"> 0 </Coefficient>
+                                    <Coefficient Position="3"> 0 </Coefficient>
+                                </Coefficients>
+                                <Coefficients Response="EC1">
                                     <Coefficient Position="0"> 0 </Coefficient>
                                     <Coefficient Position="1"> 0 </Coefficient>
                                     <Coefficient Position="2"> 0 </Coefficient>
                                     <Coefficient Position="3"> 0 </Coefficient>
-                                </CoefficientSet>
-                                <CoefficientSet Response="EC2">
-                                    <Coefficient Position="0"> 0 </Coefficient>
-                                    <Coefficient Position="1"> 0 </Coefficient>
-                                    <Coefficient Position="2"> 0 </Coefficient>
-                                    <Coefficient Position="3"> 0 </Coefficient>
-                                </CoefficientSet>
+                                </Coefficients>
                             </CoefficientSets>
                         </Variable>
                     </Variables>

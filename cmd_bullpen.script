@@ -1,8 +1,19 @@
-#!/usr/bin/env tcsh
+#!/usr/bin/tcsh -X
 
 # this is a bullpen of commands to build components or generated results
 #
 #
+
+set v=`python -V | sed -e "s/\..\+//"`
+echo "Python Version:"
+echo $v
+
+if ( "$v" != "Python 3" ) then
+    set python=python3
+else
+    set python=python
+endif
+
 
 
 #Python 
@@ -10,10 +21,14 @@
     #Cythonizing Artificials
 
     cd WDS-Python/WDS/Comp
-        set NUMPY_LOC="`python -c 'import numpy; print(numpy.__file__)'`"
-        setenv CPPFLAGS "${CPPFLAGS} -I${NUMPY_LOC:h}/core/include"
-        python3 setup.py build_ext --inplace
-        python3 setup.py clean --all
+        set NUMPY_LOC="`${python} -c 'import numpy; print(numpy.__file__)'`"
+        if ( $?CPPLFAGS ) then
+            setenv CPPFLAGS "${CPPFLAGS} -I${NUMPY_LOC:h}/core/include"
+        else
+            setenv CPPFLAGS "-I${NUMPY_LOC:h}/core/include"
+        endif
+        ${python} setup.py build_ext --inplace
+        ${python} setup.py clean --all
         /usr/bin/rm ArtificialsCythonWrapped.c
         /usr/bin/rm ArtificialsCythonWrapped.h
     cd -
@@ -23,7 +38,7 @@
 
 
     #Test of bindings
-    python3 WDS-Python/scripts/WDSModel_test1.py -x WDS-XML/XML-Examples/WDSModel-Example.xml
+    ${python} WDS-Python/scripts/WDSModel_test1.py -x WDS-XML/XML-Examples/WDSModel-Example.xml
 
 
 

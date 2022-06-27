@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+
 <!-- Copyright 2019, 2020, 2021, 2022, Wypasek Data Science, Inc. 
 
 Author: Christian Wypasek (CJW)
@@ -464,7 +465,13 @@ for details
     </xs:complexType>
 </xs:element>
 
-<xs:element name="Response" type="xs:string"/>
+<xs:element name="Response">
+    <xs:simpleContent>
+        <xs:extension base="xs:string">
+            <xs:attribute name="Position" type="xs:string"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
 
 <xs:element name="Responses">
     <xs:complexType>
@@ -480,8 +487,8 @@ for details
             <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element name="Type" type="xs:string" minOccurs="0" />
             <xs:choice>
-                <xs:element ref="Response" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="Responses" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Response" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Responses" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
         </xs:all>
     </xs:complexType>
@@ -554,16 +561,160 @@ for details
     </xs:complexType>
 </xs:element>
 
-<xs:element name="CleanLimit" type="Dbl"/>
-<xs:element name="CleanLimitList" type="DblList"/>
-<xs:element name="CleanLimitSet" type="DblList"/>
+<xs:element name="v">
+    <xs:simpleContent>
+        <xs:extension base="Dbl">
+            <xs:attribute name="Position" type="xs:int"/>
+            <xs:attribute name="i" type="xs:int"/>
+            <xs:attribute name="j" type="xs:int"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="w">
+    <xs:simpleContent>
+        <xs:extension base="Any">
+            <xs:attribute name="Position" type="xs:int"/>
+            <xs:attribute name="i" type="xs:int"/>
+            <xs:attribute name="j" type="xs:int"/>
+            <xs:attribute name="dlm" type="xs:string"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="RowDbl">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="v" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="length" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="RowStr">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="w" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="length" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="ColumnDbl">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="v" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="length" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="ColumnStr">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="w" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="length" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="ElemMD">
+    <xs:complexType>
+        <xs:attribute name="Name" type="xs:string"/>
+        <xs:attribute name="Position" type="xs:int"/>
+        <xs:attribute name="i" type="xs:int"/>
+        <xs:attribute name="j" type="xs:int"/>
+        <xs:attribute name="VariableHandle" type="xs:string"/>
+        <xs:attribute name="Response" type="xs:string"/>
+        <xs:attribute name="Index" type="xs:string"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="MatrixRowMD">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="ElemMD" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="MatrixColMD">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="ElemMD" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="MatrixDbl">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="MatrixRowMD" minOccurs="0" maxOccurs="1"/>
+            <xs:element ref="MatrixColMD" minOccurs="0" maxOccurs="1"/>
+            <xs:choice>
+                <xs:element ref="RowDbl" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="ColumnDbl" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="RowMD_eq_ColMD" type="xs:int"/>
+        <xs:attribute name="nrows" type="xs:int"/>
+        <xs:attribute name="ncols" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="MatrixStr">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="MatrixRowMD" minOccurs="0" maxOccurs="1"/>
+            <xs:element ref="MatrixColMD" minOccurs="0" maxOccurs="1"/>
+            <xs:choice>
+                <xs:element ref="RowStr" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="ColumnStr" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="RowMD_eq_ColMD" type="xs:int"/>
+        <xs:attribute name="nrows" type="xs:int"/>
+        <xs:attribute name="ncols" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="CleanLimit">
+    <xs:simpleContent>
+        <xs:extension base="Dbl">
+            <xs:attribute name="Position" type="xs:string"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="LeftLimit">
+    <xs:simpleContent>
+        <xs:extension base="Dbl">
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="RightLimit">
+    <xs:simpleContent>
+        <xs:extension base="Dbl">
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="CleanLimitList">
+    <xs:simpleContent>
+        <xs:extension base="DblList">
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
 <xs:element name="CleanLimits" minOccurs="0" maxOccurs="unbounded">
     <xs:complexType>
         <xs:choice>
+            <xs:element ref="v" minOccurs="0" maxOccurs="2"/>
             <xs:element ref="CleanLimit" minOccurs="0" maxOccurs="2"/>
             <xs:sequence>
-                <xs:element name="LeftLimit" type="Dbl" minOccurs="0" maxOccurs="1"/>
-                <xs:element name="RightLimit" type="Dbl" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="LeftLimit" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="RightLimit" minOccurs="0" maxOccurs="1"/>
             </xs:sequence>
         </xs:choice>
     </xs:complexType>
@@ -584,23 +735,33 @@ for details
         </xs:extension>
     </xs:simpleContent>
 </xs:element>
+
 <xs:element name="CriticalValueList" type="DblList"/>
+
 <xs:element name="CriticalValues">
     <xs:complexType>
-        <xs:element ref="CriticalValue" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:choice>
+            <xs:element ref="v" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="CriticalValue" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:choice>
     </xs:complexType>
 </xs:element>
 
 <xs:element name="CriticalWord">
     <xs:complexType mixed="true">
-        <xs:simpleContent>
-            <xs:extension base="xs:string">
-                <xs:attribute name="Dlm" type="xs:string"/>
-                <xs:attribute name="Position" type="Int"/>
-            </xs:extension>
-        </xs:simpleContent>
+        <xs:sequence>
+            <xs:choice>
+                <xs:element ref="w" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:simpleContent>
+                    <xs:extension base="xs:string"/>
+                </xs:simpleContent>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="Dlm" type="xs:string"/>
+        <xs:attribute name="Position" type="Int"/>
     </xs:complexType>
 </xs:element>
+
 <xs:element name="CriticalWordList">
     <xs:complexType mixed="true">
         <xs:simpleContent>
@@ -610,6 +771,11 @@ for details
                 <xs:attribute name="Position" type="Int"/>
             </xs:extension>
         </xs:simpleContent>
+    </xs:complexType>
+</xs:element>
+<xs:element name="CriticalWords">
+    <xs:complexType>
+        <xs:element ref="CriticalWord" minOccurs="0" maxOccurs="unbounded"/>
     </xs:complexType>
 </xs:element>
 <xs:element name="CriticalWordSet">
@@ -634,9 +800,20 @@ for details
         </xs:extension>
     </xs:simpleContent>
 </xs:element>
-<xs:element name="CoefficientSet">
+
+<xs:element name="Coefficients">
     <xs:complexType>
         <xs:element ref="Coefficient" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:complexType>
+    <xs:attribute name="Response"/>
+</xs:element>
+
+<xs:element name="CoefficientSet">
+    <xs:complexType>
+        <xs:choice>
+            <xs:element ref="CoefficientList" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Coefficients" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:choice>
     </xs:complexType>
     <xs:attribute name="Response"/>
 </xs:element>
@@ -644,7 +821,7 @@ for details
 <xs:element name="CoefficientSets">
     <xs:complexType>
         <xs:choice>
-            <xs:element ref="CoefficientList" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Coefficients" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element ref="CoefficientSet" minOccurs="0" maxOccurs="unbounded"/>
         </xs:choice>
         <xs:attribute name="Use"/>
@@ -669,28 +846,36 @@ for details
                 <xs:element ref="Transformations" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
             <xs:choice>
-                <xs:element name="CleanLimits" minOccurs="0" maxOccurs="1"/>
-                <xs:element name="CleanLimitList" minOccurs="0" maxOccurs="1"/>
-                <xs:element name="CleanLimitSet" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="CleanLimit" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:sequence>
+                    <xs:element ref="LeftLimit" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="RightLimit" minOccurs="0" maxOccurs="1"/>
+                </xs:sequence>
+                <xs:element ref="CleanLimits" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="CleanLimitList" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
             <xs:choice>
                 <xs:choice>
-                    <xs:element name="CriticalValues" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="CriticalValuesList" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="CriticalValuesSet" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="CriticalValue" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element ref="CriticalValues" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="CriticalValuesList" minOccurs="0" maxOccurs="1"/>
                 </xs:choice>
                 <xs:choice>
-                    <xs:element name="CriticalWord" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="CriticalWordList" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="CriticalWordSet" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="CriticalWord" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element ref="CriticalWords" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="CriticalWordList" minOccurs="0" maxOccurs="1"/>
                 </xs:choice>
             </xs:choice>
             <xs:choice>
                 <xs:element ref="DropIndex" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="DropIndexs" minOccurs="0" maxOccurs="1"/>
                 <xs:element ref="DropIndexList" minOccurs="0" maxOccurs="1"/>
                 <xs:element ref="DropIndices" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
-            <xs:element name="CoefficientSets" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:choice>
+                <xs:element ref="CoefficientSet" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="CoefficientSets" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
         </xs:sequence>
         <xs:attribute name="Name" type="xs:string" />
         <xs:attribute name="Handle" type="xs:string" />
