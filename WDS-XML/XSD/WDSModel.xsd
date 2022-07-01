@@ -722,11 +722,23 @@ for details
 
 <xs:element name="DropIndex" type="Int"/>
 <xs:element name="DropIndexList" type="IntList"/>
+<xs:element name="DropIndexs">
+    <xs:complexType>
+        <xs:element ref="DropIndex" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:complexType>
+</xs:element>
 <xs:element name="DropIndices">
     <xs:complexType>
         <xs:element ref="DropIndex" minOccurs="0" maxOccurs="unbounded"/>
     </xs:complexType>
 </xs:element>
+<xs:element name="DropIndexes">
+    <xs:complexType>
+        <xs:element ref="DropIndex" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:complexType>
+</xs:element>
+
+
 
 <xs:element name="CriticalValue">
     <xs:simpleContent>
@@ -808,23 +820,12 @@ for details
     <xs:attribute name="Response"/>
 </xs:element>
 
-<xs:element name="CoefficientSet">
+<xs:element name="CoefficientsSet">
     <xs:complexType>
         <xs:choice>
             <xs:element ref="CoefficientList" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element ref="Coefficients" minOccurs="0" maxOccurs="unbounded"/>
         </xs:choice>
-    </xs:complexType>
-    <xs:attribute name="Response"/>
-</xs:element>
-
-<xs:element name="CoefficientSets">
-    <xs:complexType>
-        <xs:choice>
-            <xs:element ref="Coefficients" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element ref="CoefficientSet" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:choice>
-        <xs:attribute name="Use"/>
     </xs:complexType>
 </xs:element>
 
@@ -858,7 +859,7 @@ for details
                 <xs:choice>
                     <xs:element ref="CriticalValue" minOccurs="0" maxOccurs="unbounded"/>
                     <xs:element ref="CriticalValues" minOccurs="0" maxOccurs="1"/>
-                    <xs:element ref="CriticalValuesList" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="CriticalValueList" minOccurs="0" maxOccurs="1"/>
                 </xs:choice>
                 <xs:choice>
                     <xs:element ref="CriticalWord" minOccurs="0" maxOccurs="unbounded"/>
@@ -868,13 +869,17 @@ for details
             </xs:choice>
             <xs:choice>
                 <xs:element ref="DropIndex" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="DropIndexs" minOccurs="0" maxOccurs="1"/>
+                <xs:choice>
+                    <xs:element ref="DropIndexs" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="DropIndices" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="DropIndexes" minOccurs="0" maxOccurs="1"/>
+                </xs:choice>
                 <xs:element ref="DropIndexList" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="DropIndices" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
             <xs:choice>
-                <xs:element ref="CoefficientSet" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="CoefficientSets" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="Coefficients" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="CoefficientList" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="CoefficientsSet" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
         </xs:sequence>
         <xs:attribute name="Name" type="xs:string" />

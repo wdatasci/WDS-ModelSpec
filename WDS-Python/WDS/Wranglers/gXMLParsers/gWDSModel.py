@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Generated Mon Jun 27 09:20:26 2022 by generateDS.py version 2.40.13.
+# Generated Thu Jun 30 06:32:31 2022 by generateDS.py version 2.40.13.
 # Python 3.9.5 (default, Nov 23 2021, 15:27:38)  [GCC 9.3.0]
 #
 # Command line options:
@@ -8217,6 +8217,120 @@ class CleanLimits(GeneratedsSuper):
 # end class CleanLimits
 
 
+class DropIndexs(GeneratedsSuper):
+    __hash__ = GeneratedsSuper.__hash__
+    subclass = None
+    superclass = None
+    def __init__(self, DropIndex=None, gds_collector_=None, **kwargs_):
+        self.gds_collector_ = gds_collector_
+        self.gds_elementtree_node_ = None
+        self.original_tagname_ = None
+        self.parent_object_ = kwargs_.get('parent_object_')
+        self.ns_prefix_ = None
+        if DropIndex is None:
+            self.DropIndex = []
+        else:
+            self.DropIndex = DropIndex
+        self.DropIndex_nsprefix_ = None
+    def factory(*args_, **kwargs_):
+        if CurrentSubclassModule_ is not None:
+            subclass = getSubclassFromModule_(
+                CurrentSubclassModule_, DropIndexs)
+            if subclass is not None:
+                return subclass(*args_, **kwargs_)
+        if DropIndexs.subclass:
+            return DropIndexs.subclass(*args_, **kwargs_)
+        else:
+            return DropIndexs(*args_, **kwargs_)
+    factory = staticmethod(factory)
+    def get_ns_prefix_(self):
+        return self.ns_prefix_
+    def set_ns_prefix_(self, ns_prefix):
+        self.ns_prefix_ = ns_prefix
+    def get_DropIndex(self):
+        return self.DropIndex
+    def set_DropIndex(self, DropIndex):
+        self.DropIndex = DropIndex
+    def add_DropIndex(self, value):
+        self.DropIndex.append(value)
+    def insert_DropIndex_at(self, index, value):
+        self.DropIndex.insert(index, value)
+    def replace_DropIndex_at(self, index, value):
+        self.DropIndex[index] = value
+    def _hasContent(self):
+        if (
+            self.DropIndex
+        ):
+            return True
+        else:
+            return False
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='DropIndexs', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('DropIndexs')
+        if imported_ns_def_ is not None:
+            namespacedef_ = imported_ns_def_
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        if self.original_tagname_ is not None and name_ == 'DropIndexs':
+            name_ = self.original_tagname_
+        if UseCapturedNS_ and self.ns_prefix_:
+            namespaceprefix_ = self.ns_prefix_ + ':'
+        showIndent(outfile, level, pretty_print)
+        outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
+        already_processed = set()
+        self._exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='DropIndexs')
+        if self._hasContent():
+            outfile.write('>%s' % (eol_, ))
+            self._exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='DropIndexs', pretty_print=pretty_print)
+            showIndent(outfile, level, pretty_print)
+            outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
+        else:
+            outfile.write('/>%s' % (eol_, ))
+    def _exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='DropIndexs'):
+        pass
+    def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='DropIndexs', fromsubclass_=False, pretty_print=True):
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        for DropIndex_ in self.DropIndex:
+            namespaceprefix_ = self.DropIndex_nsprefix_ + ':' if (UseCapturedNS_ and self.DropIndex_nsprefix_) else ''
+            DropIndex_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='DropIndex', pretty_print=pretty_print)
+    def to_etree(self, parent_element=None, name_='DropIndexs', mapping_=None, reverse_mapping_=None, nsmap_=None):
+        if parent_element is None:
+            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+        else:
+            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+        for DropIndex_ in self.DropIndex:
+            DropIndex_.to_etree(element, name_='DropIndex', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+        if mapping_ is not None:
+            mapping_[id(self)] = element
+        if reverse_mapping_ is not None:
+            reverse_mapping_[element] = self
+        return element
+    def build(self, node, gds_collector_=None):
+        self.gds_collector_ = gds_collector_
+        if SaveElementTreeNode:
+            self.gds_elementtree_node_ = node
+        already_processed = set()
+        self.ns_prefix_ = node.prefix
+        self._buildAttributes(node, node.attrib, already_processed)
+        for child in node:
+            nodeName_ = Tag_pattern_.match(child.tag).groups()[-1]
+            self._buildChildren(child, node, nodeName_, gds_collector_=gds_collector_)
+        return self
+    def _buildAttributes(self, node, attrs, already_processed):
+        pass
+    def _buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
+        if nodeName_ == 'DropIndex':
+            obj_ = Int.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.DropIndex.append(obj_)
+            obj_.original_tagname_ = 'DropIndex'
+# end class DropIndexs
+
+
 class DropIndices(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
@@ -8329,6 +8443,120 @@ class DropIndices(GeneratedsSuper):
             self.DropIndex.append(obj_)
             obj_.original_tagname_ = 'DropIndex'
 # end class DropIndices
+
+
+class DropIndexes(GeneratedsSuper):
+    __hash__ = GeneratedsSuper.__hash__
+    subclass = None
+    superclass = None
+    def __init__(self, DropIndex=None, gds_collector_=None, **kwargs_):
+        self.gds_collector_ = gds_collector_
+        self.gds_elementtree_node_ = None
+        self.original_tagname_ = None
+        self.parent_object_ = kwargs_.get('parent_object_')
+        self.ns_prefix_ = None
+        if DropIndex is None:
+            self.DropIndex = []
+        else:
+            self.DropIndex = DropIndex
+        self.DropIndex_nsprefix_ = None
+    def factory(*args_, **kwargs_):
+        if CurrentSubclassModule_ is not None:
+            subclass = getSubclassFromModule_(
+                CurrentSubclassModule_, DropIndexes)
+            if subclass is not None:
+                return subclass(*args_, **kwargs_)
+        if DropIndexes.subclass:
+            return DropIndexes.subclass(*args_, **kwargs_)
+        else:
+            return DropIndexes(*args_, **kwargs_)
+    factory = staticmethod(factory)
+    def get_ns_prefix_(self):
+        return self.ns_prefix_
+    def set_ns_prefix_(self, ns_prefix):
+        self.ns_prefix_ = ns_prefix
+    def get_DropIndex(self):
+        return self.DropIndex
+    def set_DropIndex(self, DropIndex):
+        self.DropIndex = DropIndex
+    def add_DropIndex(self, value):
+        self.DropIndex.append(value)
+    def insert_DropIndex_at(self, index, value):
+        self.DropIndex.insert(index, value)
+    def replace_DropIndex_at(self, index, value):
+        self.DropIndex[index] = value
+    def _hasContent(self):
+        if (
+            self.DropIndex
+        ):
+            return True
+        else:
+            return False
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='DropIndexes', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('DropIndexes')
+        if imported_ns_def_ is not None:
+            namespacedef_ = imported_ns_def_
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        if self.original_tagname_ is not None and name_ == 'DropIndexes':
+            name_ = self.original_tagname_
+        if UseCapturedNS_ and self.ns_prefix_:
+            namespaceprefix_ = self.ns_prefix_ + ':'
+        showIndent(outfile, level, pretty_print)
+        outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
+        already_processed = set()
+        self._exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='DropIndexes')
+        if self._hasContent():
+            outfile.write('>%s' % (eol_, ))
+            self._exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='DropIndexes', pretty_print=pretty_print)
+            showIndent(outfile, level, pretty_print)
+            outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
+        else:
+            outfile.write('/>%s' % (eol_, ))
+    def _exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='DropIndexes'):
+        pass
+    def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='DropIndexes', fromsubclass_=False, pretty_print=True):
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        for DropIndex_ in self.DropIndex:
+            namespaceprefix_ = self.DropIndex_nsprefix_ + ':' if (UseCapturedNS_ and self.DropIndex_nsprefix_) else ''
+            DropIndex_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='DropIndex', pretty_print=pretty_print)
+    def to_etree(self, parent_element=None, name_='DropIndexes', mapping_=None, reverse_mapping_=None, nsmap_=None):
+        if parent_element is None:
+            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+        else:
+            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+        for DropIndex_ in self.DropIndex:
+            DropIndex_.to_etree(element, name_='DropIndex', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+        if mapping_ is not None:
+            mapping_[id(self)] = element
+        if reverse_mapping_ is not None:
+            reverse_mapping_[element] = self
+        return element
+    def build(self, node, gds_collector_=None):
+        self.gds_collector_ = gds_collector_
+        if SaveElementTreeNode:
+            self.gds_elementtree_node_ = node
+        already_processed = set()
+        self.ns_prefix_ = node.prefix
+        self._buildAttributes(node, node.attrib, already_processed)
+        for child in node:
+            nodeName_ = Tag_pattern_.match(child.tag).groups()[-1]
+            self._buildChildren(child, node, nodeName_, gds_collector_=gds_collector_)
+        return self
+    def _buildAttributes(self, node, attrs, already_processed):
+        pass
+    def _buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
+        if nodeName_ == 'DropIndex':
+            obj_ = Int.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.DropIndex.append(obj_)
+            obj_.original_tagname_ = 'DropIndex'
+# end class DropIndexes
 
 
 class CriticalValue(GeneratedsSuper):
@@ -9372,18 +9600,16 @@ class Coefficients(GeneratedsSuper):
 # end class Coefficients
 
 
-class CoefficientSet(GeneratedsSuper):
+class CoefficientsSet(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, Response=None, CoefficientList=None, Coefficients=None, gds_collector_=None, **kwargs_):
+    def __init__(self, CoefficientList=None, Coefficients=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
         self.parent_object_ = kwargs_.get('parent_object_')
         self.ns_prefix_ = None
-        self.Response = _cast(None, Response)
-        self.Response_nsprefix_ = None
         if CoefficientList is None:
             self.CoefficientList = []
         else:
@@ -9397,13 +9623,13 @@ class CoefficientSet(GeneratedsSuper):
     def factory(*args_, **kwargs_):
         if CurrentSubclassModule_ is not None:
             subclass = getSubclassFromModule_(
-                CurrentSubclassModule_, CoefficientSet)
+                CurrentSubclassModule_, CoefficientsSet)
             if subclass is not None:
                 return subclass(*args_, **kwargs_)
-        if CoefficientSet.subclass:
-            return CoefficientSet.subclass(*args_, **kwargs_)
+        if CoefficientsSet.subclass:
+            return CoefficientsSet.subclass(*args_, **kwargs_)
         else:
-            return CoefficientSet(*args_, **kwargs_)
+            return CoefficientsSet(*args_, **kwargs_)
     factory = staticmethod(factory)
     def get_ns_prefix_(self):
         return self.ns_prefix_
@@ -9429,10 +9655,6 @@ class CoefficientSet(GeneratedsSuper):
         self.Coefficients.insert(index, value)
     def replace_Coefficients_at(self, index, value):
         self.Coefficients[index] = value
-    def get_Response(self):
-        return self.Response
-    def set_Response(self, Response):
-        self.Response = Response
     def _hasContent(self):
         if (
             self.CoefficientList or
@@ -9441,34 +9663,32 @@ class CoefficientSet(GeneratedsSuper):
             return True
         else:
             return False
-    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CoefficientSet', pretty_print=True):
-        imported_ns_def_ = GenerateDSNamespaceDefs_.get('CoefficientSet')
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CoefficientsSet', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('CoefficientsSet')
         if imported_ns_def_ is not None:
             namespacedef_ = imported_ns_def_
         if pretty_print:
             eol_ = '\n'
         else:
             eol_ = ''
-        if self.original_tagname_ is not None and name_ == 'CoefficientSet':
+        if self.original_tagname_ is not None and name_ == 'CoefficientsSet':
             name_ = self.original_tagname_
         if UseCapturedNS_ and self.ns_prefix_:
             namespaceprefix_ = self.ns_prefix_ + ':'
         showIndent(outfile, level, pretty_print)
         outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
         already_processed = set()
-        self._exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='CoefficientSet')
+        self._exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='CoefficientsSet')
         if self._hasContent():
             outfile.write('>%s' % (eol_, ))
-            self._exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='CoefficientSet', pretty_print=pretty_print)
+            self._exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='CoefficientsSet', pretty_print=pretty_print)
             showIndent(outfile, level, pretty_print)
             outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
         else:
             outfile.write('/>%s' % (eol_, ))
-    def _exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='CoefficientSet'):
-        if self.Response is not None and 'Response' not in already_processed:
-            already_processed.add('Response')
-            outfile.write(' Response=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Response), input_name='Response')), ))
-    def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CoefficientSet', fromsubclass_=False, pretty_print=True):
+    def _exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='CoefficientsSet'):
+        pass
+    def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CoefficientsSet', fromsubclass_=False, pretty_print=True):
         if pretty_print:
             eol_ = '\n'
         else:
@@ -9479,13 +9699,11 @@ class CoefficientSet(GeneratedsSuper):
         for Coefficients_ in self.Coefficients:
             namespaceprefix_ = self.Coefficients_nsprefix_ + ':' if (UseCapturedNS_ and self.Coefficients_nsprefix_) else ''
             Coefficients_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Coefficients', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='CoefficientSet', mapping_=None, reverse_mapping_=None, nsmap_=None):
+    def to_etree(self, parent_element=None, name_='CoefficientsSet', mapping_=None, reverse_mapping_=None, nsmap_=None):
         if parent_element is None:
             element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
         else:
             element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Response is not None:
-            element.set('Response', self.gds_format_string(self.Response))
         for CoefficientList_ in self.CoefficientList:
             CoefficientList_.to_etree(element, name_='CoefficientList', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
         for Coefficients_ in self.Coefficients:
@@ -9507,10 +9725,7 @@ class CoefficientSet(GeneratedsSuper):
             self._buildChildren(child, node, nodeName_, gds_collector_=gds_collector_)
         return self
     def _buildAttributes(self, node, attrs, already_processed):
-        value = find_attr_value_('Response', node)
-        if value is not None and 'Response' not in already_processed:
-            already_processed.add('Response')
-            self.Response = value
+        pass
     def _buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
         if nodeName_ == 'CoefficientList':
             obj_ = CoefficientList.factory(parent_object_=self)
@@ -9522,167 +9737,14 @@ class CoefficientSet(GeneratedsSuper):
             obj_.build(child_, gds_collector_=gds_collector_)
             self.Coefficients.append(obj_)
             obj_.original_tagname_ = 'Coefficients'
-# end class CoefficientSet
-
-
-class CoefficientSets(GeneratedsSuper):
-    __hash__ = GeneratedsSuper.__hash__
-    subclass = None
-    superclass = None
-    def __init__(self, Use=None, Coefficients=None, CoefficientSet=None, gds_collector_=None, **kwargs_):
-        self.gds_collector_ = gds_collector_
-        self.gds_elementtree_node_ = None
-        self.original_tagname_ = None
-        self.parent_object_ = kwargs_.get('parent_object_')
-        self.ns_prefix_ = None
-        self.Use = _cast(None, Use)
-        self.Use_nsprefix_ = None
-        if Coefficients is None:
-            self.Coefficients = []
-        else:
-            self.Coefficients = Coefficients
-        self.Coefficients_nsprefix_ = None
-        if CoefficientSet is None:
-            self.CoefficientSet = []
-        else:
-            self.CoefficientSet = CoefficientSet
-        self.CoefficientSet_nsprefix_ = None
-    def factory(*args_, **kwargs_):
-        if CurrentSubclassModule_ is not None:
-            subclass = getSubclassFromModule_(
-                CurrentSubclassModule_, CoefficientSets)
-            if subclass is not None:
-                return subclass(*args_, **kwargs_)
-        if CoefficientSets.subclass:
-            return CoefficientSets.subclass(*args_, **kwargs_)
-        else:
-            return CoefficientSets(*args_, **kwargs_)
-    factory = staticmethod(factory)
-    def get_ns_prefix_(self):
-        return self.ns_prefix_
-    def set_ns_prefix_(self, ns_prefix):
-        self.ns_prefix_ = ns_prefix
-    def get_Coefficients(self):
-        return self.Coefficients
-    def set_Coefficients(self, Coefficients):
-        self.Coefficients = Coefficients
-    def add_Coefficients(self, value):
-        self.Coefficients.append(value)
-    def insert_Coefficients_at(self, index, value):
-        self.Coefficients.insert(index, value)
-    def replace_Coefficients_at(self, index, value):
-        self.Coefficients[index] = value
-    def get_CoefficientSet(self):
-        return self.CoefficientSet
-    def set_CoefficientSet(self, CoefficientSet):
-        self.CoefficientSet = CoefficientSet
-    def add_CoefficientSet(self, value):
-        self.CoefficientSet.append(value)
-    def insert_CoefficientSet_at(self, index, value):
-        self.CoefficientSet.insert(index, value)
-    def replace_CoefficientSet_at(self, index, value):
-        self.CoefficientSet[index] = value
-    def get_Use(self):
-        return self.Use
-    def set_Use(self, Use):
-        self.Use = Use
-    def _hasContent(self):
-        if (
-            self.Coefficients or
-            self.CoefficientSet
-        ):
-            return True
-        else:
-            return False
-    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CoefficientSets', pretty_print=True):
-        imported_ns_def_ = GenerateDSNamespaceDefs_.get('CoefficientSets')
-        if imported_ns_def_ is not None:
-            namespacedef_ = imported_ns_def_
-        if pretty_print:
-            eol_ = '\n'
-        else:
-            eol_ = ''
-        if self.original_tagname_ is not None and name_ == 'CoefficientSets':
-            name_ = self.original_tagname_
-        if UseCapturedNS_ and self.ns_prefix_:
-            namespaceprefix_ = self.ns_prefix_ + ':'
-        showIndent(outfile, level, pretty_print)
-        outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
-        already_processed = set()
-        self._exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='CoefficientSets')
-        if self._hasContent():
-            outfile.write('>%s' % (eol_, ))
-            self._exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='CoefficientSets', pretty_print=pretty_print)
-            showIndent(outfile, level, pretty_print)
-            outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
-        else:
-            outfile.write('/>%s' % (eol_, ))
-    def _exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='CoefficientSets'):
-        if self.Use is not None and 'Use' not in already_processed:
-            already_processed.add('Use')
-            outfile.write(' Use=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.Use), input_name='Use')), ))
-    def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='CoefficientSets', fromsubclass_=False, pretty_print=True):
-        if pretty_print:
-            eol_ = '\n'
-        else:
-            eol_ = ''
-        for Coefficients_ in self.Coefficients:
-            namespaceprefix_ = self.Coefficients_nsprefix_ + ':' if (UseCapturedNS_ and self.Coefficients_nsprefix_) else ''
-            Coefficients_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Coefficients', pretty_print=pretty_print)
-        for CoefficientSet_ in self.CoefficientSet:
-            namespaceprefix_ = self.CoefficientSet_nsprefix_ + ':' if (UseCapturedNS_ and self.CoefficientSet_nsprefix_) else ''
-            CoefficientSet_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CoefficientSet', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='CoefficientSets', mapping_=None, reverse_mapping_=None, nsmap_=None):
-        if parent_element is None:
-            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        else:
-            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
-        if self.Use is not None:
-            element.set('Use', self.gds_format_string(self.Use))
-        for Coefficients_ in self.Coefficients:
-            Coefficients_.to_etree(element, name_='Coefficients', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        for CoefficientSet_ in self.CoefficientSet:
-            CoefficientSet_.to_etree(element, name_='CoefficientSet', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        if reverse_mapping_ is not None:
-            reverse_mapping_[element] = self
-        return element
-    def build(self, node, gds_collector_=None):
-        self.gds_collector_ = gds_collector_
-        if SaveElementTreeNode:
-            self.gds_elementtree_node_ = node
-        already_processed = set()
-        self.ns_prefix_ = node.prefix
-        self._buildAttributes(node, node.attrib, already_processed)
-        for child in node:
-            nodeName_ = Tag_pattern_.match(child.tag).groups()[-1]
-            self._buildChildren(child, node, nodeName_, gds_collector_=gds_collector_)
-        return self
-    def _buildAttributes(self, node, attrs, already_processed):
-        value = find_attr_value_('Use', node)
-        if value is not None and 'Use' not in already_processed:
-            already_processed.add('Use')
-            self.Use = value
-    def _buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
-        if nodeName_ == 'Coefficients':
-            obj_ = Coefficients.factory(parent_object_=self)
-            obj_.build(child_, gds_collector_=gds_collector_)
-            self.Coefficients.append(obj_)
-            obj_.original_tagname_ = 'Coefficients'
-        elif nodeName_ == 'CoefficientSet':
-            obj_ = CoefficientSet.factory(parent_object_=self)
-            obj_.build(child_, gds_collector_=gds_collector_)
-            self.CoefficientSet.append(obj_)
-            obj_.original_tagname_ = 'CoefficientSet'
-# end class CoefficientSets
+# end class CoefficientsSet
 
 
 class Variable(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, Name=None, Handle=None, SegmentedBy=None, Treatment=None, Source=None, Sources=None, Constant=None, Constants=None, Transformation=None, Transformations=None, CleanLimit=None, LeftLimit=None, RightLimit=None, CleanLimits=None, CleanLimitList=None, CriticalValue=None, CriticalValues=None, CriticalValuesList=None, CriticalWord=None, CriticalWords=None, CriticalWordList=None, DropIndex=None, DropIndexs=None, DropIndexList=None, DropIndices=None, CoefficientSet=None, CoefficientSets=None, gds_collector_=None, **kwargs_):
+    def __init__(self, Name=None, Handle=None, SegmentedBy=None, Treatment=None, Source=None, Sources=None, Constant=None, Constants=None, Transformation=None, Transformations=None, CleanLimit=None, LeftLimit=None, RightLimit=None, CleanLimits=None, CleanLimitList=None, CriticalValue=None, CriticalValues=None, CriticalValueList=None, CriticalWord=None, CriticalWords=None, CriticalWordList=None, DropIndex=None, DropIndexs=None, DropIndices=None, DropIndexes=None, DropIndexList=None, Coefficients=None, CoefficientList=None, CoefficientsSet=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
@@ -9737,8 +9799,8 @@ class Variable(GeneratedsSuper):
         self.CriticalValue_nsprefix_ = None
         self.CriticalValues = CriticalValues
         self.CriticalValues_nsprefix_ = None
-        self.CriticalValuesList = CriticalValuesList
-        self.CriticalValuesList_nsprefix_ = None
+        self.CriticalValueList = CriticalValueList
+        self.CriticalValueList_nsprefix_ = None
         if CriticalWord is None:
             self.CriticalWord = []
         else:
@@ -9755,17 +9817,24 @@ class Variable(GeneratedsSuper):
         self.DropIndex_nsprefix_ = None
         self.DropIndexs = DropIndexs
         self.DropIndexs_nsprefix_ = None
-        self.DropIndexList = DropIndexList
-        self.DropIndexList_nsprefix_ = None
         self.DropIndices = DropIndices
         self.DropIndices_nsprefix_ = None
-        if CoefficientSet is None:
-            self.CoefficientSet = []
+        self.DropIndexes = DropIndexes
+        self.DropIndexes_nsprefix_ = None
+        self.DropIndexList = DropIndexList
+        self.DropIndexList_nsprefix_ = None
+        if Coefficients is None:
+            self.Coefficients = []
         else:
-            self.CoefficientSet = CoefficientSet
-        self.CoefficientSet_nsprefix_ = None
-        self.CoefficientSets = CoefficientSets
-        self.CoefficientSets_nsprefix_ = None
+            self.Coefficients = Coefficients
+        self.Coefficients_nsprefix_ = None
+        if CoefficientList is None:
+            self.CoefficientList = []
+        else:
+            self.CoefficientList = CoefficientList
+        self.CoefficientList_nsprefix_ = None
+        self.CoefficientsSet = CoefficientsSet
+        self.CoefficientsSet_nsprefix_ = None
     def factory(*args_, **kwargs_):
         if CurrentSubclassModule_ is not None:
             subclass = getSubclassFromModule_(
@@ -9871,10 +9940,10 @@ class Variable(GeneratedsSuper):
         return self.CriticalValues
     def set_CriticalValues(self, CriticalValues):
         self.CriticalValues = CriticalValues
-    def get_CriticalValuesList(self):
-        return self.CriticalValuesList
-    def set_CriticalValuesList(self, CriticalValuesList):
-        self.CriticalValuesList = CriticalValuesList
+    def get_CriticalValueList(self):
+        return self.CriticalValueList
+    def set_CriticalValueList(self, CriticalValueList):
+        self.CriticalValueList = CriticalValueList
     def get_CriticalWord(self):
         return self.CriticalWord
     def set_CriticalWord(self, CriticalWord):
@@ -9907,28 +9976,42 @@ class Variable(GeneratedsSuper):
         return self.DropIndexs
     def set_DropIndexs(self, DropIndexs):
         self.DropIndexs = DropIndexs
-    def get_DropIndexList(self):
-        return self.DropIndexList
-    def set_DropIndexList(self, DropIndexList):
-        self.DropIndexList = DropIndexList
     def get_DropIndices(self):
         return self.DropIndices
     def set_DropIndices(self, DropIndices):
         self.DropIndices = DropIndices
-    def get_CoefficientSet(self):
-        return self.CoefficientSet
-    def set_CoefficientSet(self, CoefficientSet):
-        self.CoefficientSet = CoefficientSet
-    def add_CoefficientSet(self, value):
-        self.CoefficientSet.append(value)
-    def insert_CoefficientSet_at(self, index, value):
-        self.CoefficientSet.insert(index, value)
-    def replace_CoefficientSet_at(self, index, value):
-        self.CoefficientSet[index] = value
-    def get_CoefficientSets(self):
-        return self.CoefficientSets
-    def set_CoefficientSets(self, CoefficientSets):
-        self.CoefficientSets = CoefficientSets
+    def get_DropIndexes(self):
+        return self.DropIndexes
+    def set_DropIndexes(self, DropIndexes):
+        self.DropIndexes = DropIndexes
+    def get_DropIndexList(self):
+        return self.DropIndexList
+    def set_DropIndexList(self, DropIndexList):
+        self.DropIndexList = DropIndexList
+    def get_Coefficients(self):
+        return self.Coefficients
+    def set_Coefficients(self, Coefficients):
+        self.Coefficients = Coefficients
+    def add_Coefficients(self, value):
+        self.Coefficients.append(value)
+    def insert_Coefficients_at(self, index, value):
+        self.Coefficients.insert(index, value)
+    def replace_Coefficients_at(self, index, value):
+        self.Coefficients[index] = value
+    def get_CoefficientList(self):
+        return self.CoefficientList
+    def set_CoefficientList(self, CoefficientList):
+        self.CoefficientList = CoefficientList
+    def add_CoefficientList(self, value):
+        self.CoefficientList.append(value)
+    def insert_CoefficientList_at(self, index, value):
+        self.CoefficientList.insert(index, value)
+    def replace_CoefficientList_at(self, index, value):
+        self.CoefficientList[index] = value
+    def get_CoefficientsSet(self):
+        return self.CoefficientsSet
+    def set_CoefficientsSet(self, CoefficientsSet):
+        self.CoefficientsSet = CoefficientsSet
     def get_Name(self):
         return self.Name
     def set_Name(self, Name):
@@ -9954,16 +10037,18 @@ class Variable(GeneratedsSuper):
             self.CleanLimitList is not None or
             self.CriticalValue or
             self.CriticalValues is not None or
-            self.CriticalValuesList is not None or
+            self.CriticalValueList is not None or
             self.CriticalWord or
             self.CriticalWords is not None or
             self.CriticalWordList is not None or
             self.DropIndex or
             self.DropIndexs is not None or
-            self.DropIndexList is not None or
             self.DropIndices is not None or
-            self.CoefficientSet or
-            self.CoefficientSets is not None
+            self.DropIndexes is not None or
+            self.DropIndexList is not None or
+            self.Coefficients or
+            self.CoefficientList or
+            self.CoefficientsSet is not None
         ):
             return True
         else:
@@ -10052,10 +10137,9 @@ class Variable(GeneratedsSuper):
         if self.CriticalValues is not None:
             namespaceprefix_ = self.CriticalValues_nsprefix_ + ':' if (UseCapturedNS_ and self.CriticalValues_nsprefix_) else ''
             self.CriticalValues.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CriticalValues', pretty_print=pretty_print)
-        if self.CriticalValuesList is not None:
-            namespaceprefix_ = self.CriticalValuesList_nsprefix_ + ':' if (UseCapturedNS_ and self.CriticalValuesList_nsprefix_) else ''
-            showIndent(outfile, level, pretty_print)
-            outfile.write('<%sCriticalValuesList>%s</%sCriticalValuesList>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.CriticalValuesList), input_name='CriticalValuesList')), namespaceprefix_ , eol_))
+        if self.CriticalValueList is not None:
+            namespaceprefix_ = self.CriticalValueList_nsprefix_ + ':' if (UseCapturedNS_ and self.CriticalValueList_nsprefix_) else ''
+            self.CriticalValueList.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CriticalValueList', pretty_print=pretty_print)
         for CriticalWord_ in self.CriticalWord:
             namespaceprefix_ = self.CriticalWord_nsprefix_ + ':' if (UseCapturedNS_ and self.CriticalWord_nsprefix_) else ''
             CriticalWord_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CriticalWord', pretty_print=pretty_print)
@@ -10070,21 +10154,26 @@ class Variable(GeneratedsSuper):
             DropIndex_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='DropIndex', pretty_print=pretty_print)
         if self.DropIndexs is not None:
             namespaceprefix_ = self.DropIndexs_nsprefix_ + ':' if (UseCapturedNS_ and self.DropIndexs_nsprefix_) else ''
-            showIndent(outfile, level, pretty_print)
-            outfile.write('<%sDropIndexs>%s</%sDropIndexs>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.DropIndexs), input_name='DropIndexs')), namespaceprefix_ , eol_))
+            self.DropIndexs.export(outfile, level, namespaceprefix_, namespacedef_='', name_='DropIndexs', pretty_print=pretty_print)
+        if self.DropIndices is not None:
+            namespaceprefix_ = self.DropIndices_nsprefix_ + ':' if (UseCapturedNS_ and self.DropIndices_nsprefix_) else ''
+            self.DropIndices.export(outfile, level, namespaceprefix_, namespacedef_='', name_='DropIndices', pretty_print=pretty_print)
+        if self.DropIndexes is not None:
+            namespaceprefix_ = self.DropIndexes_nsprefix_ + ':' if (UseCapturedNS_ and self.DropIndexes_nsprefix_) else ''
+            self.DropIndexes.export(outfile, level, namespaceprefix_, namespacedef_='', name_='DropIndexes', pretty_print=pretty_print)
         if self.DropIndexList is not None:
             namespaceprefix_ = self.DropIndexList_nsprefix_ + ':' if (UseCapturedNS_ and self.DropIndexList_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%sDropIndexList>%s</%sDropIndexList>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.DropIndexList), input_name='DropIndexList')), namespaceprefix_ , eol_))
-        if self.DropIndices is not None:
-            namespaceprefix_ = self.DropIndices_nsprefix_ + ':' if (UseCapturedNS_ and self.DropIndices_nsprefix_) else ''
-            self.DropIndices.export(outfile, level, namespaceprefix_, namespacedef_='', name_='DropIndices', pretty_print=pretty_print)
-        for CoefficientSet_ in self.CoefficientSet:
-            namespaceprefix_ = self.CoefficientSet_nsprefix_ + ':' if (UseCapturedNS_ and self.CoefficientSet_nsprefix_) else ''
-            CoefficientSet_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CoefficientSet', pretty_print=pretty_print)
-        if self.CoefficientSets is not None:
-            namespaceprefix_ = self.CoefficientSets_nsprefix_ + ':' if (UseCapturedNS_ and self.CoefficientSets_nsprefix_) else ''
-            self.CoefficientSets.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CoefficientSets', pretty_print=pretty_print)
+        for Coefficients_ in self.Coefficients:
+            namespaceprefix_ = self.Coefficients_nsprefix_ + ':' if (UseCapturedNS_ and self.Coefficients_nsprefix_) else ''
+            Coefficients_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Coefficients', pretty_print=pretty_print)
+        for CoefficientList_ in self.CoefficientList:
+            namespaceprefix_ = self.CoefficientList_nsprefix_ + ':' if (UseCapturedNS_ and self.CoefficientList_nsprefix_) else ''
+            CoefficientList_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CoefficientList', pretty_print=pretty_print)
+        if self.CoefficientsSet is not None:
+            namespaceprefix_ = self.CoefficientsSet_nsprefix_ + ':' if (UseCapturedNS_ and self.CoefficientsSet_nsprefix_) else ''
+            self.CoefficientsSet.export(outfile, level, namespaceprefix_, namespacedef_='', name_='CoefficientsSet', pretty_print=pretty_print)
     def to_etree(self, parent_element=None, name_='Variable', mapping_=None, reverse_mapping_=None, nsmap_=None):
         if parent_element is None:
             element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
@@ -10134,9 +10223,9 @@ class Variable(GeneratedsSuper):
         if self.CriticalValues is not None:
             CriticalValues_ = self.CriticalValues
             CriticalValues_.to_etree(element, name_='CriticalValues', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if self.CriticalValuesList is not None:
-            CriticalValuesList_ = self.CriticalValuesList
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}CriticalValuesList').text = self.gds_format_string(CriticalValuesList_)
+        if self.CriticalValueList is not None:
+            CriticalValueList_ = self.CriticalValueList
+            CriticalValueList_.to_etree(element, name_='CriticalValueList', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
         for CriticalWord_ in self.CriticalWord:
             CriticalWord_.to_etree(element, name_='CriticalWord', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
         if self.CriticalWords is not None:
@@ -10149,18 +10238,23 @@ class Variable(GeneratedsSuper):
             DropIndex_.to_etree(element, name_='DropIndex', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
         if self.DropIndexs is not None:
             DropIndexs_ = self.DropIndexs
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}DropIndexs').text = self.gds_format_string(DropIndexs_)
-        if self.DropIndexList is not None:
-            DropIndexList_ = self.DropIndexList
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}DropIndexList').text = self.gds_format_string(DropIndexList_)
+            DropIndexs_.to_etree(element, name_='DropIndexs', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
         if self.DropIndices is not None:
             DropIndices_ = self.DropIndices
             DropIndices_.to_etree(element, name_='DropIndices', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        for CoefficientSet_ in self.CoefficientSet:
-            CoefficientSet_.to_etree(element, name_='CoefficientSet', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
-        if self.CoefficientSets is not None:
-            CoefficientSets_ = self.CoefficientSets
-            CoefficientSets_.to_etree(element, name_='CoefficientSets', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+        if self.DropIndexes is not None:
+            DropIndexes_ = self.DropIndexes
+            DropIndexes_.to_etree(element, name_='DropIndexes', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+        if self.DropIndexList is not None:
+            DropIndexList_ = self.DropIndexList
+            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}DropIndexList').text = self.gds_format_string(DropIndexList_)
+        for Coefficients_ in self.Coefficients:
+            Coefficients_.to_etree(element, name_='Coefficients', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+        for CoefficientList_ in self.CoefficientList:
+            CoefficientList_.to_etree(element, name_='CoefficientList', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
+        if self.CoefficientsSet is not None:
+            CoefficientsSet_ = self.CoefficientsSet
+            CoefficientsSet_.to_etree(element, name_='CoefficientsSet', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
         if mapping_ is not None:
             mapping_[id(self)] = element
         if reverse_mapping_ is not None:
@@ -10266,12 +10360,12 @@ class Variable(GeneratedsSuper):
             obj_.build(child_, gds_collector_=gds_collector_)
             self.CriticalValues = obj_
             obj_.original_tagname_ = 'CriticalValues'
-        elif nodeName_ == 'CriticalValuesList':
-            value_ = child_.text
-            value_ = self.gds_parse_string(value_, node, 'CriticalValuesList')
-            value_ = self.gds_validate_string(value_, node, 'CriticalValuesList')
-            self.CriticalValuesList = value_
-            self.CriticalValuesList_nsprefix_ = child_.prefix
+        elif nodeName_ == 'CriticalValueList':
+            class_obj_ = self.get_class_obj_(child_, DblList)
+            obj_ = class_obj_.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.CriticalValueList = obj_
+            obj_.original_tagname_ = 'CriticalValueList'
         elif nodeName_ == 'CriticalWord':
             obj_ = CriticalWord.factory(parent_object_=self)
             obj_.build(child_, gds_collector_=gds_collector_)
@@ -10293,32 +10387,41 @@ class Variable(GeneratedsSuper):
             self.DropIndex.append(obj_)
             obj_.original_tagname_ = 'DropIndex'
         elif nodeName_ == 'DropIndexs':
-            value_ = child_.text
-            value_ = self.gds_parse_string(value_, node, 'DropIndexs')
-            value_ = self.gds_validate_string(value_, node, 'DropIndexs')
-            self.DropIndexs = value_
-            self.DropIndexs_nsprefix_ = child_.prefix
+            obj_ = DropIndexs.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.DropIndexs = obj_
+            obj_.original_tagname_ = 'DropIndexs'
+        elif nodeName_ == 'DropIndices':
+            obj_ = DropIndices.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.DropIndices = obj_
+            obj_.original_tagname_ = 'DropIndices'
+        elif nodeName_ == 'DropIndexes':
+            obj_ = DropIndexes.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.DropIndexes = obj_
+            obj_.original_tagname_ = 'DropIndexes'
         elif nodeName_ == 'DropIndexList':
             value_ = child_.text
             value_ = self.gds_parse_string(value_, node, 'DropIndexList')
             value_ = self.gds_validate_string(value_, node, 'DropIndexList')
             self.DropIndexList = value_
             self.DropIndexList_nsprefix_ = child_.prefix
-        elif nodeName_ == 'DropIndices':
-            obj_ = DropIndices.factory(parent_object_=self)
+        elif nodeName_ == 'Coefficients':
+            obj_ = Coefficients.factory(parent_object_=self)
             obj_.build(child_, gds_collector_=gds_collector_)
-            self.DropIndices = obj_
-            obj_.original_tagname_ = 'DropIndices'
-        elif nodeName_ == 'CoefficientSet':
-            obj_ = CoefficientSet.factory(parent_object_=self)
+            self.Coefficients.append(obj_)
+            obj_.original_tagname_ = 'Coefficients'
+        elif nodeName_ == 'CoefficientList':
+            obj_ = CoefficientList.factory(parent_object_=self)
             obj_.build(child_, gds_collector_=gds_collector_)
-            self.CoefficientSet.append(obj_)
-            obj_.original_tagname_ = 'CoefficientSet'
-        elif nodeName_ == 'CoefficientSets':
-            obj_ = CoefficientSets.factory(parent_object_=self)
+            self.CoefficientList.append(obj_)
+            obj_.original_tagname_ = 'CoefficientList'
+        elif nodeName_ == 'CoefficientsSet':
+            obj_ = CoefficientsSet.factory(parent_object_=self)
             obj_.build(child_, gds_collector_=gds_collector_)
-            self.CoefficientSets = obj_
-            obj_.original_tagname_ = 'CoefficientSets'
+            self.CoefficientsSet = obj_
+            obj_.original_tagname_ = 'CoefficientsSet'
 # end class Variable
 
 
@@ -12467,9 +12570,8 @@ __all__ = [
     "CleanLimits",
     "Coefficient",
     "CoefficientList",
-    "CoefficientSet",
-    "CoefficientSets",
     "Coefficients",
+    "CoefficientsSet",
     "Column",
     "ColumnDbl",
     "ColumnStr",
@@ -12486,6 +12588,8 @@ __all__ = [
     "DblList",
     "Dictionary",
     "Documentation",
+    "DropIndexes",
+    "DropIndexs",
     "DropIndices",
     "ElemMD",
     "Enum",

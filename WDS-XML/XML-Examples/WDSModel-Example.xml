@@ -65,7 +65,7 @@ Author: Christian Wypasek (CJW)
                             <Treatment>Hats</Treatment>
                             <CleanLimitList>150 950</CleanLimitList>
                             <CriticalValueList>600 650 700</CriticalValueList>
-                            <CoefficientSets>
+                            <CoefficientsSet>
                                 <Coefficients Response="EC2">
                                     <Coefficient Position="0"> 0 </Coefficient>
                                     <Coefficient Position="1"> 12 </Coefficient>
@@ -78,7 +78,7 @@ Author: Christian Wypasek (CJW)
                                     <Coefficient Position="2"> 0 </Coefficient>
                                     <Coefficient Position="3"> 0 </Coefficient>
                                 </Coefficients>
-                            </CoefficientSets>
+                            </CoefficientsSet>
                         </Variable>
                     </Variables>
                 </ComponentModel>
