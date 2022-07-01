@@ -18,7 +18,7 @@ from WDS.Wranglers.gXMLParsers import gWDSModel_literal
 from WDS.Comp.WDSModelPrep import *
 
 
-from WDS.util.history import *
+from WDS.history import *
 history_init(globals())
 
 # for testing purposes when -i is used

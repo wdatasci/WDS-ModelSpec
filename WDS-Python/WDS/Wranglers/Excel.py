@@ -29,7 +29,7 @@ import csv
 
 
 import WDS.Wranglers.dir_walk
-import WDS.util.MonthID as mMonthID
+import WDS.MonthID as mMonthID
 
 
 def ExcelLayout(fn):
