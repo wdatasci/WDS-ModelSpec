@@ -482,17 +482,18 @@ for details
 </xs:element>
 
 <xs:element name="ModelDirectives">
-    <xs:complexType>
-        <xs:all>
-            <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element name="Type" type="xs:string" minOccurs="0" />
-            <xs:choice>
-                <xs:element ref="Response" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="Responses" minOccurs="0" maxOccurs="1"/>
-            </xs:choice>
-        </xs:all>
-    </xs:complexType>
+<xs:complexType>
+    <xs:all>
+        <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="Type" type="xs:string" minOccurs="0" />
+        <xs:choice>
+            <xs:element ref="Response" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Responses" minOccurs="0" maxOccurs="1"/>
+        </xs:choice>
+    </xs:all>
+</xs:complexType>
 </xs:element>
+
 
 <xs:element name="Models">
     <xs:complexType>
@@ -829,10 +830,38 @@ for details
     </xs:complexType>
 </xs:element>
 
+<xs:complexType name="VariableXRef">
+  <xs:attribute name="Name" type="xs:str"/>
+  <xs:attribute name="Handle" type="xs:str"/>
+  <xs:attribute name="Index" type="xs:str"/>
+</xs:complexType>
+
+<xs:complexType name="VariableModelDirectiveType">
+  <xs:attribute name="Use" type="xs:str"/>
+  <xs:attribute name="ResponseUse" type="xs:str"/>
+  <xs:attribute name="SpecialUse" type="xs:str"/>
+  <xs:attribute name="ProcessFirst" type="xs:str"/>
+  <xs:attribute name="Static" type="xs:str"/>
+  <xs:attribute name="StrataID" type="xs:str"/>
+  <xs:attribute name="SubjectID" type="xs:str"/>
+  <xs:attribute name="SubjectIDLevel" type="xs:str"/>
+  <xs:attribute name="TV" type="xs:str"/>
+  <xs:attribute name="TVID" type="xs:str"/>
+  <xs:attribute name="TVConalOrderingID" type="xs:str"/>
+  <xs:attribute name="Value" type="xs:str"/>
+  <xs:attribute name="Index" type="xs:str"/>
+  <xs:attribute name="dlm" type="xs:str"/>
+  <xs:anyAttribute/>
+</xs:complexType>
+
+
 <xs:element name="Variable">
     <xs:complexType>
         <xs:sequence>
-            <xs:element name="SegmentedBy" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:all>
+                <xs:element name="VariableModelDirectives" type="VariableModelDirectiveType" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="SegmentedBy" type="VariableXRef" minOccurs="0" maxOccurs="1"/>
+            </xs:all>
             <xs:element name="Treatment" type="xs:string" minOccurs="1" maxOccurs="1"/>
             <xs:choice>
                 <xs:element ref="Source" minOccurs="0" maxOccurs="unbounded"/>

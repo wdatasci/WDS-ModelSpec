@@ -70,12 +70,11 @@ def main(args=None):
         m = rv.Models.Model[0].ComponentModels
 
     global rvmo
-    rvmo = WDSModel(args.xml)
+    rvmo = WDSModelFromFile(args.xml)
     x=rvmo.Models.Model[0].ComponentModels.ComponentModel[1].Variables.Variable[0]
     x.CriticalValues.from_list([625, 660, 740])
     x.CoefficientsSet_from([[0, 1, 2, 3], [4, 6, 7, 8]])
     print(x)
-
 
 if __name__=='__main__':
     def main_argparser():

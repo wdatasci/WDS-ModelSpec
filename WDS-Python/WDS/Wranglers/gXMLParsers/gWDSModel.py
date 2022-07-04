@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Generated Thu Jun 30 06:32:31 2022 by generateDS.py version 2.40.13.
+# Generated Sun Jul  3 14:41:07 2022 by generateDS.py version 2.40.13.
 # Python 3.9.5 (default, Nov 23 2021, 15:27:38)  [GCC 9.3.0]
 #
 # Command line options:
@@ -9740,11 +9740,11 @@ class CoefficientsSet(GeneratedsSuper):
 # end class CoefficientsSet
 
 
-class Variable(GeneratedsSuper):
+class VariableXRef(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, Name=None, Handle=None, SegmentedBy=None, Treatment=None, Source=None, Sources=None, Constant=None, Constants=None, Transformation=None, Transformations=None, CleanLimit=None, LeftLimit=None, RightLimit=None, CleanLimits=None, CleanLimitList=None, CriticalValue=None, CriticalValues=None, CriticalValueList=None, CriticalWord=None, CriticalWords=None, CriticalWordList=None, DropIndex=None, DropIndexs=None, DropIndices=None, DropIndexes=None, DropIndexList=None, Coefficients=None, CoefficientList=None, CoefficientsSet=None, gds_collector_=None, **kwargs_):
+    def __init__(self, Name=None, Handle=None, Index=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
@@ -9754,6 +9754,469 @@ class Variable(GeneratedsSuper):
         self.Name_nsprefix_ = None
         self.Handle = _cast(None, Handle)
         self.Handle_nsprefix_ = None
+        self.Index = _cast(None, Index)
+        self.Index_nsprefix_ = None
+    def factory(*args_, **kwargs_):
+        if CurrentSubclassModule_ is not None:
+            subclass = getSubclassFromModule_(
+                CurrentSubclassModule_, VariableXRef)
+            if subclass is not None:
+                return subclass(*args_, **kwargs_)
+        if VariableXRef.subclass:
+            return VariableXRef.subclass(*args_, **kwargs_)
+        else:
+            return VariableXRef(*args_, **kwargs_)
+    factory = staticmethod(factory)
+    def get_ns_prefix_(self):
+        return self.ns_prefix_
+    def set_ns_prefix_(self, ns_prefix):
+        self.ns_prefix_ = ns_prefix
+    def get_Name(self):
+        return self.Name
+    def set_Name(self, Name):
+        self.Name = Name
+    def get_Handle(self):
+        return self.Handle
+    def set_Handle(self, Handle):
+        self.Handle = Handle
+    def get_Index(self):
+        return self.Index
+    def set_Index(self, Index):
+        self.Index = Index
+    def _hasContent(self):
+        if (
+
+        ):
+            return True
+        else:
+            return False
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='VariableXRef', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('VariableXRef')
+        if imported_ns_def_ is not None:
+            namespacedef_ = imported_ns_def_
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        if self.original_tagname_ is not None and name_ == 'VariableXRef':
+            name_ = self.original_tagname_
+        if UseCapturedNS_ and self.ns_prefix_:
+            namespaceprefix_ = self.ns_prefix_ + ':'
+        showIndent(outfile, level, pretty_print)
+        outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
+        already_processed = set()
+        self._exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='VariableXRef')
+        if self._hasContent():
+            outfile.write('>%s' % (eol_, ))
+            self._exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='VariableXRef', pretty_print=pretty_print)
+            outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
+        else:
+            outfile.write('/>%s' % (eol_, ))
+    def _exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='VariableXRef'):
+        if self.Name is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            outfile.write(' Name=%s' % (quote_attrib(self.Name), ))
+        if self.Handle is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            outfile.write(' Handle=%s' % (quote_attrib(self.Handle), ))
+        if self.Index is not None and 'Index' not in already_processed:
+            already_processed.add('Index')
+            outfile.write(' Index=%s' % (quote_attrib(self.Index), ))
+    def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='VariableXRef', fromsubclass_=False, pretty_print=True):
+        pass
+    def to_etree(self, parent_element=None, name_='VariableXRef', mapping_=None, reverse_mapping_=None, nsmap_=None):
+        if parent_element is None:
+            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+        else:
+            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+        if self.Name is not None:
+            element.set('Name', self.Name)
+        if self.Handle is not None:
+            element.set('Handle', self.Handle)
+        if self.Index is not None:
+            element.set('Index', self.Index)
+        if mapping_ is not None:
+            mapping_[id(self)] = element
+        if reverse_mapping_ is not None:
+            reverse_mapping_[element] = self
+        return element
+    def build(self, node, gds_collector_=None):
+        self.gds_collector_ = gds_collector_
+        if SaveElementTreeNode:
+            self.gds_elementtree_node_ = node
+        already_processed = set()
+        self.ns_prefix_ = node.prefix
+        self._buildAttributes(node, node.attrib, already_processed)
+        for child in node:
+            nodeName_ = Tag_pattern_.match(child.tag).groups()[-1]
+            self._buildChildren(child, node, nodeName_, gds_collector_=gds_collector_)
+        return self
+    def _buildAttributes(self, node, attrs, already_processed):
+        value = find_attr_value_('Name', node)
+        if value is not None and 'Name' not in already_processed:
+            already_processed.add('Name')
+            self.Name = value
+        value = find_attr_value_('Handle', node)
+        if value is not None and 'Handle' not in already_processed:
+            already_processed.add('Handle')
+            self.Handle = value
+        value = find_attr_value_('Index', node)
+        if value is not None and 'Index' not in already_processed:
+            already_processed.add('Index')
+            self.Index = value
+    def _buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
+        pass
+# end class VariableXRef
+
+
+class VariableModelDirectiveType(GeneratedsSuper):
+    __hash__ = GeneratedsSuper.__hash__
+    subclass = None
+    superclass = None
+    def __init__(self, Use=None, ResponseUse=None, SpecialUse=None, ProcessFirst=None, Static=None, StrataID=None, SubjectID=None, SubjectIDLevel=None, TV=None, TVID=None, TVConalOrderingID=None, Value=None, Index=None, dlm=None, gds_collector_=None, **kwargs_):
+        self.gds_collector_ = gds_collector_
+        self.gds_elementtree_node_ = None
+        self.original_tagname_ = None
+        self.parent_object_ = kwargs_.get('parent_object_')
+        self.ns_prefix_ = None
+        self.Use = _cast(None, Use)
+        self.Use_nsprefix_ = None
+        self.ResponseUse = _cast(None, ResponseUse)
+        self.ResponseUse_nsprefix_ = None
+        self.SpecialUse = _cast(None, SpecialUse)
+        self.SpecialUse_nsprefix_ = None
+        self.ProcessFirst = _cast(None, ProcessFirst)
+        self.ProcessFirst_nsprefix_ = None
+        self.Static = _cast(None, Static)
+        self.Static_nsprefix_ = None
+        self.StrataID = _cast(None, StrataID)
+        self.StrataID_nsprefix_ = None
+        self.SubjectID = _cast(None, SubjectID)
+        self.SubjectID_nsprefix_ = None
+        self.SubjectIDLevel = _cast(None, SubjectIDLevel)
+        self.SubjectIDLevel_nsprefix_ = None
+        self.TV = _cast(None, TV)
+        self.TV_nsprefix_ = None
+        self.TVID = _cast(None, TVID)
+        self.TVID_nsprefix_ = None
+        self.TVConalOrderingID = _cast(None, TVConalOrderingID)
+        self.TVConalOrderingID_nsprefix_ = None
+        self.Value = _cast(None, Value)
+        self.Value_nsprefix_ = None
+        self.Index = _cast(None, Index)
+        self.Index_nsprefix_ = None
+        self.dlm = _cast(None, dlm)
+        self.dlm_nsprefix_ = None
+        self.anyAttributes_ = {}
+    def factory(*args_, **kwargs_):
+        if CurrentSubclassModule_ is not None:
+            subclass = getSubclassFromModule_(
+                CurrentSubclassModule_, VariableModelDirectiveType)
+            if subclass is not None:
+                return subclass(*args_, **kwargs_)
+        if VariableModelDirectiveType.subclass:
+            return VariableModelDirectiveType.subclass(*args_, **kwargs_)
+        else:
+            return VariableModelDirectiveType(*args_, **kwargs_)
+    factory = staticmethod(factory)
+    def get_ns_prefix_(self):
+        return self.ns_prefix_
+    def set_ns_prefix_(self, ns_prefix):
+        self.ns_prefix_ = ns_prefix
+    def get_Use(self):
+        return self.Use
+    def set_Use(self, Use):
+        self.Use = Use
+    def get_ResponseUse(self):
+        return self.ResponseUse
+    def set_ResponseUse(self, ResponseUse):
+        self.ResponseUse = ResponseUse
+    def get_SpecialUse(self):
+        return self.SpecialUse
+    def set_SpecialUse(self, SpecialUse):
+        self.SpecialUse = SpecialUse
+    def get_ProcessFirst(self):
+        return self.ProcessFirst
+    def set_ProcessFirst(self, ProcessFirst):
+        self.ProcessFirst = ProcessFirst
+    def get_Static(self):
+        return self.Static
+    def set_Static(self, Static):
+        self.Static = Static
+    def get_StrataID(self):
+        return self.StrataID
+    def set_StrataID(self, StrataID):
+        self.StrataID = StrataID
+    def get_SubjectID(self):
+        return self.SubjectID
+    def set_SubjectID(self, SubjectID):
+        self.SubjectID = SubjectID
+    def get_SubjectIDLevel(self):
+        return self.SubjectIDLevel
+    def set_SubjectIDLevel(self, SubjectIDLevel):
+        self.SubjectIDLevel = SubjectIDLevel
+    def get_TV(self):
+        return self.TV
+    def set_TV(self, TV):
+        self.TV = TV
+    def get_TVID(self):
+        return self.TVID
+    def set_TVID(self, TVID):
+        self.TVID = TVID
+    def get_TVConalOrderingID(self):
+        return self.TVConalOrderingID
+    def set_TVConalOrderingID(self, TVConalOrderingID):
+        self.TVConalOrderingID = TVConalOrderingID
+    def get_Value(self):
+        return self.Value
+    def set_Value(self, Value):
+        self.Value = Value
+    def get_Index(self):
+        return self.Index
+    def set_Index(self, Index):
+        self.Index = Index
+    def get_dlm(self):
+        return self.dlm
+    def set_dlm(self, dlm):
+        self.dlm = dlm
+    def get_anyAttributes_(self): return self.anyAttributes_
+    def set_anyAttributes_(self, anyAttributes_): self.anyAttributes_ = anyAttributes_
+    def _hasContent(self):
+        if (
+
+        ):
+            return True
+        else:
+            return False
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='VariableModelDirectiveType', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('VariableModelDirectiveType')
+        if imported_ns_def_ is not None:
+            namespacedef_ = imported_ns_def_
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        if self.original_tagname_ is not None and name_ == 'VariableModelDirectiveType':
+            name_ = self.original_tagname_
+        if UseCapturedNS_ and self.ns_prefix_:
+            namespaceprefix_ = self.ns_prefix_ + ':'
+        showIndent(outfile, level, pretty_print)
+        outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
+        already_processed = set()
+        self._exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='VariableModelDirectiveType')
+        if self._hasContent():
+            outfile.write('>%s' % (eol_, ))
+            self._exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='VariableModelDirectiveType', pretty_print=pretty_print)
+            outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
+        else:
+            outfile.write('/>%s' % (eol_, ))
+    def _exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='VariableModelDirectiveType'):
+        unique_counter = 0
+        for name, value in self.anyAttributes_.items():
+            xsinamespaceprefix = 'xsi'
+            xsinamespace1 = 'http://www.w3.org/2001/XMLSchema-instance'
+            xsinamespace2 = '{%s}' % (xsinamespace1, )
+            if name.startswith(xsinamespace2):
+                name1 = name[len(xsinamespace2):]
+                name2 = '%s:%s' % (xsinamespaceprefix, name1, )
+                if name2 not in already_processed:
+                    already_processed.add(name2)
+                    outfile.write(' %s=%s' % (name2, quote_attrib(value), ))
+            else:
+                mo = re_.match(Namespace_extract_pat_, name)
+                if mo is not None:
+                    namespace, name = mo.group(1, 2)
+                    if name not in already_processed:
+                        already_processed.add(name)
+                        if namespace == 'http://www.w3.org/XML/1998/namespace':
+                            outfile.write(' %s=%s' % (
+                                name, quote_attrib(value), ))
+                        else:
+                            unique_counter += 1
+                            outfile.write(' xmlns:%d="%s"' % (
+                                unique_counter, namespace, ))
+                            outfile.write(' %d:%s=%s' % (
+                                unique_counter, name, quote_attrib(value), ))
+                else:
+                    if name not in already_processed:
+                        already_processed.add(name)
+                        outfile.write(' %s=%s' % (
+                            name, quote_attrib(value), ))
+        if self.Use is not None and 'Use' not in already_processed:
+            already_processed.add('Use')
+            outfile.write(' Use=%s' % (quote_attrib(self.Use), ))
+        if self.ResponseUse is not None and 'ResponseUse' not in already_processed:
+            already_processed.add('ResponseUse')
+            outfile.write(' ResponseUse=%s' % (quote_attrib(self.ResponseUse), ))
+        if self.SpecialUse is not None and 'SpecialUse' not in already_processed:
+            already_processed.add('SpecialUse')
+            outfile.write(' SpecialUse=%s' % (quote_attrib(self.SpecialUse), ))
+        if self.ProcessFirst is not None and 'ProcessFirst' not in already_processed:
+            already_processed.add('ProcessFirst')
+            outfile.write(' ProcessFirst=%s' % (quote_attrib(self.ProcessFirst), ))
+        if self.Static is not None and 'Static' not in already_processed:
+            already_processed.add('Static')
+            outfile.write(' Static=%s' % (quote_attrib(self.Static), ))
+        if self.StrataID is not None and 'StrataID' not in already_processed:
+            already_processed.add('StrataID')
+            outfile.write(' StrataID=%s' % (quote_attrib(self.StrataID), ))
+        if self.SubjectID is not None and 'SubjectID' not in already_processed:
+            already_processed.add('SubjectID')
+            outfile.write(' SubjectID=%s' % (quote_attrib(self.SubjectID), ))
+        if self.SubjectIDLevel is not None and 'SubjectIDLevel' not in already_processed:
+            already_processed.add('SubjectIDLevel')
+            outfile.write(' SubjectIDLevel=%s' % (quote_attrib(self.SubjectIDLevel), ))
+        if self.TV is not None and 'TV' not in already_processed:
+            already_processed.add('TV')
+            outfile.write(' TV=%s' % (quote_attrib(self.TV), ))
+        if self.TVID is not None and 'TVID' not in already_processed:
+            already_processed.add('TVID')
+            outfile.write(' TVID=%s' % (quote_attrib(self.TVID), ))
+        if self.TVConalOrderingID is not None and 'TVConalOrderingID' not in already_processed:
+            already_processed.add('TVConalOrderingID')
+            outfile.write(' TVConalOrderingID=%s' % (quote_attrib(self.TVConalOrderingID), ))
+        if self.Value is not None and 'Value' not in already_processed:
+            already_processed.add('Value')
+            outfile.write(' Value=%s' % (quote_attrib(self.Value), ))
+        if self.Index is not None and 'Index' not in already_processed:
+            already_processed.add('Index')
+            outfile.write(' Index=%s' % (quote_attrib(self.Index), ))
+        if self.dlm is not None and 'dlm' not in already_processed:
+            already_processed.add('dlm')
+            outfile.write(' dlm=%s' % (quote_attrib(self.dlm), ))
+    def _exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec"', name_='VariableModelDirectiveType', fromsubclass_=False, pretty_print=True):
+        pass
+    def to_etree(self, parent_element=None, name_='VariableModelDirectiveType', mapping_=None, reverse_mapping_=None, nsmap_=None):
+        if parent_element is None:
+            element = etree_.Element('{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+        else:
+            element = etree_.SubElement(parent_element, '{https://github.com/wdatasci/WDS-ModelSpec}' + name_, nsmap=nsmap_)
+        if self.Use is not None:
+            element.set('Use', self.Use)
+        if self.ResponseUse is not None:
+            element.set('ResponseUse', self.ResponseUse)
+        if self.SpecialUse is not None:
+            element.set('SpecialUse', self.SpecialUse)
+        if self.ProcessFirst is not None:
+            element.set('ProcessFirst', self.ProcessFirst)
+        if self.Static is not None:
+            element.set('Static', self.Static)
+        if self.StrataID is not None:
+            element.set('StrataID', self.StrataID)
+        if self.SubjectID is not None:
+            element.set('SubjectID', self.SubjectID)
+        if self.SubjectIDLevel is not None:
+            element.set('SubjectIDLevel', self.SubjectIDLevel)
+        if self.TV is not None:
+            element.set('TV', self.TV)
+        if self.TVID is not None:
+            element.set('TVID', self.TVID)
+        if self.TVConalOrderingID is not None:
+            element.set('TVConalOrderingID', self.TVConalOrderingID)
+        if self.Value is not None:
+            element.set('Value', self.Value)
+        if self.Index is not None:
+            element.set('Index', self.Index)
+        if self.dlm is not None:
+            element.set('dlm', self.dlm)
+        if mapping_ is not None:
+            mapping_[id(self)] = element
+        if reverse_mapping_ is not None:
+            reverse_mapping_[element] = self
+        return element
+    def build(self, node, gds_collector_=None):
+        self.gds_collector_ = gds_collector_
+        if SaveElementTreeNode:
+            self.gds_elementtree_node_ = node
+        already_processed = set()
+        self.ns_prefix_ = node.prefix
+        self._buildAttributes(node, node.attrib, already_processed)
+        for child in node:
+            nodeName_ = Tag_pattern_.match(child.tag).groups()[-1]
+            self._buildChildren(child, node, nodeName_, gds_collector_=gds_collector_)
+        return self
+    def _buildAttributes(self, node, attrs, already_processed):
+        value = find_attr_value_('Use', node)
+        if value is not None and 'Use' not in already_processed:
+            already_processed.add('Use')
+            self.Use = value
+        value = find_attr_value_('ResponseUse', node)
+        if value is not None and 'ResponseUse' not in already_processed:
+            already_processed.add('ResponseUse')
+            self.ResponseUse = value
+        value = find_attr_value_('SpecialUse', node)
+        if value is not None and 'SpecialUse' not in already_processed:
+            already_processed.add('SpecialUse')
+            self.SpecialUse = value
+        value = find_attr_value_('ProcessFirst', node)
+        if value is not None and 'ProcessFirst' not in already_processed:
+            already_processed.add('ProcessFirst')
+            self.ProcessFirst = value
+        value = find_attr_value_('Static', node)
+        if value is not None and 'Static' not in already_processed:
+            already_processed.add('Static')
+            self.Static = value
+        value = find_attr_value_('StrataID', node)
+        if value is not None and 'StrataID' not in already_processed:
+            already_processed.add('StrataID')
+            self.StrataID = value
+        value = find_attr_value_('SubjectID', node)
+        if value is not None and 'SubjectID' not in already_processed:
+            already_processed.add('SubjectID')
+            self.SubjectID = value
+        value = find_attr_value_('SubjectIDLevel', node)
+        if value is not None and 'SubjectIDLevel' not in already_processed:
+            already_processed.add('SubjectIDLevel')
+            self.SubjectIDLevel = value
+        value = find_attr_value_('TV', node)
+        if value is not None and 'TV' not in already_processed:
+            already_processed.add('TV')
+            self.TV = value
+        value = find_attr_value_('TVID', node)
+        if value is not None and 'TVID' not in already_processed:
+            already_processed.add('TVID')
+            self.TVID = value
+        value = find_attr_value_('TVConalOrderingID', node)
+        if value is not None and 'TVConalOrderingID' not in already_processed:
+            already_processed.add('TVConalOrderingID')
+            self.TVConalOrderingID = value
+        value = find_attr_value_('Value', node)
+        if value is not None and 'Value' not in already_processed:
+            already_processed.add('Value')
+            self.Value = value
+        value = find_attr_value_('Index', node)
+        if value is not None and 'Index' not in already_processed:
+            already_processed.add('Index')
+            self.Index = value
+        value = find_attr_value_('dlm', node)
+        if value is not None and 'dlm' not in already_processed:
+            already_processed.add('dlm')
+            self.dlm = value
+        self.anyAttributes_ = {}
+        for name, value in attrs.items():
+            if name not in already_processed:
+                self.anyAttributes_[name] = value
+    def _buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
+        pass
+# end class VariableModelDirectiveType
+
+
+class Variable(GeneratedsSuper):
+    __hash__ = GeneratedsSuper.__hash__
+    subclass = None
+    superclass = None
+    def __init__(self, Name=None, Handle=None, VariableModelDirectives=None, SegmentedBy=None, Treatment=None, Source=None, Sources=None, Constant=None, Constants=None, Transformation=None, Transformations=None, CleanLimit=None, LeftLimit=None, RightLimit=None, CleanLimits=None, CleanLimitList=None, CriticalValue=None, CriticalValues=None, CriticalValueList=None, CriticalWord=None, CriticalWords=None, CriticalWordList=None, DropIndex=None, DropIndexs=None, DropIndices=None, DropIndexes=None, DropIndexList=None, Coefficients=None, CoefficientList=None, CoefficientsSet=None, gds_collector_=None, **kwargs_):
+        self.gds_collector_ = gds_collector_
+        self.gds_elementtree_node_ = None
+        self.original_tagname_ = None
+        self.parent_object_ = kwargs_.get('parent_object_')
+        self.ns_prefix_ = None
+        self.Name = _cast(None, Name)
+        self.Name_nsprefix_ = None
+        self.Handle = _cast(None, Handle)
+        self.Handle_nsprefix_ = None
+        self.VariableModelDirectives = VariableModelDirectives
+        self.VariableModelDirectives_nsprefix_ = None
         self.SegmentedBy = SegmentedBy
         self.SegmentedBy_nsprefix_ = None
         self.Treatment = Treatment
@@ -9850,6 +10313,10 @@ class Variable(GeneratedsSuper):
         return self.ns_prefix_
     def set_ns_prefix_(self, ns_prefix):
         self.ns_prefix_ = ns_prefix
+    def get_VariableModelDirectives(self):
+        return self.VariableModelDirectives
+    def set_VariableModelDirectives(self, VariableModelDirectives):
+        self.VariableModelDirectives = VariableModelDirectives
     def get_SegmentedBy(self):
         return self.SegmentedBy
     def set_SegmentedBy(self, SegmentedBy):
@@ -10022,6 +10489,7 @@ class Variable(GeneratedsSuper):
         self.Handle = Handle
     def _hasContent(self):
         if (
+            self.VariableModelDirectives is not None or
             self.SegmentedBy is not None or
             self.Treatment is not None or
             self.Source or
@@ -10088,10 +10556,12 @@ class Variable(GeneratedsSuper):
             eol_ = '\n'
         else:
             eol_ = ''
+        if self.VariableModelDirectives is not None:
+            namespaceprefix_ = self.VariableModelDirectives_nsprefix_ + ':' if (UseCapturedNS_ and self.VariableModelDirectives_nsprefix_) else ''
+            self.VariableModelDirectives.export(outfile, level, namespaceprefix_, namespacedef_='', name_='VariableModelDirectives', pretty_print=pretty_print)
         if self.SegmentedBy is not None:
             namespaceprefix_ = self.SegmentedBy_nsprefix_ + ':' if (UseCapturedNS_ and self.SegmentedBy_nsprefix_) else ''
-            showIndent(outfile, level, pretty_print)
-            outfile.write('<%sSegmentedBy>%s</%sSegmentedBy>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.SegmentedBy), input_name='SegmentedBy')), namespaceprefix_ , eol_))
+            self.SegmentedBy.export(outfile, level, namespaceprefix_, namespacedef_='', name_='SegmentedBy', pretty_print=pretty_print)
         if self.Treatment is not None:
             namespaceprefix_ = self.Treatment_nsprefix_ + ':' if (UseCapturedNS_ and self.Treatment_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
@@ -10183,9 +10653,12 @@ class Variable(GeneratedsSuper):
             element.set('Name', self.gds_format_string(self.Name))
         if self.Handle is not None:
             element.set('Handle', self.gds_format_string(self.Handle))
+        if self.VariableModelDirectives is not None:
+            VariableModelDirectives_ = self.VariableModelDirectives
+            VariableModelDirectives_.to_etree(element, name_='VariableModelDirectives', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
         if self.SegmentedBy is not None:
             SegmentedBy_ = self.SegmentedBy
-            etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}SegmentedBy').text = self.gds_format_string(SegmentedBy_)
+            SegmentedBy_.to_etree(element, name_='SegmentedBy', mapping_=mapping_, reverse_mapping_=reverse_mapping_, nsmap_=nsmap_)
         if self.Treatment is not None:
             Treatment_ = self.Treatment
             etree_.SubElement(element, '{https://github.com/wdatasci/WDS-ModelSpec}Treatment').text = self.gds_format_string(Treatment_)
@@ -10281,12 +10754,16 @@ class Variable(GeneratedsSuper):
             already_processed.add('Handle')
             self.Handle = value
     def _buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
-        if nodeName_ == 'SegmentedBy':
-            value_ = child_.text
-            value_ = self.gds_parse_string(value_, node, 'SegmentedBy')
-            value_ = self.gds_validate_string(value_, node, 'SegmentedBy')
-            self.SegmentedBy = value_
-            self.SegmentedBy_nsprefix_ = child_.prefix
+        if nodeName_ == 'VariableModelDirectives':
+            obj_ = VariableModelDirectiveType.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.VariableModelDirectives = obj_
+            obj_.original_tagname_ = 'VariableModelDirectives'
+        elif nodeName_ == 'SegmentedBy':
+            obj_ = VariableXRef.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.SegmentedBy = obj_
+            obj_.original_tagname_ = 'SegmentedBy'
         elif nodeName_ == 'Treatment':
             value_ = child_.text
             value_ = self.gds_parse_string(value_, node, 'Treatment')
@@ -12560,7 +13037,13 @@ NamespaceToDefMappings_ = {'https://github.com/wdatasci/WDS-ModelSpec': [('Nbr',
                                                 'ST'),
                                                ('DTypType',
                                                 './WDS-XML/XSD/WDSModel.xsd',
-                                                'ST')]}
+                                                'ST'),
+                                               ('VariableXRef',
+                                                './WDS-XML/XSD/WDSModel.xsd',
+                                                'CT'),
+                                               ('VariableModelDirectiveType',
+                                                './WDS-XML/XSD/WDSModel.xsd',
+                                                'CT')]}
 
 __all__ = [
     "Annotation",
@@ -12631,6 +13114,8 @@ __all__ = [
     "UDxInfo",
     "UDxs",
     "Variable",
+    "VariableModelDirectiveType",
+    "VariableXRef",
     "Variables",
     "VersionType",
     "VerticaType",

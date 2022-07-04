@@ -63,7 +63,25 @@ non-numerics can use <w> elements.
 from collections import OrderedDict as __OrderedDict
 
 import WDS.Wranglers.gXMLParsers.gWDSModel as __gWDSModel
+WDSModelBase=__gWDSModel
 import WDS.Wranglers.gXMLParsers.gWDSModel_literal as __gWDSModel_literal
+
+import pudb
+
+# a quick expansion of hasattr
+def bHasNonEmptyAttr(self, nm):
+    if hasattr(self,nm):
+        if getattr(self,nm) is None:
+            return False
+        tmp = getattr(self,nm)
+        if type(tmp) in (list, str):
+            return (len(tmp)>0)
+        else:
+            if tmp:
+                return True
+            else:
+                return False
+    return False
 
 #Monkey patching CriticalValues, CleanLimits, and CoefficientSets to add as_list() methods
 
@@ -80,23 +98,29 @@ def __v_as_Coefficient(self):
 setattr(__gWDSModel.v,"as_Coefficient",__v_as_Coefficient)
 
 def __CriticalValues_from_list(self,CriticalValues):
-    if type(CriticalValues) not in (list, tuple):
-        CriticalValues = [CriticalValues]
-    ncrits = len(CriticalValues)
-    self.v = []
-    self.CriticalValue = []
-    if ncrits > 0:
-        tmp = []
-        for i, v in enumerate(CriticalValues):
-            tmp.append(__gWDSModel.CriticalValue(Position=i, valueOf_=v
-                , gds_collector_=self.gds_collector_, parent_object_=self))
-        self.set_CriticalValue(tmp)
+    if type(self) is __gWDSModel.Variable:
+        self.CriticalValues=[]
+        self.CriticalValues = __gWDSModel.CriticalValues(parent_object_=self, gds_collector_=self.gds_collector_)
+        self.CriticalValues.CriticalValues_from_list(CriticalValues)
+    else:
+        if type(CriticalValues) not in (list, tuple):
+            CriticalValues = [CriticalValues]
+        ncrits = len(CriticalValues)
+        self.v = []
+        self.CriticalValue = []
+        if ncrits > 0:
+            tmp = []
+            for i, v in enumerate(CriticalValues):
+                tmp.append(__gWDSModel.CriticalValue(Position=i, valueOf_=v
+                    , gds_collector_=self.gds_collector_, parent_object_=self))
+            self.set_CriticalValue(tmp)
 
-setattr(__gWDSModel.CriticalValues,"from_list",__CriticalValues_from_list)
+setattr(__gWDSModel.Variable,"CriticalValues_from_list",__CriticalValues_from_list)
+setattr(__gWDSModel.CriticalValues,"CriticalValues_from_list",__CriticalValues_from_list)
 
 def __CriticalValues_as_list(self):
     rv=[]
-    if hasattr(self,"v") and (len(self.v)>0):
+    if bHasNonEmptyAttr(self, "v"):
         n = len(self.v)
         rv=[None for i in range(0, n)]
         found_anyPosition = False
@@ -112,7 +136,7 @@ def __CriticalValues_as_list(self):
                         raise(Exception("in CriticalValues_as_list, Position ", i, " cannot be filled twice"))
                     else:
                         rv[i] = c.valueOf_
-    elif hasattr(self,"CriticalValue") and (len(self.CriticalValue)>0):
+    elif bHasNonEmptyAttr(self, "CriticalValue"):
         n = len(self.CriticalValue)
         rv=[None for i in range(0, n)]
         found_anyPosition = False
@@ -142,7 +166,7 @@ def __Collect_CleanLimits(self):
         if self.CleanLimits:
             cself=self.CleanLimits
         else:
-            self.set_CleanLimits(___gWDSModel.CleanLimits(CleanLimit=self.CleanLimit, LeftLimit=self.LeftLimit, RightLimit=self.RightLimit
+            self.set_CleanLimits(__gWDSModel.CleanLimits(CleanLimit=self.CleanLimit, LeftLimit=self.LeftLimit, RightLimit=self.RightLimit
                 , gds_collector_=self.gds_collector_, parent_object=self))
             cself=self.CleanLimits
             if cself.CleanLimit: 
@@ -218,25 +242,43 @@ def __CleanLimits_as_list(self):
 setattr(__gWDSModel.CleanLimits,"as_list",__CleanLimits_as_list)
 
 def __Responses_from(self, Responses):
-    self.Response = []
-    if type(Responses) not in (list, tuple):
-        Response = [Reponse]
-    tmp = []
-    for i, w in enumerate(Reponses):
-        tmp.append(__gWDSModel.Reponse(Position=i, valueOf_=w
-            , gds_collector_=self.gds_collector_, parent_object_=self))
-    self.set_Reponse(tmp)
+    if type(self) in (__gWDSModel.Model, __gWDSModel.ComponentModel):
+        if self.ModelDirectives is None:
+            self.ModelDirectives = __gWDSModel.ModelDirectives(parent_object_=self, gds_collector_=self.gds_collector_)
+        self.ModelDirectives.Responses_from(Responses)
+    elif type(self) is __gWDSModel.ModelDirectives:
+        if self.Responses is None:
+            self.Responses = __gWDSModel.Responses(parent_object_=self, gds_collector_=self.gds_collector_)
+        self.Responses.Responses_from(Responses)
+    elif type(self) is __gWDSModel.Responses:
+        self.Response = []
+        if type(Responses) not in (list, tuple):
+            Response = [Response]
+        for i, w in enumerate(Responses):
+            self.add_Response(__gWDSModel.Response(Position=i, valueOf_=w
+                , gds_collector_=self.gds_collector_, parent_object_=self))
 
-setattr(__gWDSModel.Responses,"from",__Responses_from)
+setattr(__gWDSModel.Responses,"Responses_from",__Responses_from)
+setattr(__gWDSModel.ModelDirectives,"Responses_from",__Responses_from)
+setattr(__gWDSModel.Model,"Responses_from",__Responses_from)
+setattr(__gWDSModel.ComponentModel,"Responses_from",__Responses_from)
 
 
-def __Find_Reponses(self):
-    if hasattr(self, 'ModelDirectives'):
-        return self.ModelDirectives.Responses
+def __Find_Responses(self):
+    if bHasNonEmptyAttr(self, "ModelDirectives"):
+        if bHasNonEmptyAttr(self.ModelDirectives, "Responses"):
+            return self.ModelDirectives.Responses
+        elif bHasNonEmptyAttr(self.ModelDirectives, "Response"):
+            mProcessElementWithList(self.ModelDirectives, "Response")
+            return self.ModelDirectives.Responses
+        else:
+            #keep going
+            return __Find_Responses(self.parent_object_)
     if self.parent_object_ is None:
         return None
-    return __Find_Reponses(self.parent_object_)
+    return __Find_Responses(self.parent_object_)
 
+setattr(__gWDSModel.Variable,"mFindResponses",__Find_Responses)
 
 
 def __Responses_as_list(self):
@@ -268,45 +310,56 @@ def __CoefficientsSet_from(self, Coefficients, Responses_as_list=None):
             #   Models/Model/ComponentModels/ComponentModel/Variables/Variable
             # or
             #   Models/Model/Variables/Variable
-            # Reponses are at the closest Model or ComponentModel level
+            # Responses are at the closest Model or ComponentModel level
             #
             # trying ..(Variable)/..(Variables)/..(Model)/ModelDirectives/Responses
                           #x.parent_object_.parent_object_.parent_object_.parent_object_.ModelDirectives.Responses.as_list()
-            Reponses = self.parent_object_.parent_object_.parent_object_.parent_object_.ModelDirectives.Responses
-            if not Responses:
-                # trying ..(Variable)/..(Variables)/..(ComponentModel)/..(ComponentModels)/..(Model)
-                Reponses = self.parent_object_.parent_object_.parent_object_.parent_object_.parent_object_.ModelDirectives.Responses
-            Responses_as_list = Reponses.as_list()
+            Responses_as_list = self.mFindResponses().as_list()
         except Exception as e:
-            raise(Exception('cannot call Reponses.as_list() in Coefficents.from, ' + str(e)))
-    if type(Reponses_as_list) not in (list, tuple):
+            raise(Exception('cannot call mFindResponses.as_list() in Coefficents.from, ' + str(e)))
+    if type(Responses_as_list) not in (list, tuple):
         Responses_as_list = [Responses_as_list]
-    nresp = len(Reponses_as_list)    
+    nresp = len(Responses_as_list)    
     if nresp != len(Coefficients):
         raise(Exception('in Coefficients.from, len(Coefficients) != len(Responses_as_list)'))
 
-    if self.CoefficientsSet:
-        cset = self.CoefficientsSet
-        mProcessElementWithList(cset, "Coefficient")
-    else:
+    #pudb.set_trace()
+
+    cset = None
+    if bHasNonEmptyAttr(self,"CoefficientList"):
         mProcessElementWithList(self, "Coefficient")
-        if self.Coefficients:
-            cset = __gWDSModel.CoefficientsSet(Coefficients=self.Coefficients, gds_collector_=self.gds_collector_, parent_object_=self)
-            self.set_CoefficientsSet(cset)
+        self.CoefficientsList = []
+
+    if bHasNonEmptyAttr(self,"CoefficientsSet"):
+        cset = self.CoefficientsSet
+        if bHasNonEmptyAttr(cset,"CoefficientList"):
+            mProcessElementWithList(cset, "Coefficient")
+        if bHasNonEmptyAttr(self.CoefficientsSet,"Coefficients"):
+            if bHasNonEmptyAttr(self,"Coefficients"):
+                for i, c in enumerate(self.Coefficients):
+                    for j, c2 in enumerate(cset.Coefficients):
+                        if c.Response == c2.Response:
+                            raise(Exception("Response ",c.Response," has Coefficients at both the Variable and Variable.CoefficientsSet levels"))
+                    c.parent_object_ = cset
+                    self.CoefficientsSet.add_Coefficients(c)
+                self.Coefficients = []
+    
+    if cset is None:
+        self.set_CoefficientsSet(__gWDSModel.CoefficientsSet(gds_collector_=self.gds_collector_, parent_object_=self))
+        cset = self.CoefficientsSet
+        if bHasNonEmptyAttr(self,"Coefficients"):
+            for i, c in enumerate(self.Coefficients):
+                c.parent_object_ = cset
+                cset.add_Coefficients(c)
             self.Coefficients = []
-            for c in cset.Coefficients:
-                mProcessElementWithList(c, "Coefficient")
-        else:
-            cset = __gWDSModel.CoefficientsSet(gds_collector_=self.gds_collector_, parent_object_=self)
-            self.set_CoefficientsSet(cset)
     
     for i, r in enumerate(Responses_as_list):
         found = False
-        if cset.Coefficients:
+        if bHasNonEmptyAttr(cset,"Coefficients"):
             for j, c in enumerate(cset.Coefficients):
                 if c.Response==r:
                     found = True
-                break
+                    break
         tmp = __gWDSModel.Coefficients(Response=r
             , gds_collector_=cset.gds_collector_, parent_object_=cset)
         for k, v in enumerate(Coefficients[i]):
@@ -401,21 +454,21 @@ sOuter = '''def bHas(arg,arg2):
 for w in __ElementsWithPlurals:
     s='def bIs' + w + '''(arg):
     return type(arg) is __gWDSModel.'''+w
-    print(s)
+    #print(s)
     eval(compile(s, 'bIs'+w, 'exec'), globals(), globals())
     s='def bHas' + w + '''(arg):
     return hasattr(arg,"'''+w+'") and (arg.'+w+' is not None) and (len(arg.'+w+')>0)'
     sOuter += '''
     if (arg2=="'''+w+'") and (bHas'+w+'(arg)): return True'''
-    print(s)
+    #print(s)
     eval(compile(s, 'bHas'+w, 'exec'), globals(), globals())
     s='def bIs' + w + '''s(arg):
     return type(arg) is __gWDSModel.'''+w+'s'
-    print(s)
+    #print(s)
     eval(compile(s, 'bIs'+w+'s', 'exec'), globals(), globals())
     s='def bHas' + w + '''s(arg):
     return hasattr(arg,"'''+w+'s") and (arg.'+w+'s is not None)'
-    print(s)
+    #print(s)
     eval(compile(s, 'bHas'+w, 'exec'), globals(), globals())
     sOuter += '''
     if (arg2=="'''+w+'s") and (bHas'+w+'s(arg)): return True'''
@@ -426,13 +479,13 @@ for w in __ElementsWithPlurals:
     #elif (not bHas'''+w+'(arg)) and (bHas'+w+'s(arg)):'+'''
         #arg.'''+w+' = arg.'+w+'s.'+w+'''
         '''
-    print(s)
+    #print(s)
     eval(compile(s, 'mPreProcess'+w, 'exec'), globals(), globals())
 
 for w in __ElementsWithLists:
     s='def bHas' + w + '''List(arg):
     return hasattr(arg,"''' + w + 'List") and (arg.'+w+'List is not None)'
-    print(s)
+    #print(s)
     eval(compile(s, 'bHas'+w+'List', 'exec'), globals(), globals())
     sOuter += '''
     if (arg2=="'''+w+'List") and (bHas'+w+'List(arg)): return True'''
@@ -443,15 +496,32 @@ del s
 del w
 del sOuter
 
+def WDSModel(Name=None, Responses=None):
+    rv = __gWDSModel.Model(Name=Name, Handle=Name)
+    rv.set_ModelDirectives(__gWDSModel.ModelDirectives(parent_object_=rv, gds_collector_=rv.gds_collector_))
+    rv.Responses_from(Responses)
+    return rv
 
-def WDSModel(filename):
+def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None):
+    rv = __gWDSModel.Variable(Name=Name, Handle=Name, Treatment=Treatment, parent_object_=Model, gds_collector_=Model.gds_collector_)
+    Model.add_Variable(rv)
+    rv.add_Source(__gWDSModel.Source(valueOf_=Name, parent_object_=rv, gds_collector_=Model.gds_collector_))
+    rv.CriticalValues_from_list(CriticalValues)
+    if CleanLimits:
+        rv.CleanLimits_from_list(CleanLimits)
+    if Coefficients:
+        rv.CoefficientsSet_from(Coefficients)
+    rv.VariableModelDirectives = __gWDSModel.VariableModelDirectiveType(parent_object_=rv, gds_collector_=Model.gds_collector_)
+    return rv
+
+def WDSModelFromFile(filename):
     if type(filename) is str:
         rv = __gWDSModel.parse(filename)
     else:
         rv = __gWDSModel.parse(filename.read())
-    print(rv)
+    #print(rv)
     mPreProcess(rv)
-    print(rv)
+    #print(rv)
     return rv
 
 def mProcessElementWithList(self, nm):
@@ -470,7 +540,7 @@ def mProcessElementWithList(self, nm):
                 raise(Exception('element '+nm+'s has '+nm+' values but parent element was also given a '+nm+'List '+s))
         tempv=getattr(__gWDSModel,nm+'s')(gds_collector_=self.gds_collector_, parent_object_=self)
         if hasattr(getattr(self,nm+"List"),"Response"):
-            tempv.Response = getattr(getattr(self,nm+"List"),"Reponse")
+            tempv.Response = getattr(getattr(self,nm+"List"),"Response")
         for i,w in enumerate(s.split(' ')):
             getattr(tempv,'add_'+nm)(getattr(__gWDSModel,nm)(valueOf_=float(w)
                 , gds_collector_=tempv.gds_collector_, parent_object_=tempv))
