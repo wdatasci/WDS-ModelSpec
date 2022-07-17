@@ -65,12 +65,17 @@ The author's personal methodology has been used and refined at multiple firms an
 any restricted IP.
 This article and other details
 can also be found at:
-https://github.com/wdatasci/WDS-ModelSpec
+\begin{center}
+    https://github.com/wdatasci/WDS-ModelSpec
+\end{center}
+Many of the formulas included herein are also from old writeups.
+There may be some changes in notation until this document gets finalized (if ever). 
 
 
 \section{Background discussion, the part with commentary}
 
-For this section, the author will dispense with the third person language.
+For this section, the author will dispense with the third person language. 
+
 
 The method I have used since late 1999 or early 2000 is different than another which has now 
 been implemented in multiple frameworks such as SAS and R.  
@@ -353,11 +358,18 @@ Note that
 this is \underline{exactly} a 3-state case of a semi-Markov renewal model which is like a continuous 
 time Markov chain except sojourn times are general distributions.  In other words, this type of procedure could be used for fitting timed-multinomials, 
 possibly conditional on a given state with the multinomial outcome as the transistion into another state.\footnote{Again, leaving to the
-reader to look it up, or remember from graduate classes long ago:   A discrete time Markov chain makes a Markov transition at each epoch. A
-continuous time Markov chain has the same concepts in continuous time, but has the effect of Markov state transitions with exponential
-sojourns.  A renewal process is a counting process with i.i.d. interarrival (or sojourn) times.  A Markov renewal process has Markov process
-driving the inter-renewal times with a state transition at renewals, and a semi-Markov renewal has the persistent concept of {\em state}
-between transitions.}
+reader to look it up, or remember from graduate classes long ago:   
+\begin{itemize}
+    \item A discrete time Markov chain makes a Markov transition in the state space at each epoch. 
+    \item A continuous time Markov chain has the same concept, in continuous time, resulting in Markov state transitions between 
+exponential state-dependent sojourns.  
+    \item A renewal process is a counting process with i.i.d. interarrival (or sojourn) times.  
+    \item A Markov renewal process has a Markov process driving the inter-renewal times with a state transition at renewals.
+    \item And, finally, and a semi-Markov renewal has the persistent concept of {\em state}
+between transitions.
+\end{itemize}
+}
+
 
 As before, assume that event times are ordered, $T_1, \ldots, T_N$, with a 1-1 mapping to subjects and let $M_1, \ldots, M_N$, be the respective marks which 
 may be $d, p$ or $e$ for default, prepayment or end of study respectively.  For our purposes end of study times are the only purposefull but truely non-informative 
@@ -385,6 +397,23 @@ correlated to time and could be included above, but this would become more compu
 complexity, notice that we are dividing by $h^d_0(T_i)$ at the time of the numerators event, interactions with time would require the denominators covariates
 to be interacted with the numerators time for each $T_i$.  
 
+{\em Author's note:}
+Implicit in the contribution to likelihood equation is the concept of the {\em able} set.  For this discussion, the event times
+are assumed to be ordered. Therefore, for subject $i$, the sum
+$\sum_{j=i}^N$ is effectively the sum over the {\em able} set, or at risk just like subject $i$ before $T_i$.  
+This is sometimes denoted, $\sum_{j \in {\cal S}_i}$, where ${\cal S}_i$ is the survival set relative to subject $i$.
+Until the formulas get updated in this write-up, $\sum_{j=i}^N$ will be understood as $\sum_{j \in {\cal S}_i}$ without loss of generality.
+
+{\em Author's note, continued:}
+Even though the times are assumed to be ordered, but no mention of tied event times is made.
+There may exist subjects, $i$ and $j$, with non-censored events, where  $j \in {\cal S}_i$ and $i \in {\cal S}_j$ and effectively ${\cal
+S}_i \equiv {\cal S}_j$.
+As in the note above, without loss of generality, the equations can proceed with this implied behavior.
+This is an example of Breslow tie handling, Efron will not be considered here. 
+Reasons to not bother with Efron tie handling come from the concept of PH/Cox models as 
+the limit under refinement
+of sequential conditional logistic models, repeated measure concepts of logistic modeling, and that 
+most models will be treated in discrete time.
 
 The process for fitting the marked point process becomes as follows:
 \begin{itemize}
@@ -392,14 +421,16 @@ The process for fitting the marked point process becomes as follows:
         This is optional, since it can also be fit concurrently as detailed in the equations for Newton-Raphson fitting detailed in a later
         section.
 
-\item Maximize the following likelihood function:
+    \item Maximize the following (partial) likelihood function (the right hand side illustrates a parameterized concurrent fit for
+        $\phi(t)$):
 $$\prod_{M_i \not = e} {{1_{\{M_i=d\}}e^{\beta^d Z_i}+1_{\{M_i=p\}}e^{\beta^p Z_i}e^{\phi(T_i)} }
-\over { \sum_{j=i}^N e^{\beta^d Z_j}+\left({\sum_{j=i}^N e^{\beta^p Z_j}}\right)e^{\phi(T_i)} } }. $$
+\over { \sum_{j=i}^N e^{\beta^d Z_j}+\left({\sum_{j=i}^N e^{\beta^p Z_j}}\right)e^{\phi(T_i)} } } =
+        \prod_{M_i \not = e} {{1_{\{M_i=d\}}e^{\beta^d Z_i}+1_{\{M_i=p\}}e^{\beta^p Z_i + \beta^\phi Z^T_i} }
+        \over { \sum_{j=i}^N e^{\beta^d Z_j} + e^{\beta^p Z_j + \beta^\phi Z^T_i} } } $$
 \end{itemize}
 
 Of course, it looks like $\hat{\beta}=\beta^p-\beta^d$, however, these sub-models can be entirely specified as to what is appropriate for prepayment or what is
 appropriate for default. Furthermore, these coefficients are fit in a non-informative censoring environment.
-
 
 {\em Author's note:} Notice the fundamental difference between the partial likelihood function above, in a proper form above (and proposed
 by Cox), vs FG-mud.
@@ -407,13 +438,16 @@ The additional terms in the denominator come from the competing risks and this d
 not using data from formerly at-risk subjects.
 
 
+\subsection{Comment on ties and how to use a normal PH/Cox method for fitting a MPH/Cox model}
 
-\subsection{How to use a normal PH/Cox method for fitting a MPH/Cox model}
-
-{\em Author's note:}  The fundamental concept of each single subject being replaced with a competing {\em set}, motivates how to fit MPH/Cox via a normal PH/Cox
+{\em Author's notes:}  
+\begin{itemize}
+    \item The fundamental concept of each single subject being replaced with a competing {\em set}, motivates how to fit MPH/Cox via a normal PH/Cox
 methodology without sacrificing anything ( in other words, in total contrast to NCF-CE ).  It is actually so simple, it begs credulity.
-The only down-side is that it blows up the sample size.  In software such as SAS (not necessarily done in memory), it can be handled without too
+    \item The only down-side is that it blows up the sample size and there can be a large number of $0*0+0$ calculations.  
+    \item In software such as SAS (not necessarily done in memory), it can be handled without too
 much additional complexity.
+\end{itemize}
 
 
 The basic format of a PH/Cox (without time varying covariates is):
@@ -456,7 +490,7 @@ obs_N
     t_{obs_N} & Z_{obs_N} & e_{obs_N} \in \{0, \ldots, K\} 
 \end{pmatrix}
 \end{equation*}
-where there are $1, \ldots, K$ events of interest, all others (including censoring) are mapped to to event class $0$.
+where there are $1, \ldots, K$ events of interest, all others (including censoring) are mapped to event class $0$.
 
 
 Upon close inspection to the likelihood functions described below and their relationship to a normal one-event class PH/Cox model,
@@ -476,7 +510,7 @@ model fitting dataset via the following:
             \item For each of the $K$ duplications, there is only one associated response. Whereas, in the non-duplicative
                 datset, $e_{obs_i}$ can itself be represented by a vector valued indicator function (where only the $k^{th}$ position is non-zero and equals 1
                 if and only if $e_{obs_i}=k$), the multinomial or mark reponse will be replaced with the 
-                single corresponding stacked response.  In other words, the response varaible for the $k^{th}$ duplication equals 1 if and only if $e_{obs_i}=k$.
+                single corresponding stacked response.  In other words, the response variable for the $k^{th}$ duplication equals 1 if and only if $e_{obs_i}=k$.
         \end{itemize}
     \item In addition to {\em row} duplication, there is column duplication in the following sense:
         \begin{itemize}
@@ -496,13 +530,15 @@ model fitting dataset via the following:
         \end{itemize}
 \end{itemize}
 
-Therefore, if one is modeling, say 5 reponses, and with 10 covariates, one ends up with 5X rows and 5X covariates.  The multivariate reponse
-is replaced with a bivariate reponse, associated with the row-duplicate.  Futhermore, the 5X rows and 5X covariates, is actually quite
-sparse and representable by a block diagonal structure.   
+Therefore, if one is modeling, say 5 reponses over $N$ observations (where there are $N$ 5-vector valued responses) and 10 covariates, one
+ends up with $5N$ observations, $5N$ single (or 2-vector) responses, and $5*10$ covariates.  The multivariate reponse
+is replaced with a bivariate reponse, associated with the row-duplicate.  Futhermore, the $5N$ rows and $5*10$ covariates, is actually quite
+sparse and representable by a block diagonal structure.   The fact that one is modelling $e^{\beta Z}$ renders all of the off-diagonal 
+blocks of covariates ineffective for rows and reponses not associated with the corresponding non-zero block.  This combined with 
+the non-zero blocks of duplicative rows re-creates the extended denominator in the MPH/Cox likelihood.
 
 {\em Author's note:} This may seem awkward, but still easily handlable in something like SAS (which has been effectively file-based since
 the mainframe/COBOL days).  This is still a hell of a lot better than making up data. 
-
 
 \subsection{Second-to-last thoughts}
 
@@ -673,9 +709,13 @@ In the case of tied event times, the system of equations generated by setting de
 \section{Further extensions and equations for Newton-Raphson fitting}
 
 Once the format for two outcomes is established, extension to a greater number of outcomes is direct. 
-For example, if the mark set is $m_0, m_1, \ldots, m_l$, (with $m_0$ as the censored mark),
-the key to this extension is a family of Radon-Nikodym derivatives, $\phi_2(t), \ldots, \phi_l(t)$, 
-between the multiple hazard functions and one pre-specified reference outcome.  
+For example, if the mark set is $m_0, m_1, \ldots, m_K$, where $m_0$ as the censored mark and $m_1$ 
+is the reference mark\footnote{As may have been mentioned before, it is assumed that the reference mark
+in some sense {\em drives} the common baseline, since all other marks have changes of measures.  This is 
+not a necessity, the common baseline does not have to have one reference mark.  In this case, every mark 
+may need a parameterized RND change of measure.}.  The key to this extension is a family of Radon-Nikodym derivatives, 
+$[\phi_1(t),] \phi_2(t), \ldots, \phi_K(t)$, 
+between the multiple hazard functions and the common baseline.
 These could of course be fit using a common reference generalized logit model. The quanitities above of the form 
 $1_{\{M_n=d\}}e^{\beta^dZ_n}+1_{\{M_n=p\}}e^{\beta^pZ_n}e^{\phi(t_n)}$ would be replaced by
 $$1_{\{M_n=m_1\}}e^{\beta^1Z_n}+\sum_{k=2}^l1_{\{M_n=m_k\}}e^{\beta^kZ_n}e^{\phi_k(t_n)}.$$
@@ -761,6 +801,16 @@ Thus, for a Newton-Raphson technique the following quantities are required:
 	}\right] \\
 \end{align*}
 
+{\em Author's note:} A few additional observations:
+\begin{itemize}
+    \item The last three equations have to do with fitting competing risks in common.  Yes, fitting in common can have an impact on the
+    \item There is an interesting behavior above.  
+        Effectively, $\phi^{k_i}$ is paired with $\beta^{k_i}$, the first three second order equations above 
+        have an additional term when compared to the last three equations.  This is due to the commonality of their associated response.
+        estimaes.
+    \item If a covariate was to be used across reponses with the same coefficient, that commonality would require 
+        additional terms.
+\end{itemize}
 
 }
 
