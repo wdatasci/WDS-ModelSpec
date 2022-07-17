@@ -101,7 +101,7 @@ In consumer credit modeling, possibly with a long span of data crossing multiple
 once a subject has an exit, such as prepayment or default, the data stream ends.  
 Unless one has already built the "calculator" for forecasting out the process (which may also include other 
 more complex exogenous variables), to include
-data from exited subjects in the denominator is akin to using made-up-data (FG-mud).
+data from exited subjects in the denominator is akin-to using made-up-data (FG-mud).
 \footnote{Oddly enough, for years, I had an ongoing argument about validating hazard models with a few colleagues who did not have
 mathematical sciences backgrounds.
 The concept of comparing the empirical hazard against the at-risk average of model estimates was mis-termed by a colleague as somehow {\em with
@@ -137,7 +137,7 @@ much free time, would have been great. Instead, we got the job done, made the fi
 Furthermore, the authors of the SAS article referenced above make a claring mistake that represents the problem with
 a simplistic cause-specific fitting of competing risks.  Another way of interpreting the {\em cause-specific}
 term is that the competing risk hazards are effectively {\em non-concurrently fit but 
-concurrently evaluated}, NCF-CE.  For my purposes, the root cause of misunderstanding is the statement:
+concurrently evaluated} (NCF-CE).  For my purposes, the root cause of misunderstanding is the statement:
 \begin{center}
 \it Because the K models are mutually exclusive, they can be analyzed independently.
 \end{center}
@@ -149,21 +149,21 @@ non-informative sensoring is ignored in both NCF-CE and FG-mud.
 That being said, in consumer credit modeling, there may be cases (with prime mortgages as an example), 
 where one might argue that prepayment and default are independent. In these cases, default is usually 
 the more rare event and often due to an unrelated event for the consumer. 
-From my personal experience of modeling collateral on the order of \$T,
+From personal experience of modeling collateral on the order of \$Ts,
 once one gets outside of prime credit, competing risks are generally not independent.
 
 It is fairly common to talk with modellers who fit risks separately and then used combined systems, as in NCF-CE,
-and find that adjustments or corrections have to be made to the final system.  That was one of the motivating factors
-for the method discussed here:  In a shop where one colleague developed a first-serious-delinquency model and
+only to find that adjustments (corrections) have to be made to the final system.  That was one of the motivating factors
+for the method discussed in this article/commentary/editorial:  In a shop where one colleague developed a first-serious-delinquency model and
 another fit a prepayment model, I developed the roll-to-loss model and got stuck implementing them all.  
 That is when the misspecifications showed up.  The first-serious-delinquency model looked like it validated well, 
 but when carried out, it was a full distribution function, over-estimating ultimate defaults, lacking
 the the sub-distribution effect associated with prepayments.
-To my colleague's credit, he did come up with a really interesting accelerated life type of model 
-for a subdistribution function, with the terminal as the expected default level.
+To my colleague's credit, he subsequently did come up with a really interesting accelerated life type of model 
+for a subdistribution function, where the terminal value was the expected default level.
 The prepay model was, well, just wrong.
 
-One can see the motivation in something like FG to create a hazard which results in sub-distribution, 
+One can see the motivation in something like FG to create a hazard which results in a sub-distribution, 
 but instead of mud, how about just doing it right in the first place?  
 Which brings me back to the method I have used for 20+ years. 
 
@@ -196,13 +196,17 @@ not have to be the same and the coefficient values should not have to be the sam
     lack reasonable smoothness.  If the method doesn't discuss this, then the authors might 
     never have done anything in consumer credit.
 \end{itemize}
-
 One can fit MPH/Cox models satisfying these requirements either by:
 \begin{itemize}
-\item Writing it yourself: Which back in 1999/2000, I first did with a combination of MATLAB and SAS code.
-\item Tricking a normal PH/Cox method, like SAS's PHREG.  I figured this one out when a colleague thought that a SAS-only technique
-was somehow better.   (Details below also detail this method, although someone may have published an 
-article describing it in the 1990s.)
+\item Writing it yourself: Which back in 1999/2000, I first did with a combination of MATLAB and SAS code, using the equations detailed
+    below.
+\item Tricking a normal PH/Cox method, like SAS's PHREG.\footnote{I have always pronounced SAS's PHReg as P-H-Reg,
+    since it stands for Proportional-Hazards-Regression.  After one unfortunate event, I try not to snicker at those 
+        who pronounce it {\em FREG}.  As an alternative, I try to stick with the southern-ism, {\em oh, bless its heart}.
+        }
+I figured this one out when a colleague promoted the concept that a SAS-only technique
+        would be better in some way.  Once one thinks about it, it is actually quite easy (details below), but data expensive.
+Someone may have published an article in the 1990s.
 \end{itemize}
 
 Most of my original write-up is included here, but I have also decided to include refinements made along 
@@ -342,13 +346,18 @@ Once $S_0(t)$ is estimated from the data, $S_i(t)=[S_0(t)]^{e^{\beta Z_i}}$.
 
 \subsection{Fitting the long technique}
 
-Instead of playing a racing game with composite distributions as above in technique 2 which introduced scores of censoring/numerical/technique issues, let us 
+Instead of playing a racing game with composite distributions as above which introduced scores of censoring/numerical/technique issues, let us 
 look to the loan level.  Instead of treating subject $i$ as a single counting process stream as described in the previous section, treat each subject as a 
 composite stream itself, i.e., $N^i_t=N^{i,d}_t+N^{i,p}_t$ (even though we generally care only about the first event epoch).
 Note that 
-this is \underline{exactly} a 3-state case of a semi-Markov renewal model (I need to check Cinlar for the exact name I'm looking for) which is like a continuous 
+this is \underline{exactly} a 3-state case of a semi-Markov renewal model which is like a continuous 
 time Markov chain except sojourn times are general distributions.  In other words, this type of procedure could be used for fitting timed-multinomials, 
-possibly conditional on a given state with the multinomial outcome as the transistion into another state.
+possibly conditional on a given state with the multinomial outcome as the transistion into another state.\footnote{Again, leaving to the
+reader to look it up, or remember from graduate classes long ago:   A discrete time Markov chain makes a Markov transition at each epoch. A
+continuous time Markov chain has the same concepts in continuous time, but has the effect of Markov state transitions with exponential
+sojourns.  A renewal process is a counting process with i.i.d. interarrival (or sojourn) times.  A Markov renewal process has Markov process
+driving the inter-renewal times with a state transition at renewals, and a semi-Markov renewal has the persistent concept of {\em state}
+between transitions.}
 
 As before, assume that event times are ordered, $T_1, \ldots, T_N$, with a 1-1 mapping to subjects and let $M_1, \ldots, M_N$, be the respective marks which 
 may be $d, p$ or $e$ for default, prepayment or end of study respectively.  For our purposes end of study times are the only purposefull but truely non-informative 
@@ -359,7 +368,11 @@ $$ {{1_{\{M_i=d\}}e^{\beta^d Z_i}h^d_0(T_i)+1_{\{M_i=p\}}e^{\beta^p Z_i}h^p_0(T_
 \over { \sum_{j=i}^N e^{\beta^d Z_j}h^d_0(T_i)+e^{\beta^p Z_j}h^p_0(T_i) } }.$$
 Here, $1_{\{A\}}$ is the indicator of a set, i.e., $1_{\{A\}}=1$ if $A$ occurs and 0 otherwise.
 
-Of course, it would be nice if we could {\em cancel} out the baseline hazards, but they are not shared in common any longer.  However, dividing numerator and 
+Of course, it would be nice if we could {\em cancel} out the baseline hazards, but they are not shared in common any longer.\footnote{{\em
+Author's note:}  At this point, when presenting, I usually just say: What the hell, just do it anyways.  In generally, for more stability 
+in the Radon-Nikodym derivative (RND), the reference event should be the more frequent event at any given time.  Or, in the even more general
+case, the reference measure should be a common effect and both/all outcomes might have RND's to change measure to the common.}
+However, dividing numerator and 
 denominator by $h^d_0(T_i)$ yields a contribution to likelihood of :
 $$ {{1_{\{M_i=d\}}e^{\beta^d Z_i}+1_{\{M_i=p\}}e^{\beta^p Z_i}{h^p_0(T_i)\over h^d_0(T_i)} } 
 \over { \sum_{j=i}^N e^{\beta^d Z_j}+e^{\beta^p Z_j}{h^p_0(T_i)\over h^d_0(T_i)} } }.$$
@@ -388,24 +401,135 @@ Of course, it looks like $\hat{\beta}=\beta^p-\beta^d$, however, these sub-model
 appropriate for default. Furthermore, these coefficients are fit in a non-informative censoring environment.
 
 
-{\em Author's note:} Notice the fundamental difference between the partial likelihood function above, in the proper form proposed by Cox, vs
-FG-mud.
+{\em Author's note:} Notice the fundamental difference between the partial likelihood function above, in a proper form above (and proposed
+by Cox), vs FG-mud.
 The additional terms in the denominator come from the competing risks and this dampens the hazard appropriately using just at-risk subjects,
 not using data from formerly at-risk subjects.
+
+
+
+\subsection{How to use a normal PH/Cox method for fitting a MPH/Cox model}
+
+{\em Author's note:}  The fundamental concept of each single subject being replaced with a competing {\em set}, motivates how to fit MPH/Cox via a normal PH/Cox
+methodology without sacrificing anything ( in other words, in total contrast to NCF-CE ).  It is actually so simple, it begs credulity.
+The only down-side is that it blows up the sample size.  In software such as SAS (not necessarily done in memory), it can be handled without too
+much additional complexity.
+
+
+The basic format of a PH/Cox (without time varying covariates is):
+
+
+\begin{equation*}
+\begin{pmatrix}
+obs_1 \\
+obs_2 \\
+\vdots \\
+obs_N
+\end{pmatrix}
+=
+\begin{pmatrix}
+    t_{obs_1} & Z_{obs_1} & e_{obs_1} \in \{0, 1\} \\
+    t_{obs_2} & Z_{obs_2} & e_{obs_2} \in \{0, 1\} \\
+\vdots \\
+    t_{obs_N} & Z_{obs_N} & e_{obs_N} \in \{0, 1\} 
+\end{pmatrix}
+\end{equation*}
+
+Here, for each observation, $objs_i \in \{obs_1, \ldots, obs_N\}$, there is an associated time point, $t_{obs_i}$, and covariate picture,
+$Z_{obs_i}$, and
+a response $e_{obs_i}$.  For simplicity in this discussion, assume that $e_{obs_i}=1$ at time $t_{obs_i}$ is the event of a target event and that $e_{obs_i}=0$
+at time $t_{obs_i}$ is a censoring event.
+
+In a marked or competing risk scenario, this is extended to:
+\begin{equation*}
+\begin{pmatrix}
+obs_1 \\
+obs_2 \\
+\vdots \\
+obs_N
+\end{pmatrix}
+=
+\begin{pmatrix}
+    t_{obs_1} & Z_{obs_1} & e_{obs_1} \in \{0, \ldots, K\} \\
+    t_{obs_2} & Z_{obs_2} & e_{obs_2} \in \{0, \ldots, K\} \\
+\vdots \\
+    t_{obs_N} & Z_{obs_N} & e_{obs_N} \in \{0, \ldots, K\} 
+\end{pmatrix}
+\end{equation*}
+where there are $1, \ldots, K$ events of interest, all others (including censoring) are mapped to to event class $0$.
+
+
+Upon close inspection to the likelihood functions described below and their relationship to a normal one-event class PH/Cox model,
+it is clear that for $K$ response classes, there are $K$ factors to the baseline being fit concurrently, $e^{\beta^iZ}$, $i = 1, \ldots,
+K$.\footnote{This includes any $\phi(t)$ RND factors.}  The coefficients can be estimated with total consistency to the full MPH/Cox method by {\em stacking} the
+model fitting dataset via the following:
+\begin{itemize}
+    \item Assume that responses are ordered and numbered, 1, $\dots$, $K$.
+    \item Without loss of generality, assume that the reference outcome is the first response.
+    \item Recall that each singular subject, $i$, has $K$ competing risks (i.e., $e_{obs_i} \in \{0, \ldots, K\}$), 
+                for which the occurrence of any one, $e_{obs_i}=k>0$, truncates
+                any future behavior for the $k^{th}$ and all other response classes.  
+    \item Each observation, $obs_i, i \in \{1, \ldots, N\}$, is replaced with $K$ observations, $obs_{i,k}, k=1, \ldots, K$:
+        \begin{itemize}
+            \item Accordingly, $e_{obs_i}=0$ indicates a censoring after time $t_{obs_i}$. In other words, through and including time 
+                $t_{obj_i}$, no marks have been observed, and the subject survives.
+            \item For each of the $K$ duplications, there is only one associated response. Whereas, in the non-duplicative
+                datset, $e_{obs_i}$ can itself be represented by a vector valued indicator function (where only the $k^{th}$ position is non-zero and equals 1
+                if and only if $e_{obs_i}=k$), the multinomial or mark reponse will be replaced with the 
+                single corresponding stacked response.  In other words, the response varaible for the $k^{th}$ duplication equals 1 if and only if $e_{obs_i}=k$.
+        \end{itemize}
+    \item In addition to {\em row} duplication, there is column duplication in the following sense:
+        \begin{itemize}
+            \item Assume the total covariate space is considered to be $\{Z_j\}_{\{j \in 1, \ldots, N\}}$.
+            \item Also, assume that the covariates can be grouped into $K$ sets, $Z^1, \ldots, Z^K$,\footnote{{\em Author's note:} 
+                There have been some interesting observations from personal experience, such as, variables in
+                common to more than one outcome may end up having the same, implying that the variable also has a {\em duration} effect, i.e., works across outcomes in the same
+                way. Or, if coefficents for outcomes have contrasting signs, there might be a particularly strong variable associated with
+                positive change in one response with a negatively correlated response in another.} associated with each of the
+                $K$ reponses, respectively.
+                \begin{itemize}
+                    \item Note: The $Z^1, \ldots, Z^K$ sets of covariates do not have to be mutually exclusive (and probably are not).
+                \end{itemize}
+            \item For each of the $K$ row duplications, there is also a copy of each of the $Z^1, \ldots, Z^K$ sets of covariates.
+            \item For the row duplication associated with reponse, $k \in \{1, \ldots, K\}$, only the covariate set, $Z_k$, is non-zero,
+                each of the other covariate sets is overriden to 0.
+        \end{itemize}
+\end{itemize}
+
+Therefore, if one is modeling, say 5 reponses, and with 10 covariates, one ends up with 5X rows and 5X covariates.  The multivariate reponse
+is replaced with a bivariate reponse, associated with the row-duplicate.  Futhermore, the 5X rows and 5X covariates, is actually quite
+sparse and representable by a block diagonal structure.   
+
+{\em Author's note:} This may seem awkward, but still easily handlable in something like SAS (which has been effectively file-based since
+the mainframe/COBOL days).  This is still a hell of a lot better than making up data. 
+
+
+\subsection{Second-to-last thoughts}
+
+When using MPH/Cox models, there is also one last implied assumption (if not stated elsewhere):  There are un-observable processes going
+on in a subject's {\em life}.  The assumption on everything in discussion here is:  Once all of the covariates are controlled for, and
+only after that point,
+for that one subject, the competing risks become independent.  
+
+In other words, the covariates represent all of the information that, once controlled for, provides the context for treating 
+the responses as independent (and self-censoring in a combined context).
 
 \subsection{Last thoughts before getting lost in formulas}
 
 PH/Cox models are thought of as {\em robust} estimation techniques.
 One of the basic concepts of these models is that the nuisance parameters do not confound the fitting of the pertinent covariates.  
-In fact, any effect in common to all subjects cancels out and   
+In fact, any effect in common to all subjects cancels out.  It follows that 
 no energy is spent fitting the baseline in the first step.  
 
-Since the baseline could cause major shifts in behavior, including it could take predictive power away from other variables.  
+Since the baseline could cause major shifts in behavior, its inclusion could take predictive power away from other variables.  
 This is also a criticism of $\phi(t)$ above, so care needs to be taken in its artificial treatment and which response is the reference.
 
 Something that might be new in this discussion is the introduction of {\em conal ordering}.
-One can think of {\em number of events over number able} as being stratified to a cohort,
-the {\em able}.   The {\em able} is usually determined by ordered survival age.  In a 2-dimensional plane, conal ordering perserves the
+One can think of {\em number of events over number able} as being stratified to a cohort, the {\em able}.   
+The {\em able} is usually determined by ordered survival age where the number {\em able} includes all subjects that have survived past the
+reference time.
+
+In a 2-dimensional plane, conal ordering perserves the
 transitive ordering process.  How can we use this to our advantage?  By cohort conal ordering in age and calendar time,
         the net effect is that both age-related and calendar-related effects are cancelled.  
 
@@ -430,8 +554,8 @@ applicable, negative otherwise), one has the basis for specification of an entir
 
 In contrast to an after-the-fact markup, such as PMML, one might as well start with a markup for specification, fit the models and then return coefficients to the markup.  
 Afterwhich, all encapsulated information is immediately available for implementation.  
-Implementation is free and easily productionizable.  The markup could be consumed by a model delivery engine, or via processes like XSLT,
-could be used to write out pedantic (and fast) implementations in any language.  Please see WDSModelSpec for details.
+Implementation is free and easily productionizable.  The markup could be consumed by a model delivery engine, or via processes such as  XSLT,
+and used to write out pedantic (and fast) implementations in any language.  Please see WDSModelSpec for details.
 
 \subsection{Estimating the baseline, the easy one first}
 
