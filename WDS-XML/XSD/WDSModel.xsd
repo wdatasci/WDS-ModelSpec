@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+
 <!-- Copyright 2019, 2020, 2021, 2022, Wypasek Data Science, Inc. 
 
 Author: Christian Wypasek (CJW)
@@ -123,6 +124,11 @@ for details
     </xs:complexType>
 </xs:element>
 
+<xs:attributeGroup name="NameGroup">
+    <xs:attribute name="Name" type="xs:string" />
+    <xs:attribute name="Handle" type="xs:string" />
+</xs:attributeGroup>
+
 <xs:attributeGroup name="SourceMD">
     <xs:annotation>
         <xs:documentation>
@@ -132,15 +138,12 @@ for details
         </xs:documentation>
     </xs:annotation>
     <xs:attribute name="Name" type="xs:string" use="required"/>
+    <xs:attribute name="Handle" type="xs:string" />
     <xs:attribute name="DTyp" type="DTypType" use="required"/>
     <xs:attribute name="Length" type="xs:int"/>
     <xs:attribute name="Default" type="xs:string"/>
     <xs:attribute name="MetaDataXRef" type="xs:string"/>
-</xs:attributeGroup>
-
-<xs:attributeGroup name="NameGroup">
-    <xs:attribute name="Name" type="xs:string" />
-    <xs:attribute name="Handle" type="xs:string" />
+    <xs:attribute name="ProjectHandleXRef" type="xs:string"/>
 </xs:attributeGroup>
 
 <xs:attributeGroup name="UseGroup">
@@ -373,6 +376,27 @@ for details
     <xs:attributeGroup ref="SourceMD"/>
 </xs:element>
 
+<xs:element name="FieldExtMD">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:choice>
+                <xs:element ref="Source" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Sources" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:element ref="Constant" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Constants" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:element ref="Transformation" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="Transformations" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+        </xs:sequence>
+    <xs:attributeGroup ref="SourceMD"/>
+        <xs:attribute name="Name" type="xs:string" />
+        <xs:attribute name="Handle" type="xs:string" />
+    </xs:complexType>
+</xs:element>
 
 <xs:element name="Dictionary">
     <xs:all>
@@ -441,7 +465,13 @@ for details
     </xs:complexType>
 </xs:element>
 
-<xs:element name="Response" type="xs:string"/>
+<xs:element name="Response">
+    <xs:simpleContent>
+        <xs:extension base="xs:string">
+            <xs:attribute name="Position" type="xs:string"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
 
 <xs:element name="Responses">
     <xs:complexType>
@@ -452,17 +482,18 @@ for details
 </xs:element>
 
 <xs:element name="ModelDirectives">
-    <xs:complexType>
-        <xs:all>
-            <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element name="Type" type="xs:string" minOccurs="0" />
-            <xs:choice>
-                <xs:element ref="Response" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="Responses" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:choice>
-        </xs:all>
-    </xs:complexType>
+<xs:complexType>
+    <xs:all>
+        <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="Type" type="xs:string" minOccurs="0" />
+        <xs:choice>
+            <xs:element ref="Response" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Responses" minOccurs="0" maxOccurs="1"/>
+        </xs:choice>
+    </xs:all>
+</xs:complexType>
 </xs:element>
+
 
 <xs:element name="Models">
     <xs:complexType>
@@ -479,12 +510,16 @@ for details
         <xs:sequence>
             <xs:element ref="Annotation" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element ref="Signatures" minOccurs="1" maxOccurs="1"/>
+            <xs:element ref="Dictionary" minOccurs="0" maxOccurs="1"/>
             <xs:element ref="ModelDirectives" minOccurs="1" maxOccurs="1"/>
             <xs:choice>
-            <xs:element ref="ComponentModels" minOccurs="0" maxOccurs="1"/>
-            <xs:element ref="ComponentModel" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:choice>
-            <xs:element ref="Variables" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="ComponentModels" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="ComponentModel" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:element ref="Variables" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="Variable" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
         </xs:sequence>
         <xs:attributeGroup ref="NameGroup"/>
         <xs:attribute name="Use" type="xs:string" />
@@ -527,16 +562,160 @@ for details
     </xs:complexType>
 </xs:element>
 
-<xs:element name="CleanLimit" type="Dbl"/>
-<xs:element name="CleanLimitList" type="DblList"/>
-<xs:element name="CleanLimitSet" type="DblList"/>
+<xs:element name="v">
+    <xs:simpleContent>
+        <xs:extension base="Dbl">
+            <xs:attribute name="Position" type="xs:int"/>
+            <xs:attribute name="i" type="xs:int"/>
+            <xs:attribute name="j" type="xs:int"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="w">
+    <xs:simpleContent>
+        <xs:extension base="Any">
+            <xs:attribute name="Position" type="xs:int"/>
+            <xs:attribute name="i" type="xs:int"/>
+            <xs:attribute name="j" type="xs:int"/>
+            <xs:attribute name="dlm" type="xs:string"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="RowDbl">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="v" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="length" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="RowStr">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="w" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="length" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="ColumnDbl">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="v" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="length" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="ColumnStr">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="w" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="length" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="ElemMD">
+    <xs:complexType>
+        <xs:attribute name="Name" type="xs:string"/>
+        <xs:attribute name="Position" type="xs:int"/>
+        <xs:attribute name="i" type="xs:int"/>
+        <xs:attribute name="j" type="xs:int"/>
+        <xs:attribute name="VariableHandle" type="xs:string"/>
+        <xs:attribute name="Response" type="xs:string"/>
+        <xs:attribute name="Index" type="xs:string"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="MatrixRowMD">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="ElemMD" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="MatrixColMD">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="ElemMD" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="MatrixDbl">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="MatrixRowMD" minOccurs="0" maxOccurs="1"/>
+            <xs:element ref="MatrixColMD" minOccurs="0" maxOccurs="1"/>
+            <xs:choice>
+                <xs:element ref="RowDbl" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="ColumnDbl" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="RowMD_eq_ColMD" type="xs:int"/>
+        <xs:attribute name="nrows" type="xs:int"/>
+        <xs:attribute name="ncols" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="MatrixStr">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element ref="MatrixRowMD" minOccurs="0" maxOccurs="1"/>
+            <xs:element ref="MatrixColMD" minOccurs="0" maxOccurs="1"/>
+            <xs:choice>
+                <xs:element ref="RowStr" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="ColumnStr" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="RowMD_eq_ColMD" type="xs:int"/>
+        <xs:attribute name="nrows" type="xs:int"/>
+        <xs:attribute name="ncols" type="xs:int"/>
+    </xs:complexType>
+</xs:element>
+
+<xs:element name="CleanLimit">
+    <xs:simpleContent>
+        <xs:extension base="Dbl">
+            <xs:attribute name="Position" type="xs:string"/>
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="LeftLimit">
+    <xs:simpleContent>
+        <xs:extension base="Dbl">
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="RightLimit">
+    <xs:simpleContent>
+        <xs:extension base="Dbl">
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
+<xs:element name="CleanLimitList">
+    <xs:simpleContent>
+        <xs:extension base="DblList">
+        </xs:extension>
+    </xs:simpleContent>
+</xs:element>
+
 <xs:element name="CleanLimits" minOccurs="0" maxOccurs="unbounded">
     <xs:complexType>
         <xs:choice>
+            <xs:element ref="v" minOccurs="0" maxOccurs="2"/>
             <xs:element ref="CleanLimit" minOccurs="0" maxOccurs="2"/>
             <xs:sequence>
-                <xs:element name="LeftLimit" type="Dbl" minOccurs="0" maxOccurs="1"/>
-                <xs:element name="RightLimit" type="Dbl" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="LeftLimit" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="RightLimit" minOccurs="0" maxOccurs="1"/>
             </xs:sequence>
         </xs:choice>
     </xs:complexType>
@@ -544,11 +723,23 @@ for details
 
 <xs:element name="DropIndex" type="Int"/>
 <xs:element name="DropIndexList" type="IntList"/>
+<xs:element name="DropIndexs">
+    <xs:complexType>
+        <xs:element ref="DropIndex" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:complexType>
+</xs:element>
 <xs:element name="DropIndices">
     <xs:complexType>
         <xs:element ref="DropIndex" minOccurs="0" maxOccurs="unbounded"/>
     </xs:complexType>
 </xs:element>
+<xs:element name="DropIndexes">
+    <xs:complexType>
+        <xs:element ref="DropIndex" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:complexType>
+</xs:element>
+
+
 
 <xs:element name="CriticalValue">
     <xs:simpleContent>
@@ -557,23 +748,33 @@ for details
         </xs:extension>
     </xs:simpleContent>
 </xs:element>
+
 <xs:element name="CriticalValueList" type="DblList"/>
+
 <xs:element name="CriticalValues">
     <xs:complexType>
-        <xs:element ref="CriticalValue" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:choice>
+            <xs:element ref="v" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="CriticalValue" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:choice>
     </xs:complexType>
 </xs:element>
 
 <xs:element name="CriticalWord">
     <xs:complexType mixed="true">
-        <xs:simpleContent>
-            <xs:extension base="xs:string">
-                <xs:attribute name="Dlm" type="xs:string"/>
-                <xs:attribute name="Position" type="Int"/>
-            </xs:extension>
-        </xs:simpleContent>
+        <xs:sequence>
+            <xs:choice>
+                <xs:element ref="w" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:simpleContent>
+                    <xs:extension base="xs:string"/>
+                </xs:simpleContent>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="Dlm" type="xs:string"/>
+        <xs:attribute name="Position" type="Int"/>
     </xs:complexType>
 </xs:element>
+
 <xs:element name="CriticalWordList">
     <xs:complexType mixed="true">
         <xs:simpleContent>
@@ -583,6 +784,11 @@ for details
                 <xs:attribute name="Position" type="Int"/>
             </xs:extension>
         </xs:simpleContent>
+    </xs:complexType>
+</xs:element>
+<xs:element name="CriticalWords">
+    <xs:complexType>
+        <xs:element ref="CriticalWord" minOccurs="0" maxOccurs="unbounded"/>
     </xs:complexType>
 </xs:element>
 <xs:element name="CriticalWordSet">
@@ -607,27 +813,55 @@ for details
         </xs:extension>
     </xs:simpleContent>
 </xs:element>
-<xs:element name="CoefficientSet">
+
+<xs:element name="Coefficients">
     <xs:complexType>
         <xs:element ref="Coefficient" minOccurs="0" maxOccurs="unbounded"/>
     </xs:complexType>
     <xs:attribute name="Response"/>
 </xs:element>
 
-<xs:element name="CoefficientSets">
+<xs:element name="CoefficientsSet">
     <xs:complexType>
         <xs:choice>
             <xs:element ref="CoefficientList" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element ref="CoefficientSet" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="Coefficients" minOccurs="0" maxOccurs="unbounded"/>
         </xs:choice>
-        <xs:attribute name="Use"/>
     </xs:complexType>
 </xs:element>
+
+<xs:complexType name="VariableXRef">
+  <xs:attribute name="Name" type="xs:str"/>
+  <xs:attribute name="Handle" type="xs:str"/>
+  <xs:attribute name="Index" type="xs:str"/>
+</xs:complexType>
+
+<xs:complexType name="VariableModelDirectiveType">
+  <xs:attribute name="Use" type="xs:str"/>
+  <xs:attribute name="ResponseUse" type="xs:str"/>
+  <xs:attribute name="SpecialUse" type="xs:str"/>
+  <xs:attribute name="ProcessFirst" type="xs:str"/>
+  <xs:attribute name="Static" type="xs:str"/>
+  <xs:attribute name="StrataID" type="xs:str"/>
+  <xs:attribute name="SubjectID" type="xs:str"/>
+  <xs:attribute name="SubjectIDLevel" type="xs:str"/>
+  <xs:attribute name="TV" type="xs:str"/>
+  <xs:attribute name="TVID" type="xs:str"/>
+  <xs:attribute name="TVConalOrderingID" type="xs:str"/>
+  <xs:attribute name="Value" type="xs:str"/>
+  <xs:attribute name="Index" type="xs:str"/>
+  <xs:attribute name="dlm" type="xs:str"/>
+  <xs:anyAttribute/>
+</xs:complexType>
+
 
 <xs:element name="Variable">
     <xs:complexType>
         <xs:sequence>
-            <xs:element name="SegmentedBy" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:all>
+                <xs:element name="VariableModelDirectives" type="VariableModelDirectiveType" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="SegmentedBy" type="VariableXRef" minOccurs="0" maxOccurs="1"/>
+            </xs:all>
             <xs:element name="Treatment" type="xs:string" minOccurs="1" maxOccurs="1"/>
             <xs:choice>
                 <xs:element ref="Source" minOccurs="0" maxOccurs="unbounded"/>
@@ -642,28 +876,40 @@ for details
                 <xs:element ref="Transformations" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
             <xs:choice>
-                <xs:element name="CleanLimits" minOccurs="0" maxOccurs="1"/>
-                <xs:element name="CleanLimitList" minOccurs="0" maxOccurs="1"/>
-                <xs:element name="CleanLimitSet" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="CleanLimit" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:sequence>
+                    <xs:element ref="LeftLimit" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="RightLimit" minOccurs="0" maxOccurs="1"/>
+                </xs:sequence>
+                <xs:element ref="CleanLimits" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="CleanLimitList" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
             <xs:choice>
                 <xs:choice>
-                    <xs:element name="CriticalValues" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="CriticalValuesList" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="CriticalValuesSet" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="CriticalValue" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element ref="CriticalValues" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="CriticalValueList" minOccurs="0" maxOccurs="1"/>
                 </xs:choice>
                 <xs:choice>
-                    <xs:element name="CriticalWord" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="CriticalWordList" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="CriticalWordSet" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="CriticalWord" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element ref="CriticalWords" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="CriticalWordList" minOccurs="0" maxOccurs="1"/>
                 </xs:choice>
             </xs:choice>
             <xs:choice>
                 <xs:element ref="DropIndex" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:choice>
+                    <xs:element ref="DropIndexs" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="DropIndices" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="DropIndexes" minOccurs="0" maxOccurs="1"/>
+                </xs:choice>
                 <xs:element ref="DropIndexList" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="DropIndices" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
-            <xs:element name="CoefficientSets" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:choice>
+                <xs:element ref="Coefficients" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="CoefficientList" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="CoefficientsSet" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
         </xs:sequence>
         <xs:attribute name="Name" type="xs:string" />
         <xs:attribute name="Handle" type="xs:string" />
@@ -671,4 +917,3 @@ for details
 </xs:element>
 
 </xs:schema>
-

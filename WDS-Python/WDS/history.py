@@ -2,7 +2,7 @@
 Unix-like history and ! during a python session.
 
 Usage:
-    from WDS.util.history import history_init
+    from WDS.history import history_init
 
     #instantiate link to global namespace with
 
@@ -16,7 +16,7 @@ Usage:
 
 '''
 #import sys
-from WDS.util.namespaceop import namespaceop_using__dict__
+from WDS.namespaceop import namespaceop_using__dict__
 
 #if hasattr(sys,'ps1'):
 import readline

@@ -3,6 +3,7 @@ import numpy.random as rand
 import polars as pl
 import math
 from typing import *
+from WDS.Comp.ArtificialsCythonWrapped import *
 
 from WDS.Wranglers.gXMLParsers import gWDSModel
 

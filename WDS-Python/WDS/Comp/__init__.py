@@ -1,2 +1,0 @@
-'''ComponentModel pieces.
-'''

@@ -1,0 +1,108 @@
+<Model xmlns:wds="https://github.com/wdatasci/WDS-ModelSpec" Name="test_py_3" Handle="test_py_3">
+    <ModelDirectives>
+        <Responses>
+            <Response Position="0">Resp1</Response>
+            <Response Position="1">Resp2</Response>
+        </Responses>
+    </ModelDirectives>
+    <Variable Name="Static_A" Handle="Static_A">
+        <VariableModelDirectives ResponseUse="Resp1" Static="Yes"/>
+        <Treatment>Hats</Treatment>
+        <Source>Static_A</Source>
+        <CleanLimits>
+            <CleanLimit Position="0">0.05</CleanLimit>
+            <CleanLimit Position="1">0.95</CleanLimit>
+        </CleanLimits>
+        <CriticalValues>
+            <CriticalValue Position="0">0.2</CriticalValue>
+            <CriticalValue Position="1">0.6</CriticalValue>
+        </CriticalValues>
+        <CoefficientsSet>
+            <Coefficients Response="Resp1">
+                <Coefficient Position="0">0.3</Coefficient>
+                <Coefficient Position="1">0.1</Coefficient>
+                <Coefficient Position="2">0.8</Coefficient>
+            </Coefficients>
+            <Coefficients Response="Resp2">
+                <Coefficient Position="0">-0.3</Coefficient>
+                <Coefficient Position="1">-0.2</Coefficient>
+                <Coefficient Position="2">0.17</Coefficient>
+            </Coefficients>
+        </CoefficientsSet>
+    </Variable>
+    <Variable Name="Static_B" Handle="Static_B">
+        <VariableModelDirectives ResponseUse="Resp2" Static="Yes"/>
+        <Treatment>Hats</Treatment>
+        <Source>Static_B</Source>
+        <CleanLimits>
+            <CleanLimit Position="0">-10</CleanLimit>
+            <CleanLimit Position="1">40</CleanLimit>
+        </CleanLimits>
+        <CriticalValues>
+            <CriticalValue Position="0">-2</CriticalValue>
+            <CriticalValue Position="1">20</CriticalValue>
+        </CriticalValues>
+        <CoefficientsSet>
+            <Coefficients Response="Resp1">
+                <Coefficient Position="0">0.3</Coefficient>
+                <Coefficient Position="1">0.1</Coefficient>
+                <Coefficient Position="2">0.8</Coefficient>
+            </Coefficients>
+            <Coefficients Response="Resp2">
+                <Coefficient Position="0">-0.3</Coefficient>
+                <Coefficient Position="1">-0.2</Coefficient>
+                <Coefficient Position="2">0.17</Coefficient>
+            </Coefficients>
+        </CoefficientsSet>
+    </Variable>
+    <Variable Name="TV_A" Handle="TV_A">
+        <VariableModelDirectives ResponseUse="All"/>
+        <Treatment>Hats</Treatment>
+        <Source>TV_A</Source>
+        <CleanLimits>
+            <CleanLimit Position="0">0.05</CleanLimit>
+            <CleanLimit Position="1">0.95</CleanLimit>
+        </CleanLimits>
+        <CriticalValues>
+            <CriticalValue Position="0">0.2</CriticalValue>
+            <CriticalValue Position="1">0.6</CriticalValue>
+        </CriticalValues>
+        <CoefficientsSet>
+            <Coefficients Response="Resp1">
+                <Coefficient Position="0">0.3</Coefficient>
+                <Coefficient Position="1">0.1</Coefficient>
+                <Coefficient Position="2">0.8</Coefficient>
+            </Coefficients>
+            <Coefficients Response="Resp2">
+                <Coefficient Position="0">-0.3</Coefficient>
+                <Coefficient Position="1">-0.2</Coefficient>
+                <Coefficient Position="2">0.17</Coefficient>
+            </Coefficients>
+        </CoefficientsSet>
+    </Variable>
+    <Variable Name="TV_B" Handle="TV_B">
+        <VariableModelDirectives ResponseUse="Resp2"/>
+        <Treatment>Hats</Treatment>
+        <Source>TV_B</Source>
+        <CleanLimits>
+            <CleanLimit Position="0">-10</CleanLimit>
+            <CleanLimit Position="1">40</CleanLimit>
+        </CleanLimits>
+        <CriticalValues>
+            <CriticalValue Position="0">-2</CriticalValue>
+            <CriticalValue Position="1">20</CriticalValue>
+        </CriticalValues>
+        <CoefficientsSet>
+            <Coefficients Response="Resp1">
+                <Coefficient Position="0">0.3</Coefficient>
+                <Coefficient Position="1">0.1</Coefficient>
+                <Coefficient Position="2">0.8</Coefficient>
+            </Coefficients>
+            <Coefficients Response="Resp2">
+                <Coefficient Position="0">-0.3</Coefficient>
+                <Coefficient Position="1">-0.2</Coefficient>
+                <Coefficient Position="2">0.17</Coefficient>
+            </Coefficients>
+        </CoefficientsSet>
+    </Variable>
+</Model>
