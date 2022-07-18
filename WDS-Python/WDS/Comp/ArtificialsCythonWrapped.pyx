@@ -5,6 +5,8 @@ import numpy as np
 cimport numpy as np
 from libc.stdlib cimport malloc, free
 
+import polars as pl
+
 cdef extern from "stddef.h":
     ctypedef Py_UNICODE wchar_t
 
@@ -319,6 +321,47 @@ cpdef _fArtificialsScored_Categorical(np.ndarray[str, ndim=2] SourceValue
                             , True) 
     return rv.base
 
+cpdef fViewCorrectly(Source=None, as_column=True, as_float=True):
+    if type(Source) is np.array:
+        if len(Source.shape) == 2:
+            return Source
+        else:
+            if as_column:
+                return Source.view().reshape((len(Source),1))
+            else:
+                return Source.view().reshape((1,len(Source)))
+    if type(Source) is pl.Series:
+        if as_column:
+            return Source.to_numpy().reshape((len(Source),1))
+        else:
+            return Source.to_numpy().reshape((1,len(Source)))
+    if type(Source) is tuple:
+        if type(Source[0]) is tuple:
+            if as_float:
+                return fViewCorrectly(np.array(*Source,dtype=np.float64), as_column, as_float)
+            else:
+                return fViewCorrectly(np.array(*Source,dtype=type(Source[0][0])), as_column, as_float)
+        else:
+            if as_float:
+                return fViewCorrectly(np.array(Source,dtype=np.float64), as_column, as_float)
+            else:
+                return fViewCorrectly(np.array(Source,dtype=type(Source[0])), as_column, as_float)
+    if type(Source) is list:
+        if type(Source[0]) is list:
+            if as_float:
+                return fViewCorrectly(np.array(*Source,dtype=np.float64), as_column, as_float)
+            else:
+                return fViewCorrectly(np.array(*Source,dtype=type(Source[0][0])), as_column, as_float)
+        else:
+            if as_float:
+                return fViewCorrectly(np.array(Source,dtype=np.float64), as_column, as_float)
+            else:
+                return fViewCorrectly(np.array(Source,dtype=type(Source[0])), as_column, as_float)
+    return Source
+
+cpdef fViewCorrectlyAsColumn(Source, as_float=True): return fViewCorrectly(Source, as_column=True, as_float=as_float)
+
+cpdef fViewCorrectlyAsRow(Source, as_float=True): return fViewCorrectly(Source, as_column=False, as_float=as_float)
 
 cpdef fArtificials(Source=None
         , Treatment=None
@@ -332,17 +375,17 @@ cpdef fArtificials(Source=None
     cdef str trt=_eTreatmentClean(Treatment);
     rv=None
     if trt=="Categorical":
-        rv = _fArtificials_Categorical(Source,trt,CriticalValues)
+        rv = _fArtificials_Categorical(fViewCorrectlyAsColumn(Source),trt,CriticalValues)
     elif trt=="CategoricalNumeric":
         if CleanLimits is None:
-            rv = _fArtificials_CategoricalNumeric(Source,trt,CriticalValues,np.ndarray((0,0),dtype=np.double))
+            rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),np.ndarray((0,0),dtype=np.double))
         else:
-            rv = _fArtificials_CategoricalNumeric(Source,trt,CriticalValues,CleanLimits)
+            rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),fViewCorrectlyAsRow(CleanLimits))
     else:
         if CleanLimits is None:
-            rv = _fArtificials_Numeric(Source,trt,CriticalValues,np.ndarray((0,0),dtype=np.double))
+            rv = _fArtificials_Numeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),np.ndarray((0,0),dtype=np.double))
         else:
-            rv = _fArtificials_Numeric(Source,trt,CriticalValues,CleanLimits)
+            rv = _fArtificials_Numeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),fViewCorrectlyAsRow(CleanLimits))
     rv.dtype = [(lbl,np.double) for lbl in fArtificialLabels(CriticalValues.shape[1]
                                                 , Treatment
                                                 , LabelBase=LabelBase
@@ -369,19 +412,19 @@ cpdef fArtificialsScored(Source=None
     cdef double[:,::1] rv # =np.empty((nrows, nScores))
     if trt=="Categorical":
         if CleanLimits is None: raise("Insufficient arguments to fArtificials")
-        rv = _fArtificialsScored_Categorical(Source,trt,CriticalValues,CleanLimits)
+        rv = _fArtificialsScored_Categorical(fViewCorrectlyAsColumn(Source,as_float=False),trt,CriticalValues,CleanLimits)
     else:
         if CoefficientSets is None: raise("Insufficient arguments to fArtificials")
         if trt=="CategoricalNumeric":
             if CleanLimits is None:
-                rv = _fArtificialsScored_CategoricalNumeric(Source,trt,CriticalValues,np.ndarray((0,0),dtype=np.double),CoefficientSets)
+                rv = _fArtificialsScored_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,np.ndarray((0,0),dtype=np.double),CoefficientSets)
             else:
-                rv = _fArtificialsScored_CategoricalNumeric(Source,trt,CriticalValues,CleanLimits,CoefficientSets)
+                rv = _fArtificialsScored_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,CleanLimits,CoefficientSets)
         else:
             if CleanLimits is None:
-                rv = _fArtificialsScored_Numeric(Source,trt,CriticalValues,np.ndarray((0,0),dtype=np.double),CoefficientSets)
+                rv = _fArtificialsScored_Numeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,np.ndarray((0,0),dtype=np.double),fViewCorrectly(CoefficientSets))
             else:
-                rv = _fArtificialsScored_Numeric(Source,trt,CriticalValues,CleanLimits,CoefficientSets)
+                rv = _fArtificialsScored_Numeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),fViewCorrectlyAsRow(CleanLimits),fViewCorrectly(CoefficientSets))
     rv.base.dtype = [(lbl,np.double) for lbl in fArtificialsScoredLabels(nScores
                                                 , LabelStart=LabelStart
                                                 , LabelBase=LabelBase

@@ -66,6 +66,8 @@ import WDS.Wranglers.gXMLParsers.gWDSModel as __gWDSModel
 WDSModelBase=__gWDSModel
 import WDS.Wranglers.gXMLParsers.gWDSModel_literal as __gWDSModel_literal
 
+import numpy as np
+
 import pudb
 
 # a quick expansion of hasattr
@@ -156,6 +158,10 @@ def __CriticalValues_as_list(self):
 
 setattr(__gWDSModel.CriticalValues,"as_list",__CriticalValues_as_list)
 
+def __CriticalValues_as_numpy(self):
+    return np.array([self.as_list()], dtype=np.float64)
+setattr(__gWDSModel.CriticalValues,"as_numpy",__CriticalValues_as_numpy)
+
 def __Collect_CleanLimits(self):
     if not ( hasattr(self,'CleanLimits') 
             or hasattr(self, 'CleanLimit')
@@ -241,6 +247,11 @@ def __CleanLimits_as_list(self):
 
 setattr(__gWDSModel.CleanLimits,"as_list",__CleanLimits_as_list)
 
+def __CleanLimits_as_numpy(self):
+    return np.array([self.as_list()], dtype=np.float64)
+setattr(__gWDSModel.CleanLimits,"as_numpy",__CleanLimits_as_numpy)
+
+
 def __Responses_from(self, Responses):
     if type(self) in (__gWDSModel.Model, __gWDSModel.ComponentModel):
         if self.ModelDirectives is None:
@@ -321,7 +332,7 @@ def __CoefficientsSet_from(self, Coefficients, Responses_as_list=None):
         Responses_as_list = [Responses_as_list]
     nresp = len(Responses_as_list)    
     if nresp != len(Coefficients):
-        raise(Exception('in Coefficients.from, len(Coefficients) != len(Responses_as_list)'))
+        raise(Exception('in Coefficients.from, len(Coefficients) != len(Responses_as_list), Coef='+str(Coefficients)+', Resp='+str(Responses_as_list)))
 
     #pudb.set_trace()
 
@@ -409,7 +420,13 @@ def __Coefficients_as_list(self):
     return rv
 setattr(__gWDSModel.Coefficients,"as_list",__Coefficients_as_list)
 
-def __CoefficientsSet_as_list(self,Responses):
+def __CoefficientsSet_as_list(self,Responses=None):
+    if type(self) is __gWDSModel.Variable:
+        return self.CoefficientsSet.as_list(Responses)
+    if Responses is None:
+        Responses = self.parent_object_.mFindResponses().as_list()
+    if type(Responses) is str:
+        Responses = [Responses, ]
     rv=__OrderedDict()
     for r in Responses:
         rv[r] = []
@@ -423,6 +440,12 @@ def __CoefficientsSet_as_list(self,Responses):
 setattr(__gWDSModel.CoefficientsSet,"as_list",__CoefficientsSet_as_list)
 setattr(__gWDSModel.Variable,"Coefficients_as_list",__CoefficientsSet_as_list)
 
+def __CoefficientsSet_as_numpy(self, Responses=None):
+    if type(self) is __gWDSModel.Variable:
+        return self.CoefficientsSet.as_numpy(Responses)
+    return np.array(self.as_list(Responses), dtype=np.float64)
+setattr(__gWDSModel.CoefficientsSet,"as_numpy",__CoefficientsSet_as_numpy)
+setattr(__gWDSModel.Variable,"Coefficients_as_numpy",__CoefficientsSet_as_numpy)
 
 __ElementsWithPlurals = ['Project'
                         , 'Model'
@@ -499,12 +522,15 @@ del sOuter
 def WDSModel(Name=None, Responses=None):
     rv = __gWDSModel.Model(Name=Name, Handle=Name)
     rv.set_ModelDirectives(__gWDSModel.ModelDirectives(parent_object_=rv, gds_collector_=rv.gds_collector_))
-    rv.Responses_from(Responses)
+    if Responses:
+        rv.Responses_from(Responses)
     return rv
 
 def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None):
     rv = __gWDSModel.Variable(Name=Name, Handle=Name, Treatment=Treatment, parent_object_=Model, gds_collector_=Model.gds_collector_)
-    Model.add_Variable(rv)
+    if Model.Variables is None:
+        Model.Variables = __gWDSModel.Variables(parent_object_=Model, gds_collector_=Model.gds_collector_)
+    Model.Variables.add_Variable(rv)
     rv.add_Source(__gWDSModel.Source(valueOf_=Name, parent_object_=rv, gds_collector_=Model.gds_collector_))
     rv.CriticalValues_from_list(CriticalValues)
     if CleanLimits:
@@ -513,6 +539,34 @@ def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, Cle
         rv.CoefficientsSet_from(Coefficients)
     rv.VariableModelDirectives = __gWDSModel.VariableModelDirectiveType(parent_object_=rv, gds_collector_=Model.gds_collector_)
     return rv
+
+def __add_Variable(self, Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None):
+    return add_Variable(Model=self, Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None)
+
+setattr(__gWDSModel.Model,"add_Variable",__add_Variable)
+
+def __get_Variable(self, Name=None):
+    if Name is not None:
+        if bHasVariable(self) or bHasVariables(self):
+            mPreProcessVariable(self)
+        for vrbl in self.Variables.Variable:
+            if vrbl.Name == Name:
+                return vrbl
+        return None
+    else:
+        return None
+    
+setattr(__gWDSModel.Model,"get_Variable",__get_Variable)
+
+
+def __add_DropIndex(self, indx):
+    mProcessList(self, just_DropIndexs=True)
+    if self.DropIndexs is None:
+        self.DropIndexs = __gWDSModel.DropIndexs(parent_object_=self)
+    mProcessList(self, just_DropIndexs=True)
+    self.DropIndexs.add_DropIndex(__gWDSModel.Int(indx, parent_object_=self.DropIndexs))
+
+setattr(__gWDSModel.Variable,"add_DropIndex",__add_DropIndex)
 
 def WDSModelFromFile(filename):
     if type(filename) is str:
@@ -548,7 +602,7 @@ def mProcessElementWithList(self, nm):
     setattr(self,nm+'List',None)
 
 
-def mProcessList(self):
+def mProcessList(self, just_DropIndexs=False):
     '''Takes care of any unusual DropIndexs, DropIndices, or DropIndexes and then processes List-valued elements'''
     if bHas(self,"DropIndex") or bHas(self,"DropIndices") or bHas(self,"DropIndexs") or bHas(self,"DropIndexes"):
         if bHas(self,"DropIndices") or bHas(self,"DropIndexs") or bHas(self,"DropIndexes"):
@@ -573,8 +627,9 @@ def mProcessList(self):
                 self.DropIndices = None
         if bHasDropIndex(self) or bHasDropIndexs(self):
             mPreProcessDropIndex(self)
-    for nm in __ElementsWithLists:
-        mProcessElementWithList(self, nm)
+    if not just_DropIndexs:
+        for nm in __ElementsWithLists:
+            mProcessElementWithList(self, nm)
 
 def mPreProcess(self):
     mProcessList(self)
