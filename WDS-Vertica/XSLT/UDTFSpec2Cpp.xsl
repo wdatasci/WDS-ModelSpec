@@ -312,6 +312,12 @@ class <xsl:value-of select="$ProjectName"/> : public TransformFunction
         <xsl:when test="@DTyp='Bln'">
             vbool <xsl:value-of select="@Name"/>=(<xsl:if test="@Default='NULL'">vbool_null</xsl:if><xsl:if test="@Default != 'NULL'">vbool_<xsl:value-of select="@Default"/></xsl:if>);
         </xsl:when>
+                    <xsl:when test="@DTyp='Dte'">
+                        DateADT <xsl:value-of select="@Name"/>=(<xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vfloat_null</xsl:otherwise></xsl:choose>);
+                    </xsl:when>
+                    <xsl:when test="@DTyp='DTm'">
+                        Timestamp <xsl:value-of select="@Name"/>=(<xsl:choose><xsl:when test="@InitValue!='NULL'"><xsl:value-of select="@InitValue"/></xsl:when><xsl:otherwise>vint_null</xsl:otherwise></xsl:choose>);
+                    </xsl:when>
         <xsl:when test="@DTyp='Str' or @DTyp='VLS'">
             string <xsl:value-of select="@Name"/>="<xsl:value-of select="@Default"/>";
     </xsl:when></xsl:choose>
