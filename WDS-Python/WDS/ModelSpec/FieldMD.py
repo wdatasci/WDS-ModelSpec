@@ -164,7 +164,7 @@ def CleanDte(slf,tv,v,toReturn=False,isDateEpochExcel=False):
     try:
         lv=CleanDate(v,tv=tv,isDateEpochExcel=isDateEpochExcel)
     except Exception as e:
-        raise Exception('Error in CleanDte: '+e.args[0]+'\n'+e.__traceback__)
+        raise Exception('Error in CleanDte: '+e.args[0]+'\n'+str(e.__traceback__))
     
     if lv is None:
         if slf.isNULLable:
@@ -513,7 +513,7 @@ class FieldMD(object):
                                     lv=v.decode()
                                 else:
                                     lv=str(v)
-                                self.DTyp=Str
+                                self.DTyp=eDTyp.Str
                                 if isReturnRequested: return lv.rstrip()
                                 return
         elif self.DTyp is eDTyp.Dbl:
@@ -538,7 +538,7 @@ class FieldMD(object):
                                     lv=v.decode()
                                 else:
                                     lv=str(v)
-                                self.DTyp=Str
+                                self.DTyp=eDTyp.Str
                                 if isReturnRequested: return lv.rstrip()
                                 return
         elif self.DTyp is eDTyp.Dte:
@@ -558,7 +558,7 @@ class FieldMD(object):
                                     lv=v.decode()
                                 else:
                                     lv=str(v)
-                                self.DTyp=Str
+                                self.DTyp=eDTyp.Str
                                 if isReturnRequested: return lv.rstrip()
                                 return
         elif self.DTyp is eDTyp.DTm:
@@ -571,7 +571,7 @@ class FieldMD(object):
                                     lv=v.decode()
                                 else:
                                     lv=str(v)
-                                self.DTyp=Str
+                                self.DTyp=eDTyp.Str
                                 if isReturnRequested: return lv.rstrip()
                                 return
         else:
@@ -747,6 +747,8 @@ class FieldMDs(dict):
                     castq+=lnm+' as CAST(NULLIF(LTRIM(RTRIM('+lnm+'_FILLER)),'+"'"+fld.NULLStr+"') AS DATE)::DATE "
                 elif fld.DTyp is eDTyp.DTm:
                     castq+=lnm+' as CAST(NULLIF(LTRIM(RTRIM('+lnm+'_FILLER)),'+"'"+fld.NULLStr+"') AS DATETIME)::DATETIME "
+                elif fld.DTyp is eDTyp.Bln:
+                    castq+=lnm+' as CAST(NULLIF(LTRIM(RTRIM('+lnm+'_FILLER)),'+"'"+fld.NULLStr+"') AS BOOLEAN)::BOOLEAN "
                 else:
                     castq+=lnm+' as NULLIF(LTRIM(RTRIM('+lnm+'_FILLER)),'+"'"+fld.NULLStr+"') "
             else:
@@ -765,6 +767,8 @@ class FieldMDs(dict):
                 ddlq+="char(%d) " % max(1,fld.length)
             elif fld.DTyp is eDTyp.VLS:
                 ddlq+="varchar(%d) " % max(1,fld.length)
+            elif fld.DTyp is eDTyp.Bln:
+                ddlq+="boolean "
             if (fld.default is None) or (fld.default in('NULL','None')):
                 ddlq+=" default NULL"
             else:
