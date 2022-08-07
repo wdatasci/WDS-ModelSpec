@@ -68,7 +68,7 @@ import sys
 import datetime
 import math
 
-from WDS.Util.namespaceop import namespaceop
+from WDS.namespaceop import namespaceop
 
 
 vint_null=-sys.maxsize
