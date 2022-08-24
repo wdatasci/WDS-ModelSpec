@@ -68,6 +68,12 @@ import WDS.Wranglers.gXMLParsers.gWDSModel_literal as __gWDSModel_literal
 
 import numpy as np
 
+import copy
+
+import polars as pl
+
+import WDS.Comp.ArtificialsCythonWrapped as art_c
+
 import pudb
 
 # a quick expansion of hasattr
@@ -161,6 +167,7 @@ setattr(__gWDSModel.CriticalValues,"as_list",__CriticalValues_as_list)
 def __CriticalValues_as_numpy(self):
     return np.array([self.as_list()], dtype=np.float64)
 setattr(__gWDSModel.CriticalValues,"as_numpy",__CriticalValues_as_numpy)
+setattr(__gWDSModel.CriticalValues,"np",__CriticalValues_as_numpy)
 
 def __Collect_CleanLimits(self):
     if not ( hasattr(self,'CleanLimits') 
@@ -250,6 +257,7 @@ setattr(__gWDSModel.CleanLimits,"as_list",__CleanLimits_as_list)
 def __CleanLimits_as_numpy(self):
     return np.array([self.as_list()], dtype=np.float64)
 setattr(__gWDSModel.CleanLimits,"as_numpy",__CleanLimits_as_numpy)
+setattr(__gWDSModel.CleanLimits,"np",__CleanLimits_as_numpy)
 
 
 def __Responses_from(self, Responses):
@@ -445,7 +453,9 @@ def __CoefficientsSet_as_numpy(self, Responses=None):
         return self.CoefficientsSet.as_numpy(Responses)
     return np.array(self.as_list(Responses), dtype=np.float64)
 setattr(__gWDSModel.CoefficientsSet,"as_numpy",__CoefficientsSet_as_numpy)
+setattr(__gWDSModel.CoefficientsSet,"np",__CoefficientsSet_as_numpy)
 setattr(__gWDSModel.Variable,"Coefficients_as_numpy",__CoefficientsSet_as_numpy)
+setattr(__gWDSModel.Variable,"Coefficients_np",__CoefficientsSet_as_numpy)
 
 __ElementsWithPlurals = ['Project'
                         , 'Model'
@@ -568,6 +578,18 @@ def __add_DropIndex(self, indx):
 
 setattr(__gWDSModel.Variable,"add_DropIndex",__add_DropIndex)
 
+def __DropIndexs_as_list(self):
+    rv=[]
+    if self.DropIndex is not []:
+        for c in self.DropIndex:
+            rv.append(c.valueOf_)
+    return rv
+
+setattr(__gWDSModel.DropIndexs,"as_list",__DropIndexs_as_list)
+
+
+
+
 def WDSModelFromFile(filename):
     if type(filename) is str:
         rv = __gWDSModel.parse(filename)
@@ -681,6 +703,42 @@ def mPreProcess(self):
     elif bIsVariable(self):
         pass
        
+def plDF(arg):
+    return pl.DataFrame(arg.view(dtype=np.float64),columns=arg.dtype.fields)
+
+
+def fArtificials(arg, VariableSpec):
+    return plDF(art_c.fArtificials(arg,VariableSpec.Treatment,VariableSpec.CriticalValues.as_numpy(),VariableSpec.CleanLimits.as_numpy(),LabelBase=VariableSpec.Name))
+
+def fArtificialsScored(arg, VariableSpec):
+    return plDF(art_c.fArtificialsScored(arg,VariableSpec.Treatment,VariableSpec.CriticalValues.as_numpy(),VariableSpec.CleanLimits.as_numpy(),VariableSpec.CoefficientsSet.as_numpy(),LabelBase=VariableSpec.Name))
+
+def ModelBuildingMD_Constructor():
+    class _ModelBuildingMD(object):
+        def __init__(self, mdl):
+            self._mdl = mdl
+            self.Resp_arts_names = {}
+            self.Resp_arts_droplist ={}
+            for r in mdl.ModelDirectives.Responses.as_list():
+                self.Resp_arts_names[r]=[]
+                self.Resp_arts_droplist[r]=[]
+        def add_arts(self, vrbl, cols):
+            if vrbl.VariableModelDirectives.ResponseUse=='All':
+                for r in self._mdl.ModelDirectives.Responses.as_list():
+                    self.Resp_arts_names[r].extend(cols)
+                    if vrbl.DropIndexs.DropIndex != []:
+                        self.Resp_arts_droplist[r].extend([cols[i] for i in vrbl.DropIndexs.as_list()])
+            else:
+                r = vrbl.VariableModelDirectives.ResponseUse
+                self.Resp_arts_names[r].extend(cols)
+                if vrbl.DropIndexs.DropIndex != []:
+                    self.Resp_arts_droplist[r].extend([cols[i] for i in vrbl.DropIndexs.as_list()])
+        def effective_names(self, r):
+            return [x for x in filter(lambda x: not (x in self.Resp_arts_droplist[r]), self.Resp_arts_names[r])]
+
+    return _ModelBuildingMD
+
+
 
 if __name__=='__main__':
     global rv

@@ -72,7 +72,7 @@ data2['TestBaseline_2'] = data2.Age.apply(lambda x: np.exp(-np.power(x-20.0,2.0)
 
 mdl = WDSModel("test_py_3", Responses=['Resp1', 'Resp2'])
 
-vStatic_A = add_Variable(Model=mdl, Name='Static_A', CriticalValues=[.2, .6], CleanLimits=[.05, .95], Treatment='Hats', Coefficients=[[.3, 0, .8],[-.3, 0, .17]])
+vStatic_A = add_Variable(Model=mdl, Name='Static_A', CriticalValues=[.2, .6], CleanLimits=[.05, .95], Treatment='Hats', Coefficients=[[.3, 0, .8],[0.0, 0, 0.0]])
 vStatic_A.add_DropIndex(1)
 vStatic_A.VariableModelDirectives.Static = "Yes"
 vStatic_A.VariableModelDirectives.ResponseUse = "Resp1"
@@ -80,14 +80,14 @@ vStatic_A.VariableModelDirectives.ResponseUse = "Resp1"
 vStatic_B= add_Variable(Model=mdl, Name='Static_B', CriticalValues=[-2, 20], CleanLimits=[-10, 40], Treatment='Hats', Coefficients=[[.3, .1, 0.0],[-.3, -.2, 0.0]])
 vStatic_B.add_DropIndex(2)
 vStatic_B.VariableModelDirectives.Static = "Yes"
-vStatic_B.VariableModelDirectives.ResponseUse = "Resp2"
+vStatic_B.VariableModelDirectives.ResponseUse = "All"
 
 
 vTV_A = add_Variable(Model=mdl, Name='TV_A', CriticalValues=[.2, .6], CleanLimits=[.05, .95], Treatment='Hats', Coefficients=[[.3, 0, .8],[-.3, 0, .17]])
 vTV_A.add_DropIndex(1)
 vTV_A.VariableModelDirectives.ResponseUse = "All"
 
-vTV_B= add_Variable(Model=mdl, Name='TV_B', CriticalValues=[-2, 20], CleanLimits=[-10, 40], Treatment='Hats', Coefficients=[[.3, .1, 0],[-.3, -.2, 0]])
+vTV_B= add_Variable(Model=mdl, Name='TV_B', CriticalValues=[-2, 20], CleanLimits=[-10, 40], Treatment='Hats', Coefficients=[[0.0, 0.0, 0.0],[-.3, -.2, 0]])
 vTV_B.add_DropIndex(2)
 vTV_B.VariableModelDirectives.ResponseUse = "Resp2"
 
@@ -97,35 +97,49 @@ vAge = add_Variable(Model=mdl_baseline, Name='Age', CriticalValues=[0.0, 10.0, 2
 vAge.add_DropIndex(0)
 vAge.add_DropIndex(1)
 
-#baseline.view(dtype=np.float64,type=np.ndarray) @ vAge.Coefficients_as_numpy().T
 
-baseline_arts = art_c.fArtificials(data2.Age+0.0,vAge.Treatment,vAge.CriticalValues.as_numpy(),vAge.CleanLimits.as_numpy(),LabelBase=vAge.Name)
-baseline = art_c.fArtificialsScored(data2.Age+0.0,vAge.Treatment,vAge.CriticalValues.as_numpy(),vAge.CleanLimits.as_numpy(),vAge.CoefficientsSet.as_numpy(), LabelBase = vAge.Name + '_Marg')
 
-system_matrix = pl.DataFrame(baseline_arts.view(dtype=np.float64),columns=baseline_arts.dtype.fields)
 
-Static_A_arts = art_c.fArtificials(data2.Static_A,vStatic_A.Treatment,vStatic_A.CriticalValues.as_numpy(),vStatic_A.CleanLimits.as_numpy(), LabelBase =  vStatic_A.Name)
-Static_A_marg = art_c.fArtificialsScored(data2.Static_A,vStatic_A.Treatment,vStatic_A.CriticalValues.as_numpy(),vStatic_A.CleanLimits.as_numpy(),vStatic_A.CoefficientsSet.as_numpy())
-system_matrix.hstack(pl.DataFrame(Static_A_arts.view(dtype=np.float64),columns=Static_A_arts.dtype.fields), in_place=True)
+ModelBuildingMD = ModelBuildingMD_Constructor()(mdl)
+arts_names = []
+arts_droplist = []
 
-Static_B_arts = art_c.fArtificials(data2.Static_B,vStatic_B.Treatment,vStatic_B.CriticalValues.as_numpy(),vStatic_B.CleanLimits.as_numpy(), LabelBase =  vStatic_B.Name)
-Static_B_marg = art_c.fArtificialsScored(data2.Static_B,vStatic_B.Treatment,vStatic_B.CriticalValues.as_numpy(),vStatic_B.CleanLimits.as_numpy(),vStatic_B.CoefficientsSet.as_numpy())
-system_matrix.hstack(pl.DataFrame(Static_B_arts.view(dtype=np.float64),columns=Static_B_arts.dtype.fields), in_place=True)
+baseline_arts = plDF(art_c.fArtificials(data2.Age+0.0,vAge.Treatment,vAge.CriticalValues.as_numpy(),vAge.CleanLimits.as_numpy(),LabelBase=vAge.Name))
+baseline = plDF(art_c.fArtificialsScored(data2.Age+0.0,vAge.Treatment,vAge.CriticalValues.as_numpy(),vAge.CleanLimits.as_numpy(),vAge.CoefficientsSet.as_numpy(), LabelBase = vAge.Name + '_Marg'))
 
-TV_A_arts = art_c.fArtificials(data2.TV_A,vTV_A.Treatment,vTV_A.CriticalValues.as_numpy(),vTV_A.CleanLimits.as_numpy(), LabelBase = vTV_A.Name)
-TV_A_marg = art_c.fArtificialsScored(data2.TV_A,vTV_A.Treatment,vTV_A.CriticalValues.as_numpy(),vTV_A.CleanLimits.as_numpy(),vTV_A.CoefficientsSet.as_numpy())
-system_matrix.hstack(pl.DataFrame(TV_A_arts.view(dtype=np.float64),columns=TV_A_arts.dtype.fields), in_place=True)
+arts_names.extend( baseline_arts.columns )
+arts_droplist.extend( [baseline_arts.columns[i] for i in vAge.DropIndexs.as_list()] )
 
-TV_B_arts = art_c.fArtificials(data2.TV_B,vTV_B.Treatment,vTV_B.CriticalValues.as_numpy(),vTV_B.CleanLimits.as_numpy(), LabelBase = vTV_B.Name)
-TV_B_marg = art_c.fArtificialsScored(data2.TV_B,vTV_B.Treatment,vTV_B.CriticalValues.as_numpy(),vTV_B.CleanLimits.as_numpy(),vTV_B.CoefficientsSet.as_numpy())
-system_matrix.hstack(pl.DataFrame(TV_B_arts.view(dtype=np.float64),columns=TV_B_arts.dtype.fields), in_place=True)
 
-ebz = np.exp(Static_A_marg.view(dtype=np.float64)+TV_A_marg.view(dtype=np.float64))
-data2['Haz_A'] = (ebz[:,0].reshape((ebz.shape[0],1))*baseline.view(dtype=np.float64)).flatten()
-data2['Haz_B'] = (ebz[:,1].reshape((ebz.shape[0],1))*baseline.view(dtype=np.float64)).flatten()
+Static_A_arts = fArtificials(data2.Static_A,vStatic_A)
+Static_A_marg = fArtificialsScored(data2.Static_A,vStatic_A)
 
-#data2=data2.with_column(pl.concat_list(['TestBaseline_1','Static_A','TV_A']).apply(lambda x: x[0]*np.exp(.3*x[1]+.2*x[2])).alias('Haz_A'))
-#data2=data2.with_column(pl.concat_list(['TestBaseline_2','Static_B','TV_A','TV_B']).apply(lambda x: x[0]*np.exp(.002*x[1]+.001*x[2]+.02*x[3])).alias('Haz_B'))
+ModelBuildingMD.add_arts(vStatic_A, Static_A_arts.columns)
+system_matrix = copy.copy(Static_A_arts)
+
+
+Static_B_arts = fArtificials(data2.Static_B,vStatic_B)
+Static_B_marg = fArtificialsScored(data2.Static_B,vStatic_B)
+    
+ModelBuildingMD.add_arts(vStatic_B, Static_B_arts.columns)
+system_matrix = system_matrix.hstack(Static_B_arts)
+
+TV_A_arts = fArtificials(data2.TV_A,vTV_A)
+TV_A_marg = fArtificialsScored(data2.TV_A,vTV_A)
+
+ModelBuildingMD.add_arts(vTV_A, TV_A_arts.columns)
+system_matrix = system_matrix.hstack(TV_A_arts)
+
+TV_B_arts = fArtificials(data2.TV_B,vTV_B)
+TV_B_marg = fArtificialsScored(data2.TV_B,vTV_B)
+
+ModelBuildingMD.add_arts(vTV_B, TV_B_arts.columns)
+system_matrix = system_matrix.hstack(TV_B_arts)
+
+ebz = ((Static_A_marg + Static_B_marg + TV_A_marg + TV_B_marg)).with_columns(pl.col('*').apply(np.exp))  #*baseline[:,0]
+
+data2['Haz_A'] = ebz[:,0]*baseline[:,0]
+data2['Haz_B'] = ebz[:,1]*baseline[:,0]
 
 data2['eps_A'] = rand.rand(data2.shape[0])
 data2['eps_B'] = rand.rand(data2.shape[0])
@@ -147,6 +161,9 @@ x=data2.select(['ID','Signal']).groupby('ID').agg_list().select(['ID','Signal',p
 x=x.select(['ID','EventIndex',pl.concat_list(['Signal','EventIndex']).apply(lambda x:x[x[-1]]).alias('EventClass')])
 
 data2=data2.join(x,on=['ID']).filter(pl.col('RowIndex') <= pl.col('EventIndex'))
+
+data2_Resp1 = system_matrix.select(ModelBuildingMD.effective_names('Resp1'))
+data2_Resp2 = system_matrix.select(ModelBuildingMD.effective_names('Resp2'))
 
 
 fid = open(__file__+'.out','w')
