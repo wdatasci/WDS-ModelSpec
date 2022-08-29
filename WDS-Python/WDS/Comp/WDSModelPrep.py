@@ -568,15 +568,64 @@ def __get_Variable(self, Name=None):
     
 setattr(__gWDSModel.Model,"get_Variable",__get_Variable)
 
-
 def __add_DropIndex(self, indx):
-    mProcessList(self, just_DropIndexs=True)
-    if self.DropIndexs is None:
-        self.DropIndexs = __gWDSModel.DropIndexs(parent_object_=self)
-    mProcessList(self, just_DropIndexs=True)
-    self.DropIndexs.add_DropIndex(__gWDSModel.Int(indx, parent_object_=self.DropIndexs))
+    __DropIndexs_fix(self)
+    if type(indx) in (int, float, str):
+        indx = int(indx)
+        found = False
+        for v0 in self.DropIndexs.DropIndex:
+            if v0.valueOf_ == indx:
+                break
+        if not found:
+            self.DropIndexs.DropIndex.append(__gWDSModel.Int(indx, parent_object_=self.DropIndexs))
+    elif type(indx) is list:
+        for v in indx:
+            __add_DropIndex(self, v)
+    elif type(indx) is __gWDSModel.DropIndex:
+            __add_DropIndex(self, indx.valueOf_)
+    else:
+        raise(Exception("Cannot add type, "+str(type(indx))+", to DropIndexs"))
+
 
 setattr(__gWDSModel.Variable,"add_DropIndex",__add_DropIndex)
+
+
+def __DropIndexs_fix(self):
+    other = None
+    if bHas(self,"DropIndex") or bHas(self,"DropIndices") or bHas(self,"DropIndexs") or bHas(self,"DropIndexes"):
+        if self.DropIndexs and len(self.DropIndexs.DropIndex)>0:
+            if self.DropIndices and len(self.DropIndices.DropIndex)>0:
+                raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
+            self.DropIndices = None
+            if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
+                raise(Exception('error in mProcessList, DropIndexes and DropIndexs cannot both be used, internal is DropIndexs'))
+            self.DropIndexes = None
+        else:
+            if self.DropIndices and len(self.DropIndices.DropIndex)>0:
+                if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
+                    raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
+                self.DropIndexes = None
+                other = self.DropIndices
+            if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
+                other = self.DropIndices
+    if self.DropIndexs is None:
+        if other:
+            self.DropIndexs = __gWDSModel.DropIndexs(DropIndex=other.DropIndex
+                    , parent_object_=self, gds_collector_=self.gds_collector_)
+            if self.DropIndexs.DropIndex !=[]:
+                for v in self.DropIndexs.DropIndex:
+                    v.parent_object_ = self.DropIndexs
+            if type(other) is __gWDSModel.DropIndices:
+                __gWDSModel.DropIndices = None
+            elif type(other) is __gWDSModel.DropIndexes:
+                __gWDSModel.DropIndexes = None
+            other = None
+        else:
+            self.DropIndexs = __gWDSModel.DropIndexs(parent_object_=self, gds_collector_=self.gds_collector_)
+    if self.DropIndex != []:
+        for v in self.DropIndex:
+            self.DropIndexs.add_DropIndex(v.valueOf_)
+        self.DropIndex = []
 
 def __DropIndexs_as_list(self):
     rv=[]
@@ -626,29 +675,7 @@ def mProcessElementWithList(self, nm):
 
 def mProcessList(self, just_DropIndexs=False):
     '''Takes care of any unusual DropIndexs, DropIndices, or DropIndexes and then processes List-valued elements'''
-    if bHas(self,"DropIndex") or bHas(self,"DropIndices") or bHas(self,"DropIndexs") or bHas(self,"DropIndexes"):
-        if bHas(self,"DropIndices") or bHas(self,"DropIndexs") or bHas(self,"DropIndexes"):
-            if self.DropIndexs and len(self.DropIndexs.DropIndex)>0:
-                if self.DropIndices and len(self.DropIndices.DropIndex)>0:
-                    raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
-                self.DropIndices = None
-                if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
-                    raise(Exception('error in mProcessList, DropIndexes and DropIndexs cannot both be used, internal is DropIndexs'))
-                self.DropIndexes = None
-            elif self.DropIndices and len(self.DropIndices.DropIndex)>0:
-                if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
-                    raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
-                self.DropIndexes = None
-                self.DropIndexs = self.DropIndices
-                self.DropIndices = None
-            elif self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
-                if self.DropIndices and len(self.DropIndices.DropIndices)>0:
-                    raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
-                self.DropIndexs = self.DropIndexes
-                self.DropIndexes = None
-                self.DropIndices = None
-        if bHasDropIndex(self) or bHasDropIndexs(self):
-            mPreProcessDropIndex(self)
+    __DropIndexs_fix(self)
     if not just_DropIndexs:
         for nm in __ElementsWithLists:
             mProcessElementWithList(self, nm)
@@ -737,6 +764,30 @@ def ModelBuildingMD_Constructor():
             return [x for x in filter(lambda x: not (x in self.Resp_arts_droplist[r]), self.Resp_arts_names[r])]
 
     return _ModelBuildingMD
+
+def fAddToSystem(resp, arg, system_matrix_Resp1, system_matrix_Resp2):
+    #arg=pl.DataFrame(arg.view(dtype=np.float64), columns=arg.dtype.fields)
+    if resp == "All":
+        if system_matrix_Resp1:
+            system_matrix_Resp1.hstack(arg, in_place=True)
+        else:
+            system_matrix_Resp1 = arg
+        if system_matrix_Resp2:
+            system_matrix_Resp2.hstack(arg, in_place=True)
+        else:
+            system_matrix_Resp2 = copy.copy(arg)
+    elif resp == "Resp1":
+        if system_matrix_Resp1:
+            system_matrix_Resp1.hstack(arg, in_place=True)
+        else:
+            system_matrix_Resp1 = arg
+    elif resp == "Resp2":
+        if system_matrix_Resp2:
+            system_matrix_Resp2.hstack(arg, in_place=True)
+        else:
+            system_matrix_Resp2 = arg
+    return [system_matrix_Resp1, system_matrix_Resp2]
+
 
 
 
