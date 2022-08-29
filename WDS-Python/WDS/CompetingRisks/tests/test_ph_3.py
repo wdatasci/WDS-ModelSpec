@@ -12,6 +12,7 @@ from WDS.Comp.WDSModelPrep import *
 
 from WDS.history import *
 history_init(globals())
+pl.cfg.Config.set_tbl_cols(20)
 
 #build a model spec from scratch
 
@@ -48,7 +49,7 @@ IDs=[x for x in range(1, M+1)]
 data_static = pl.DataFrame({'ID':IDs,
             'N':[T for x in IDs],
             'VintageMonthID':[MonthID_Start+rand.randint(MonthID_Start,MonthID_Stop) for x in IDs],
-            'Strata':rand.randint(0,2,M)+1,
+            'StrataID':rand.randint(0,2,M)+1,
             'Static_A':rand.rand(M),
             'Static_B':rand.rand(M)*100-30,
             })
@@ -185,8 +186,8 @@ fid.close()
 
 
 data=data2[ind]
-system_matrix_Resp1 = system_matrix_Resp1[ind]
-system_matrix_Resp2 = system_matrix_Resp2[ind]
+system_matrix_Resp1 = data.select(['ID','StrataID','MonthID','Age']).hstack(system_matrix_Resp1[ind])
+system_matrix_Resp2 = data.select(['ID','StrataID','MonthID','Age']).hstack(system_matrix_Resp2[ind])
 
 fid = open(__file__+'.out.data.csv','w')
 fid.write(data.to_csv())
@@ -201,7 +202,7 @@ fid.write(system_matrix_Resp2.to_csv())
 fid.close()
 
 fid = open(__file__+'.out.system_etc.csv','w')
-fid.write(data.select(['ID','VintageMonthID','MonthID','Age','Signal','EventIndex']).to_csv())
+fid.write(data.select(['ID','StrataID','MonthID','Age','Signal','EventClass','EventIndex']).to_csv())
 fid.close()
 
 
