@@ -765,9 +765,8 @@ def ModelBuildingMD_Constructor():
 
     return _ModelBuildingMD
 
-def fAddToSystem(resp, arg, system_matrix_Resp1, system_matrix_Resp2):
-    #arg=pl.DataFrame(arg.view(dtype=np.float64), columns=arg.dtype.fields)
-    if resp == "All":
+def fAddToSystem(variable, arg, system_matrix_Resp1, system_matrix_Resp2):
+    if variable.get_VariableModelDirectives().ResponseUse == "All":
         if system_matrix_Resp1:
             system_matrix_Resp1.hstack(arg, in_place=True)
         else:
@@ -776,12 +775,12 @@ def fAddToSystem(resp, arg, system_matrix_Resp1, system_matrix_Resp2):
             system_matrix_Resp2.hstack(arg, in_place=True)
         else:
             system_matrix_Resp2 = copy.copy(arg)
-    elif resp == "Resp1":
+    elif variable.get_VariableModelDirectives().ResponseUse == "Resp1":
         if system_matrix_Resp1:
             system_matrix_Resp1.hstack(arg, in_place=True)
         else:
             system_matrix_Resp1 = arg
-    elif resp == "Resp2":
+    elif variable.get_VariableModelDirectives().ResponseUse == "Resp2":
         if system_matrix_Resp2:
             system_matrix_Resp2.hstack(arg, in_place=True)
         else:

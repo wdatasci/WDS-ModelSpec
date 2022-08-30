@@ -13,6 +13,7 @@ from WDS.Comp.WDSModelPrep import *
 from WDS.history import *
 history_init(globals())
 pl.cfg.Config.set_tbl_cols(20)
+pl.cfg.Config.set_tbl_rows(20)
 
 #build a model spec from scratch
 
@@ -116,26 +117,26 @@ system_matrix_Resp2 = None
 Static_A_arts = fArtificials(data2.Static_A,vStatic_A)
 Static_A_marg = fArtificialsScored(data2.Static_A,vStatic_A)
 
-system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vStatic_A.get_VariableModelDirectives().ResponseUse,Static_A_arts, system_matrix_Resp1, system_matrix_Resp2)
+system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vStatic_A,Static_A_arts, system_matrix_Resp1, system_matrix_Resp2)
 ModelBuildingMD.add_arts(vStatic_A, Static_A_arts.columns)
 
 Static_B_arts = fArtificials(data2.Static_B,vStatic_B)
 Static_B_marg = fArtificialsScored(data2.Static_B,vStatic_B)
     
 ModelBuildingMD.add_arts(vStatic_B, Static_B_arts.columns)
-system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vStatic_B.get_VariableModelDirectives().ResponseUse,Static_B_arts, system_matrix_Resp1, system_matrix_Resp2)
+system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vStatic_B,Static_B_arts, system_matrix_Resp1, system_matrix_Resp2)
 
 TV_A_arts = fArtificials(data2.TV_A,vTV_A)
 TV_A_marg = fArtificialsScored(data2.TV_A,vTV_A)
 
 ModelBuildingMD.add_arts(vTV_A, TV_A_arts.columns)
-system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vTV_A.get_VariableModelDirectives().ResponseUse,TV_A_arts, system_matrix_Resp1, system_matrix_Resp2)
+system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vTV_A,TV_A_arts, system_matrix_Resp1, system_matrix_Resp2)
 
 TV_B_arts = fArtificials(data2.TV_B,vTV_B)
 TV_B_marg = fArtificialsScored(data2.TV_B,vTV_B)
 
 ModelBuildingMD.add_arts(vTV_B, TV_B_arts.columns)
-system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vTV_B.get_VariableModelDirectives().ResponseUse,TV_B_arts, system_matrix_Resp1, system_matrix_Resp2)
+system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vTV_B,TV_B_arts, system_matrix_Resp1, system_matrix_Resp2)
 
 ebz = ((Static_A_marg + Static_B_marg + TV_A_marg + TV_B_marg)).with_columns(pl.col('*').apply(np.exp))  #*baseline[:,0]
 
@@ -186,8 +187,8 @@ fid.close()
 
 
 data=data2[ind]
-system_matrix_Resp1 = data.select(['ID','StrataID','MonthID','Age']).hstack(system_matrix_Resp1[ind])
-system_matrix_Resp2 = data.select(['ID','StrataID','MonthID','Age']).hstack(system_matrix_Resp2[ind])
+system_matrix_Resp1 = data.select(['ID','StrataID','MonthID','Age','Signal']).hstack(system_matrix_Resp1[ind])
+system_matrix_Resp2 = data.select(['ID','StrataID','MonthID','Age','Signal']).hstack(system_matrix_Resp2[ind])
 
 fid = open(__file__+'.out.data.csv','w')
 fid.write(data.to_csv())
@@ -205,5 +206,50 @@ fid = open(__file__+'.out.system_etc.csv','w')
 fid.write(data.select(['ID','StrataID','MonthID','Age','Signal','EventClass','EventIndex']).to_csv())
 fid.close()
 
+base_names=['ID','StrataID','MonthID','Age','Signal']
 
+Resp1_Names = copy.copy(base_names)
+Resp1_Names.extend(ModelBuildingMD.effective_names('Resp1'))
+
+Resp2_Names = copy.copy(base_names)
+Resp2_Names.extend(ModelBuildingMD.effective_names('Resp2'))
+
+
+Resp_Names = [ [], ModelBuildingMD.effective_names('Resp1'), ModelBuildingMD.effective_names('Resp2')]
+base_and_Resp_Names = [ [], Resp1_Names, Resp2_Names]
+
+system_matrix = [ [], system_matrix_Resp1.select(base_and_Resp_Names[1]), system_matrix_Resp2.select(base_and_Resp_Names[2]) ]
+
+etc_names = ['Signal']
+etc_and_base_names = copy.copy(base_names)
+#etc_and_base_names.extend(etc_names)
+
+etc_and_base = data.select(etc_and_base_names)
+
+etc_denom_index = etc_and_base[etc_and_base.Signal>0].select(['Signal','StrataID','Age']).distinct().sort(['Signal','StrataID','Age'])
+
+nbeta=[0, len(ModelBuildingMD.effective_names('Resp1')),len(ModelBuildingMD.effective_names('Resp2'))]
+nbetatotal=nbeta[0]+nbeta[1]
+beta=[[], pl.DataFrame(np.random.rand(nbeta[1],1)),pl.DataFrame(np.random.rand(nbeta[2],1))]
+
+ebz=[ [], np.exp(np.dot(system_matrix[1].select(Resp_Names[1]).transpose(),beta[1].transpose())),
+        np.exp(np.dot(system_matrix[2].select(Resp_Names[2]).transpose(),beta[2].transpose()))]
+
+etcWebz = [ [], etc_and_base.with_column(pl.Series(ebz[1].flatten()).alias('ebz')),
+        etc_and_base.with_column(pl.Series(ebz[2].flatten()).alias('ebz')) ]
+
+etcWebz_sumj = [ [], 
+            etcWebz[1].groupby(['StrataID','Age']).agg([pl.col('ebz').sum().alias('ebz_sumj')]),
+            etcWebz[2].groupby(['StrataID','Age']).agg([pl.col('ebz').sum().alias('ebz_sumj')])
+            ]
+
+etcWebz = [ []
+        , etcWebz[1].join(etcWebz_sumj[1], on=['StrataID','Age'])
+        , etcWebz[2].join(etcWebz_sumj[2], on=['StrataID','Age'])
+        ]
+
+etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).filter(pl.col('Signal')==1).groupby('Signal').agg_list().select(pl.col(Resp_Names[1]).apply(np.nansum))
+etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).filter(pl.col('Signal')==1).groupby('Age').agg_list().select(pl.col(Resp_Names[1]).apply(np.nansum))
+etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg_list().select(['StrataID','Age',pl.col(Resp_Names[1]).apply(np.nansum)])
+np.dot(system_matrix[1].select(Resp_Names[1]).transpose() , (system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz))
 
