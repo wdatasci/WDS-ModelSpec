@@ -1,7 +1,28 @@
 
 import numpy as np
 import numpy.random as rand
+
 import polars as pl
+
+#newer polars does not allow df.x anymore, add a monkey patch for it
+try:
+    d=pl.DataFrame({a:[1,2], b:[3,4]})
+    d.a
+except:
+    def __monkey__getattr__(self,name):
+       if name in self.columns:
+         return self[name]
+    pl.DataFrame.__getattr__ = __monkey__getattr__
+    pl.DataFrame.to_csv = pl.DataFrame.write_csv
+    pl.DataFrame.distinct = pl.DataFrame.unique
+    def __monkey__matmul__(self,a):
+        return self.to_numpy() @ a.to_numpy()
+    pl.DataFrame.__matmul__ = __monkey__matmul__
+
+def add_column(df, name, value):
+    return df.with_column(pl.Series(value).alias(name))
+
+    
 import math
 import copy
 from typing import *
@@ -62,11 +83,15 @@ data2 = Bones_explode(data_static,
             OffsetName="VintageMonthID",
             )
 
-data2['TV_A'] = rand.rand(data2.shape[0])
-data2['TV_B'] = 3*rand.rand(data2.shape[0])-2
+#data2['TV_A'] = rand.rand(data2.shape[0])
+data2=add_column(data2,'TV_A',rand.rand(data2.shape[0]))
+#data2['TV_B'] = 3*rand.rand(data2.shape[0])-2
+data2=add_column(data2,'TV_B',3*rand.rand(data2.shape[0])-2)
 
-data2['RowIndex'] = data2.MonthID-data2.VintageMonthID
-data2['Age'] = data2.MonthID-data2.VintageMonthID
+#data2['RowIndex'] = data2.MonthID-data2.VintageMonthID
+data2=add_column(data2,'RowIndex',data2.MonthID-data2.VintageMonthID)
+#data2['Age'] = data2.MonthID-data2.VintageMonthID
+data2=add_column(data2,'Age',data2.MonthID-data2.VintageMonthID)
 
 
 mdl = WDSModel("test_py_3", Responses=['Resp1', 'Resp2'])
@@ -140,8 +165,10 @@ system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vTV_B,TV_B_arts, system_
 
 ebz = ((Static_A_marg + Static_B_marg + TV_A_marg + TV_B_marg)).with_columns(pl.col('*').apply(np.exp))  #*baseline[:,0]
 
-data2['Haz_A'] = ebz[:,0]*baseline[:,0]
-data2['Haz_B'] = ebz[:,1]*baseline[:,0]
+#data2['Haz_A'] = ebz[:,0]*baseline[:,0]
+data2=add_column(data2,'Haz_A', ebz[:,0]*baseline[:,0])
+#data2['Haz_B'] = ebz[:,1]*baseline[:,0]
+data2=add_column(data2,'Haz_B',ebz[:,1]*baseline[:,0])
 
 fid = open(__file__+'.out','w')
 
@@ -150,11 +177,15 @@ mdl.export(fid, level=0)
 fid.close()
 
 
-data2['eps_A'] = rand.rand(data2.shape[0])
-data2['eps_B'] = rand.rand(data2.shape[0])
+#data2['eps_A'] = rand.rand(data2.shape[0])
+data2=add_column(data2,'eps_A',rand.rand(data2.shape[0]))
+#data2['eps_B'] = rand.rand(data2.shape[0])
+data2=add_column(data2,'eps_B',rand.rand(data2.shape[0]))
 
-data2['Signal_A']=data2.eps_A<data2.Haz_A
-data2['Signal_B']=data2.eps_B<data2.Haz_B
+#data2['Signal_A']=data2.eps_A<data2.Haz_A
+data2=add_column(data2,'Signal_A',data2.eps_A<data2.Haz_A)
+#data2['Signal_B']=data2.eps_B<data2.Haz_B
+data2=add_column(data2,'Signal_B',data2.eps_B<data2.Haz_B)
 
 data2=data2.with_column(pl.concat_list(['Signal_A','Signal_B']).apply(lambda x: 1 if x[0] else 2 if x[1] else 0).alias('Signal'))
 
@@ -186,9 +217,9 @@ fid.close()
 
 
 
-data=data2[ind]
-system_matrix_Resp1 = data.select(['ID','StrataID','MonthID','Age','Signal']).hstack(system_matrix_Resp1[ind])
-system_matrix_Resp2 = data.select(['ID','StrataID','MonthID','Age','Signal']).hstack(system_matrix_Resp2[ind])
+data=data2.filter(ind)
+system_matrix_Resp1 = data.select(['ID','StrataID','MonthID','Age','Signal']).hstack(system_matrix_Resp1.filter(ind))
+system_matrix_Resp2 = data.select(['ID','StrataID','MonthID','Age','Signal']).hstack(system_matrix_Resp2.filter(ind))
 
 fid = open(__file__+'.out.data.csv','w')
 fid.write(data.to_csv())
@@ -226,14 +257,14 @@ etc_and_base_names = copy.copy(base_names)
 
 etc_and_base = data.select(etc_and_base_names)
 
-etc_denom_index = etc_and_base[etc_and_base.Signal>0].select(['Signal','StrataID','Age']).distinct().sort(['Signal','StrataID','Age'])
+etc_denom_index = etc_and_base.filter(etc_and_base.Signal>0).select(['Signal','StrataID','Age']).distinct().sort(['Signal','StrataID','Age'])
 
 nbeta=[0, len(ModelBuildingMD.effective_names('Resp1')),len(ModelBuildingMD.effective_names('Resp2'))]
 nbetatotal=nbeta[0]+nbeta[1]
 beta=[[], pl.DataFrame(np.random.rand(nbeta[1],1)),pl.DataFrame(np.random.rand(nbeta[2],1))]
 
-ebz=[ [], np.exp(np.dot(system_matrix[1].select(Resp_Names[1]).transpose(),beta[1].transpose())),
-        np.exp(np.dot(system_matrix[2].select(Resp_Names[2]).transpose(),beta[2].transpose()))]
+ebz=[ [], system_matrix[1].select(Resp_Names[1]) @ beta[1],
+        system_matrix[2].select(Resp_Names[2]) @ beta[2] ]
 
 etcWebz = [ [], etc_and_base.with_column(pl.Series(ebz[1].flatten()).alias('ebz')),
         etc_and_base.with_column(pl.Series(ebz[2].flatten()).alias('ebz')) ]
@@ -251,5 +282,5 @@ etcWebz = [ []
 etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).filter(pl.col('Signal')==1).groupby('Signal').agg_list().select(pl.col(Resp_Names[1]).apply(np.nansum))
 etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).filter(pl.col('Signal')==1).groupby('Age').agg_list().select(pl.col(Resp_Names[1]).apply(np.nansum))
 etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg_list().select(['StrataID','Age',pl.col(Resp_Names[1]).apply(np.nansum)])
-np.dot(system_matrix[1].select(Resp_Names[1]).transpose() , (system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz))
+system_matrix[1].select(Resp_Names[1]) @ (system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).transpose()
 
