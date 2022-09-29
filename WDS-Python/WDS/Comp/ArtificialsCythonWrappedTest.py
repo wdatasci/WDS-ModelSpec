@@ -34,7 +34,7 @@ if __name__=="__main__":
         print("XA=",XA)
         Coef=2.0-4.0*np.random.rand(3,nArtificials)
         print("Coef=",Coef,type(Coef))
-        XAS=art_c.fArtificialsScored(X,T,CriticalValues,CleanLimits=CleanLimits,CoefficientSets=Coef)
+        XAS=art_c.fArtificialsScored(X,T,CriticalValues,CleanLimits=CleanLimits,CoefficientsSet=Coef)
         print("Labels=",art_c.fArtificialsScoredLabels(Coef.shape[0]))
         print("XAS=",XAS)
         print(type(XAS))
