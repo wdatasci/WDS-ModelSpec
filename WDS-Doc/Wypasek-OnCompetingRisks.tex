@@ -609,7 +609,7 @@ $$ h_0(t) = \beta^{h_0}W(t) $$
 where $W(t)$ is a vector of artificials of $t$. The only criterion is that the artificial treatment (or any linear combination thereof) does not yield negative values
 for $t\ge 0$.
 Again, see WDSModelSpec for detail, but the artificials could be something like {\em Hats} (BZ1) for piece-wise linear and continuous
-or BZ treatements with higher orders.
+or BZ treatments with higher orders.
 
 In this way, $\beta^{h_0}$ can be fit through linear regression of 
     $$ N_t = \beta^{h_0} [\int_0^te^{\beta Z}W(s)ds ] $$
@@ -723,7 +723,7 @@ $$1_{\{M_n=m_1\}}e^{\beta^1Z_n}+\sum_{k=2}^l1_{\{M_n=m_k\}}e^{\beta^kZ_n}e^{\phi
 If we use a linear form for $\phi_k(t)=\phi_kt$, (now treating $\phi_k$ and $t$ as vector valued), the $\phi^k$ could also be fit simulataneously
 to the $\beta^k$.  
 This would alleviate some of the censored data issues around the preconditioning 
-model.  Let us consider the following form for the likelihood function:
+model.  Let us consider the following form for the partial likelihood function:
 $$L=\prod_{M_i \not = e} {{  \sum_{k=1}^l1_{\{M_n=m_k\}}e^{\beta^kZ_i}e^{\phi_kT_{i,i}}\eta(i,i) }
 \over { \sum_{j=i}^N \left({ \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}} }\right)\eta(i,j) } }. $$
 
@@ -806,13 +806,162 @@ Thus, for a Newton-Raphson technique the following quantities are required:
     \item The last three equations have to do with fitting competing risks in common.  Yes, fitting in common can have an impact on the
     \item There is an interesting behavior above.  
         Effectively, $\phi^{k_i}$ is paired with $\beta^{k_i}$, the first three second order equations above 
-        have an additional term when compared to the last three equations.  This is due to the commonality of their associated response.
-        estimaes.
+        have an additional term when compared to the last three equations.  This is due to the commonality of their associated response
+        estimates.
     \item If a covariate was to be used across reponses with the same coefficient, that commonality would require 
         additional terms.
 \end{itemize}
 
 }
+
+\subsection{Another organization of the partial derivatives}
+This overall method is directly applicable to consumer credit assets and a few commonalities also motivate some tricks for implementation
+purposes:
+\begin{itemize}
+    \item The data generally is based on regular reporting periods, as is done in ABS bond reporting. 
+        This implies significant ties, in fact, very few single events.  Breslow tie treatment, in the sense of logistic repeated measures,
+        is the only practical approach.
+    \item Even without consideration of Radon-Nikodym derivatives between baselines, there is almost always a time-varying aspect of 
+        some covariates.  For example, this includes exogenous variables such as interest rates and housing prices for mortgage products.
+\end{itemize}
+So, let us reorganize the equations, and after over twenty years, they may even be more readable.
+
+To simplify concepts, we will temporarily withhold discussion of $\eta$, the weighting and/or strata handler.  
+
+%Here, we will take $\eta(i,j) \in \{0, 1\}$ for simplicity and for explicit integration of strata and Breslow ties, for an uncensored
+%subject, $sbj_i$, 
+%let $S_i$ denote its relative survival set.  In other words, the relative survival set for a given subject is the set of all subjects that are both {\em at-risk} 
+%at time $t_{sbj_i}$ and within the same strata.    We will let $\eta_i$ be used as a weight for subject $i$.
+
+{\em Note:} It is directly implied that the set of distinct survival sets, $\{ S_i \forall i \ni e_{sbj_i} \ne 0 \}$, 
+has cardinality significantly smaller than $\{ i \ni e_{sbj_i} \ne 0 \}$. This is due to the fact that $S_i = S_j$ for every $sbj_i$ and
+$sbj_j$
+where $t_{sbj_i}=t_{sbj_j}$ and $e_{sbj_i} \ne 0$ and $e_{sbj_j} \ne 0$.  It is not required that $e_{sbj_i}=e_{sbj_j}$ when $S_i=S_j$.
+
+As an example, as with auto loans, one might have 8M subjects with 8M x 36 time series observations, using 36 as an example of average
+observation length for subjects with up to 72 month terms.  In the past, the author has modelled competing risk outcomes of Repayment, 
+non-delinquent insurance events (accidents), bankruptcy, and first significant deliquency.\footnote{Why {\em first significant delinquency} instead of {\em
+default}?  These models are often used in stage 1 of a states and stages approach, handing off to subsequent model to handle cure 
+and repossession behaviors.}  With one strata in this example, the cardinality of $\{S_i\}$ is at most 72 x 4, for the maximum number of
+event times multiplied by the number of non-censored events.
+
+{\em Last notes on notation consolidation:} 
+\begin{itemize}
+    \item As with the preceding example, since we are working with time-varying data and fully enumerated datasets, aggregation across any survival
+set, $\{S_i\}$, is fairly straight foward with database or dataframe querying methods.
+\item Furthermore, we are generally using artificial variable treatments as per the WDS-ModelSpec and the Radon-Nikodym change of measures 
+and incorporated via treats on Age and/or Calendar Time.  Upon close inspection of the preceding set of derivative equations, we can just
+embed these as variables within the overall covariate picture, $Z_i$.  If not explicitly written, we will also use an implied time-varying
+context, so $Z_i$, will be understood to represent $Z_i(t)$, where the context is the evaluation at time $t$.  
+     \item By now, it should 
+also be clearly understood, that the $K$ marks are indexed by $k$, that $M_0$ is censored, and that any indexed quantity requiring $k$ to be 
+limited will be from $k=1, \ldots, K$ (so indicating $k>0$ is redundant).
+    \item If $M_k$ is the set of all subjects with mark $k$, let $M_k(t)$ be the subset with event time $t$.  Note that this implies that 
+        every member of $M_k(t)$ for a given $t$ has the same survival set.  Let $M_k(T)$ denote the set of event times for the subjects of
+        $M_k$,
+        and let $S_{M_k(t)}$ denote the common survival set.
+    \item Since survival sets are shared in common, even regardless of mark, set $S(t)$ denote the relative survival set for a given event
+        time.
+    \item Let $M(t)$ denote the set of all uncensored subjects with event at time $t$.
+\end{itemize}
+
+Starting with the fully enumerated partial likelihood function as before:
+$$L=\prod_{M_i \not = 0} {{  \sum_{k=1}^l1_{\{M_n=m_k\}}e^{\beta^kZ_i}e^{\phi_kT_{i,i}}\eta(i,i) }
+\over { \sum_{j=i}^N \left({ \sum_{k=1}^le^{\beta^kZ_j}e^{\phi_kT_{j,i}} }\right)\eta(i,j) } }. $$
+This can be written:
+$$L=\prod_{sbj_i \ni e_{sbj_i} \ne 0}  { { \sum_k 1_{\{e_{sbj_i}=k\}}e^{\beta^kZ_i(t_{sbj_i})} }
+\over { \sum_{j \in S_i} \left({ \sum_k e^{\beta^kZ_j(t_{sbj_i})} }\right) } }. $$
+
+{\em Observation:} Any time period where no event happens for any subject does not contribute to the MPH/Cox partial likelihood.  However,
+every observation (prior to censoring), regardless of event or non-event, contributes to baseline estimation.
+
+Thus, for a Newton-Raphson technique the following quantities are required:
+\begin{align*}
+{LL = ln(L)} =& 
+    \sum_{sbj_i \ni e_{sbj_i} \ne 0}  \left[{ln\left({ \sum_k 1_{\{e_{sbj_i}=k\}}e^{\beta^kZ_i(t_{sbj_i})} }\right)
+    - ln\left( { \sum_{j \in S_i} \left({ \sum_k e^{\beta^kZ_j(t_{sbj_i})} }\right) } \right) }\right]\\
+ =& 
+    {\sum_{M_k}\sum_{i \in M_k}{\beta^kZ_i(t_{sbj_i})} } - {\sum_{M_k1}\sum_{i \in M_k} ln\left( { \sum_{j \in S_i} \left({
+        \sum_k e^{\beta^kZ_j(t_{sbj_i})} }\right) } \right) } \\
+{\delta LL \over \delta \beta_a^{k'}}=&
+    {\sum_{M_{k'}}\sum_{i \in M_{k'}} Z_{i,a}(t_{sbj_i})} -{\sum_{M_{k}}\sum_{i\in M_{k}}{\sum_{j\in S_i}Z_{j,a}e^{\beta^{k'}Z_j}
+            \over \sum_{j\in S_i} \sum_k e^{\beta^kZ_j} } }\\
+    {\delta^2 LL \over \delta \beta_a^{k'} \delta \beta_b^{k'}}=&\sum_{M_k, k>1}\sum_{i \in M_k}\left[{
+        -{\sum_{j\in S_i}Z_{j,a}Z_{j,b}e^{\beta^{k'}Z_j}\over \sum_{j\in S_i} \sum_{k>0}e^{\beta^kZ_j} }
+    +{\sum_{j\in S_i}Z_{j,a}e^{\beta^{k'}Z_j}\sum_{j\in S_i}Z_{j,b}e^{\beta^{k'}Z_j}
+    \over \left({\sum_{j\in S_i} \sum_{k>0}e^{\beta^kZ_j}}\right)^2 } }\right] \\
+    {\delta^2 LL \over \delta \beta_a^{k'} \delta \beta_b^{k''}}=&\sum_{M_k, k>1}\sum_{i \in M_k}\left[{
+        {\sum_{j\in S_i}Z_{j,a}e^{\beta^{k'}Z_j}\sum_{j\in S_i}Z_{j,b}e^{\beta^{k''}Z_j}
+    \over \left({\sum_{j\in S_i} \sum_{k>0}e^{\beta^kZ_j}}\right)^2 }
+}\right] 
+\end{align*}    
+{\em Observation:} We think about log-partial-likelihood as the sum over uncensored subjects. However, with the Breslow tie treatment
+    (and its analogy to repeated measures), we see that the sums can collapse.  The truly subject-unique
+    part of the likelihood is the numerator of original expression. As per the previous observation, those unique contributions
+    can be pre-aggregated at the start of the Newton-Raphson iterations.
+    Every other quantity is shared by observations with the same survival set and the subset thereof with the same mark.   
+    For this reason, we can collapse the {\em over every non-censored subject} to the sum over event times for a mark.
+
+\begin{align*}
+{\delta LL \over \delta \beta_a^{k'}}
+    =&{\sum_t\sum_{i \in M_{k'}(t)} Z_{i,a}(t)} 
+     -{\sum_t\sum_k\sum_{i\in M_k(t)}{\sum_{j\in S_i}Z_{j,a}e^{\beta^{k'}Z_j(t)}
+            \over \sum_{j\in S_i} \sum_k e^{\beta^kZ_j(t)} } }\\
+    =&{\sum_t\sum_{i \in M_{k'}(t)} Z_{i,a}(t)} 
+     -{\sum_t\sum_k\left|{M_k(t)}\right|{\sum_{j\in S(t)}Z_{j,a}e^{\beta^{k'}Z_j(t)}
+            \over \sum_{j\in S(t)} \sum_k e^{\beta^kZ_j(t)} } }\\
+    =&{\sum_t\sum_{i \in M_{k'}(t)} Z_{i,a}(t)} 
+     -\sum_t{\sum_k\left|{M_k(t)}\right|{\sum_{j\in S(t)}Z_{j,a}e^{\beta^{k'}Z_j(t)}}
+            \over \sum_{j\in S(t)} \sum_k e^{\beta^kZ_j(t)}  }\\
+    =&{\sum_t\sum_{i \in M_{k'}(t)} Z_{i,a}(t)} 
+     -\sum_t{\left|{M(t)}\right|\left({\sum_{j\in S(t)}Z_{j,a}e^{\beta^{k'}Z_j(t)}}\right)
+            \over \left({\sum_{j\in S(t)} \sum_k e^{\beta^kZ_j(t)} }\right) }\\
+    {\delta^2 LL \over \delta \beta_a^{k'} \delta \beta_b^{k'}}
+    =&\sum_t1_{\{k'=k''\}}{{-\left|{M_{k'}(t)}\right|
+        \left({\sum_{j\in S(t)}Z_{j,a}(t)Z_{j,b}(t)e^{\beta^{k'}Z_j(t)}}\right)}
+        \over \left({\sum_{j\in S(t)} \sum_ke^{\beta^kZ_j(t)}}\right) } \\
+    &+\sum_t{\left|{M(t)}\right|\left({\sum_{j\in S(t)}Z_{j,a}(t)e^{\beta^{k'}Z_j(t)}}\right)\left({\sum_{j\in
+    S(t)}Z_{j,b}e^{\beta^{k''}Z_j(t)}}\right)
+    \over \left({\sum_{j\in S_i} \sum_{k>0}e^{\beta^kZ_j}}\right)^2 } \\
+\end{align*}    
+
+
+{\samepage
+{\em Implementation notes:}
+\begin{itemize}
+    \item In the last equation, the first part of the r.h.s. for $\delta LL \over \beta_a^{k'}$ does not depend on $\beta$, the aggregations by $M_k$ can be
+done once and cached.
+\item For the estimates beginning each iteration, $\{\beta^k\}$:
+    \begin{itemize}
+        \item For each subject and time period, the exponentiated scores, ${e^{\beta^kZ(t)}}$, and the sum are calculated and stored.
+        \item For each mark set and survival set, the sum across members of the vector-valued quantity, $\sum Z e^{\beta Z}$, and 
+            $\sum \sum_k  e^{\beta^kZ(t)}$ are calculated stored.
+    \end{itemize}
+\item Further note that these quantities are also the core elements of the second partial derivatives.  The only additional element required
+    is the matrix valued quantity $ Z^TZe^{\beta Z} $, which is summed across members of the same mark set corresponding to $\beta$.
+\end{itemize}
+}
+
+Bringing all of the concepts together, the following algorithm emerges:
+\begin{itemize}
+    \item Despite abuse of notation above, in a tabular format, $Z_{sbj_i}(t)$ is a row-vector valued quantity. $\beta Z$ is just the common
+        expression of the dot product.  We will consider $\beta$ to be the {\em stacked} version of the $\{\beta^k\}$, say with length
+        $N_{\beta}$.  All vectors and matrices associated with $\beta$ are taken to be {\em blocked} in order defined by $M_1, \ldots, M_K$.
+    \item Storage for all quantites can be pre-determined by the collection of distinct $\{M_k\}$, $\{S_i\}$, and $\{(M_k, S_i)\}$.  
+        Furthermore, preliminary statistics for each set can be collected, including the $\sum Z$ by $M_k$ quantities as discussed above.
+    \item Given an initial $\beta$, for all subjects and non-censored time periods, the $K$ values, $e^{\beta^kZ(t)}$ are calculated and
+        stored.
+    \item Whether subsequently or concurrent with the previous item, the following items are summed across every distinct $(M_k, S_i)$ combination:
+        \begin{itemize}
+            \item $\sum_k e^{\beta^k Z(t)}$, 1 scalar value per $M_k(t)$, or blocked accordingly into a vector.
+            \item $\sum_k Ze^{\beta^k Z}$, 1 vector valued value per $S_{M_k}(t)$, or blocked accordingly into a vector for $S(t)$.
+            \item $\sum_k Z^TZe^{\beta^k Z}$, 1 matrix valued value per $S_{M_k}(t)$, could be stored in a block diagonal matrix.
+        \end{itemize}
+    \item Once weighted by the repeated measures, the blocked vector valued aggregate, say $V$, is used with the last aggregate block
+        diagonal matrix, say $BD$, to create the Hessian via $V^TV-BD$, and an iteration is performed.
+\end{itemize}
+
+See the test implementation associated with WDS-ModelSpec for a working example.
 
 \subsection{Old notes on the longer form for the baseline}
 In the case of no ties and regarding the $LL$ for the baseline and talking the product below only over non-censored observations, we have

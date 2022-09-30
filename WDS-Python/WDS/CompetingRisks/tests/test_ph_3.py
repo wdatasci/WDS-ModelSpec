@@ -297,9 +297,15 @@ etc_and_base_names = copy.copy(base_names)
 #etc_and_base_names.extend(etc_names)
 
 etc_and_base = data.select(etc_and_base_names).sort(['Signal','StrataID','Age'])
+<<<<<<< Updated upstream
 
 etc_denom_index = etc_and_base.mfilter(etc_and_base.Signal>0).select(['StrataID','Age','Signal']).distinct().sort(['StrataID','Age','Signal'])
 
+=======
+
+etc_denom_index = etc_and_base.mfilter(etc_and_base.Signal>0).select(['StrataID','Age','Signal']).distinct().sort(['StrataID','Age','Signal'])
+
+>>>>>>> Stashed changes
 nbeta=[0
     , len(ModelBuildingMD.effective_names('Resp1'))
     , len(ModelBuildingMD.effective_names('Resp2'))
@@ -313,6 +319,7 @@ Mn = [ etc_and_base.filter(pl.col('Signal')==0).shape[0]
     ]
 
 MtnSA=etc_and_base.filter(pl.col('Signal')>0).groupby(['StrataID','Age']).agg(pl.col('Signal').count().alias('M')).sort(['StrataID','Age'])
+<<<<<<< Updated upstream
 
 MnSA = [ etc_and_base.filter(pl.col('Signal')==0).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
     , etc_and_base.filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
@@ -325,6 +332,20 @@ beta=[ []
     , pl.DataFrame(np.random.rand(nbeta[2],1))
     ]
 
+=======
+
+MnSA = [ etc_and_base.filter(pl.col('Signal')==0).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+    , etc_and_base.filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+    , etc_and_base.filter(pl.col('Signal')==2).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+    ]
+
+
+beta=[ []
+    , pl.DataFrame(np.random.rand(nbeta[1],1))
+    , pl.DataFrame(np.random.rand(nbeta[2],1))
+    ]
+
+>>>>>>> Stashed changes
 for aaa in range(0,20):
     ebz=[ []
         , system_matrix[1].select(Resp_Names[1]) @ beta[1]
@@ -370,6 +391,7 @@ for aaa in range(0,20):
     
     betas = beta[1].vstack(beta[2])
     db=iter_comp_1[1].transpose().vstack(iter_comp_1[2].transpose())- iter_comp_2[1].select(Resp_Names[1]).transpose().vstack(iter_comp_2[2].select(Resp_Names[2]).transpose())
+<<<<<<< Updated upstream
 
     for i in range(0,MtnSA.shape[1]):
         db2_10 = iter_comp_22[1].select(Resp_Names[1]).transpose().vstack(iter_comp_22[2].select(Resp_Names[2]).transpose())
@@ -379,6 +401,10 @@ for aaa in range(0,20):
         else:
             db20agg = db20agg+db20*MtnSA[i].ID
 
+=======
+    db2_1 = iter_comp_22[1].select(Resp_Names[1]).transpose().vstack(iter_comp_22[2].select(Resp_Names[2]).transpose())
+    db2 = (db2_1 @ db2_1.transpose())
+>>>>>>> Stashed changes
     
     k = -1
     sc = 0
