@@ -1,4 +1,3 @@
-
 import numpy as np
 import numpy.random as rand
 
@@ -8,6 +7,12 @@ import polars as pl
 try:
     d=pl.DataFrame({a:[1,2], b:[3,4]})
     d.a
+    def __monkey__filter__(self,a):
+        return self[a]
+    pl.DataFrame.mfilter = __monkey__filter__
+    def add_column(df, name, value):
+        df[name]=pl.Series(value)
+        return df
 except:
     def __monkey__getattr__(self,name):
        if name in self.columns:
@@ -18,10 +23,12 @@ except:
     def __monkey__matmul__(self,a):
         return self.to_numpy() @ a.to_numpy()
     pl.DataFrame.__matmul__ = __monkey__matmul__
+    pl.DataFrame.mfilter = pl.DataFrame.filter
+    def add_column(df, name, value):
+        return df.with_column(pl.Series(value).alias(name))
 
-def add_column(df, name, value):
-    return df.with_column(pl.Series(value).alias(name))
-
+def copy_with_column(df, name, value):
+    return df.with_column(pl.Series(value.flatten()).alias(name))
     
 import math
 import copy
@@ -86,12 +93,13 @@ data2 = Bones_explode(data_static,
 #data2['TV_A'] = rand.rand(data2.shape[0])
 data2=add_column(data2,'TV_A',rand.rand(data2.shape[0]))
 #data2['TV_B'] = 3*rand.rand(data2.shape[0])-2
-data2=add_column(data2,'TV_B',3*rand.rand(data2.shape[0])-2)
+data2=add_column(data2,'TV_B',50*rand.rand(data2.shape[0])-20)
 
 #data2['RowIndex'] = data2.MonthID-data2.VintageMonthID
 data2=add_column(data2,'RowIndex',data2.MonthID-data2.VintageMonthID)
 #data2['Age'] = data2.MonthID-data2.VintageMonthID
 data2=add_column(data2,'Age',data2.MonthID-data2.VintageMonthID)
+
 
 
 mdl = WDSModel("test_py_3", Responses=['Resp1', 'Resp2'])
@@ -123,7 +131,8 @@ vTV_Age.VariableModelDirectives.ResponseUse = "Resp2"
 
 
 mdl_baseline = WDSModel("test_py_3_baseline", Responses=['All',])
-vAge = add_Variable(Model=mdl_baseline, Name='Age', CriticalValues=[0.0, 10.0, 20.0, 80.0], CleanLimits=[-1.0, 140.0 ], Treatment='Hats', Coefficients=[[0.0, 0.0, 0.01, 0.012, 0.002]])
+vAge = add_Variable(Model=mdl_baseline, Name='Age', CriticalValues=[0.0, 10.0, 15.0, 30.0, 80.0], CleanLimits=[-1.0, 140.0 ], Treatment='BZ2',
+Coefficients=[[0.0, 0.0, 0.1, 0.2, 0.08]])
 vAge.add_DropIndex(0)
 vAge.add_DropIndex(1)
 
@@ -201,7 +210,7 @@ x=data2.select(['ID','Signal']).groupby('ID').agg_list().select(['ID','Signal',p
 x=x.select(['ID','EventIndex',pl.concat_list(['Signal','EventIndex']).apply(lambda x:x[x[-1]]).alias('EventClass')])
 
 data2=data2.join(x,on=['ID'])
-#.filter(pl.col('RowIndex') <= pl.col('EventIndex'))
+#ind = (pl.col('RowIndex') <= pl.col('EventIndex'))
 ind = data2.RowIndex <= data2.EventIndex
 
 #data2_Resp1 = system_matrix.select(ModelBuildingMD.effective_names('Resp1'))
@@ -217,9 +226,13 @@ fid.close()
 
 
 
-data=data2.filter(ind)
-system_matrix_Resp1 = data.select(['ID','StrataID','MonthID','Age','Signal']).hstack(system_matrix_Resp1.filter(ind))
-system_matrix_Resp2 = data.select(['ID','StrataID','MonthID','Age','Signal']).hstack(system_matrix_Resp2.filter(ind))
+data=data2.mfilter(ind)
+system_matrix_Resp1 = data.select(['ID','StrataID','MonthID','Age','Signal']).hstack(system_matrix_Resp1.mfilter(ind))
+system_matrix_Resp2 = data.select(['ID','StrataID','MonthID','Age','Signal']).hstack(system_matrix_Resp2.mfilter(ind))
+
+data = data.sort(['StrataID','Age','Signal'])
+system_matrix_Resp1 = system_matrix_Resp1.sort(['StrataID','Age','Signal'])
+system_matrix_Resp2 = system_matrix_Resp2.sort(['StrataID','Age','Signal'])
 
 fid = open(__file__+'.out.data.csv','w')
 fid.write(data.to_csv())
@@ -246,41 +259,160 @@ Resp2_Names = copy.copy(base_names)
 Resp2_Names.extend(ModelBuildingMD.effective_names('Resp2'))
 
 
-Resp_Names = [ [], ModelBuildingMD.effective_names('Resp1'), ModelBuildingMD.effective_names('Resp2')]
-base_and_Resp_Names = [ [], Resp1_Names, Resp2_Names]
+Resp_Names = [ []
+    , ModelBuildingMD.effective_names('Resp1')
+    , ModelBuildingMD.effective_names('Resp2')
+    ]
+base_and_Resp_Names = [ []
+    , Resp1_Names
+    , Resp2_Names
+    ]
 
-system_matrix = [ [], system_matrix_Resp1.select(base_and_Resp_Names[1]), system_matrix_Resp2.select(base_and_Resp_Names[2]) ]
+Resp_NamesPrefxd = [ [], [], [], ]
+Resp_NamesX = [ [], [], [], ]
+Resp_NamesXd = [ [], {}, {}, ]
+for i in range(1,3):
+    for nm2 in Resp_Names[i]:
+        Resp_NamesXd[i][nm2]=[]
+        Resp_NamesPrefxd[i].append('Resp'+str(i)+'_'+nm2)
+    for nm2 in Resp_Names[i]:
+        for nm1 in Resp_Names[i]:
+            Resp_NamesX[i].append(nm1+'x'+nm2)
+            Resp_NamesXd[i][nm2].append(nm1+'x'+nm2)
+
+x1 = system_matrix_Resp1.select(base_and_Resp_Names[1]).lazy()
+for i,nm in enumerate(Resp_Names[1]):
+    x1=x1.with_columns((pl.col(Resp_Names[1])*pl.col(nm)).suffix('x'+nm))
+x2 = system_matrix_Resp2.select(base_and_Resp_Names[2]).lazy()
+for i,nm in enumerate(Resp_Names[2]):
+    x2=x2.with_columns((pl.col(Resp_Names[2])*pl.col(nm)).suffix('x'+nm))
+
+system_matrix = [ []
+    , x1.collect() #system_matrix_Resp1.select(base_and_Resp_Names[1])
+    , x2.collect() #system_matrix_Resp2.select(base_and_Resp_Names[2]) 
+    ]
 
 etc_names = ['Signal']
 etc_and_base_names = copy.copy(base_names)
 #etc_and_base_names.extend(etc_names)
 
-etc_and_base = data.select(etc_and_base_names)
+etc_and_base = data.select(etc_and_base_names).sort(['Signal','StrataID','Age'])
 
-etc_denom_index = etc_and_base.filter(etc_and_base.Signal>0).select(['Signal','StrataID','Age']).distinct().sort(['Signal','StrataID','Age'])
+etc_denom_index = etc_and_base.mfilter(etc_and_base.Signal>0).select(['StrataID','Age','Signal']).distinct().sort(['StrataID','Age','Signal'])
 
-nbeta=[0, len(ModelBuildingMD.effective_names('Resp1')),len(ModelBuildingMD.effective_names('Resp2'))]
+nbeta=[0
+    , len(ModelBuildingMD.effective_names('Resp1'))
+    , len(ModelBuildingMD.effective_names('Resp2'))
+    ]
+
 nbetatotal=nbeta[0]+nbeta[1]
-beta=[[], pl.DataFrame(np.random.rand(nbeta[1],1)),pl.DataFrame(np.random.rand(nbeta[2],1))]
 
-ebz=[ [], system_matrix[1].select(Resp_Names[1]) @ beta[1],
-        system_matrix[2].select(Resp_Names[2]) @ beta[2] ]
+Mn = [ etc_and_base.filter(pl.col('Signal')==0).shape[0]
+    , etc_and_base.filter(pl.col('Signal')==1).shape[0]
+    , etc_and_base.filter(pl.col('Signal')==2).shape[0]
+    ]
 
-etcWebz = [ [], etc_and_base.with_column(pl.Series(ebz[1].flatten()).alias('ebz')),
-        etc_and_base.with_column(pl.Series(ebz[2].flatten()).alias('ebz')) ]
+MtnSA=etc_and_base.filter(pl.col('Signal')>0).groupby(['StrataID','Age']).agg(pl.col('Signal').count().alias('M')).sort(['StrataID','Age'])
 
-etcWebz_sumj = [ [], 
-            etcWebz[1].groupby(['StrataID','Age']).agg([pl.col('ebz').sum().alias('ebz_sumj')]),
-            etcWebz[2].groupby(['StrataID','Age']).agg([pl.col('ebz').sum().alias('ebz_sumj')])
-            ]
+MnSA = [ etc_and_base.filter(pl.col('Signal')==0).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+    , etc_and_base.filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+    , etc_and_base.filter(pl.col('Signal')==2).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+    ]
 
-etcWebz = [ []
-        , etcWebz[1].join(etcWebz_sumj[1], on=['StrataID','Age'])
-        , etcWebz[2].join(etcWebz_sumj[2], on=['StrataID','Age'])
+
+beta=[ []
+    , pl.DataFrame(np.random.rand(nbeta[1],1))
+    , pl.DataFrame(np.random.rand(nbeta[2],1))
+    ]
+
+for aaa in range(0,20):
+    ebz=[ []
+        , system_matrix[1].select(Resp_Names[1]) @ beta[1]
+        , system_matrix[2].select(Resp_Names[2]) @ beta[2] 
         ]
+    
+    etcWebz = [ []
+        , copy_with_column(etc_and_base, 'ebz', ebz[1])
+        , copy_with_column(etc_and_base, 'ebz', ebz[2]) 
+        ]
+    
+    iter_comp_1 = [ []
+        , system_matrix[1].filter(pl.col('Signal')==1).select(Resp_Names[1]).sum()
+        , system_matrix[2].filter(pl.col('Signal')==2).select(Resp_Names[2]).sum()
+        ]
+    
+    #etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).mfilter(pl.col('Signal')==1).groupby('Signal').agg_list().select(pl.col(Resp_Names[1]).apply(np.nansum))
+    #etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).mfilter(pl.col('Signal')==1).groupby('Age').agg_list().select(pl.col(Resp_Names[1]).apply(np.nansum))
+    #etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).mfilter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg_list().select(['StrataID','Age',pl.col(Resp_Names[1]).apply(np.nansum)])
+    #system_matrix[1].select(Resp_Names[1]).transpose() @ (system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz)
+    
+    iter_comp_2 = [ [], [], [] ]
+    iter_comp_22 = [ [], [], [] ]
+    
+    x=(etcWebz[1].hstack(system_matrix[1].select([*Resp_Names[1],*Resp_NamesX[1]]) * etcWebz[1].ebz)).groupby(['StrataID','Age']).agg(pl.col(['ebz', *Resp_Names[1], *Resp_NamesX[1]]).sum()).sort(['StrataID','Age'])
+    xx=x.join(MtnSA, on=['StrataID','Age'], how='inner')
+    
+    iter_comp_2[1]= (xx.select([*Resp_Names[1],*Resp_NamesX[1]]) * xx.M / xx.ebz) #.sum()
+    iter_comp_22[1]= (xx.select(Resp_Names[1]) * xx.M.apply(np.sqrt) / xx.ebz) #.sum()
+    #iter_comp_22[1]= (xx.select(Resp_Names[1]) * xx.M / xx.ebz).sum()
+    
+    x=(etcWebz[2].hstack(system_matrix[2].select([*Resp_Names[2],*Resp_NamesX[2]]) * etcWebz[2].ebz)).groupby(['StrataID','Age']).agg(pl.col(['ebz', *Resp_Names[2], *Resp_NamesX[2]]).sum()).sort(['StrataID','Age'])
+    xx=x.join(MtnSA, on=['StrataID','Age'], how='inner')
+    
+    iter_comp_2[2]= (xx.select([*Resp_Names[2],*Resp_NamesX[2]]) * xx.M / xx.ebz) #.sum()
+    iter_comp_22[2]= (xx.select(Resp_Names[2]) * xx.M.apply(np.sqrt) / xx.ebz) #.sum()
+    #iter_comp_22[2]= (xx.select(Resp_Names[2]) * xx.M / xx.ebz).sum()
+    
+    
+    #yy=system_matrix[1].select(['ID','StrataID','Signal','Age',*Resp_Names[1]]).melt(id_vars=['ID','StrataID','Signal','Age']).sort(['ID','StrataID','Signal','Age','variable']).groupby(['ID','StrataID','Signal','Age']).agg(pl.col('value').list()).with_column(pl.col('value').apply(f))
+    
+    
+    
+    betas = beta[1].vstack(beta[2])
+    db=iter_comp_1[1].transpose().vstack(iter_comp_1[2].transpose())- iter_comp_2[1].select(Resp_Names[1]).transpose().vstack(iter_comp_2[2].select(Resp_Names[2]).transpose())
 
-etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).filter(pl.col('Signal')==1).groupby('Signal').agg_list().select(pl.col(Resp_Names[1]).apply(np.nansum))
-etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).filter(pl.col('Signal')==1).groupby('Age').agg_list().select(pl.col(Resp_Names[1]).apply(np.nansum))
-etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg_list().select(['StrataID','Age',pl.col(Resp_Names[1]).apply(np.nansum)])
-system_matrix[1].select(Resp_Names[1]) @ (system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).transpose()
+    for i in range(0,MtnSA.shape[1]):
+        db2_10 = iter_comp_22[1].select(Resp_Names[1]).transpose().vstack(iter_comp_22[2].select(Resp_Names[2]).transpose())
+        db20 = (db2_10 @ db2_10.transpose())
+        if i==0:
+            db20agg = db20*MtnSA[i].ID
+        else:
+            db20agg = db20agg+db20*MtnSA[i].ID
+
+    
+    k = -1
+    sc = 0
+    bdi=[ [],[],[]]
+    for i in range(1,3):
+        nnm = len(Resp_Names[i])
+        for j,nm in enumerate(Resp_Names[i]):
+            k+=1
+            x = iter_comp_2[i].lazy()
+            x = x.select(Resp_NamesXd[i][nm])
+            for l,lnm in enumerate(Resp_NamesXd[i][nm]):
+                x = x.with_column(pl.col(lnm).alias(Resp_NamesPrefxd[i][l]))
+            if j==0:
+                bdi[i] = x.select(Resp_NamesPrefxd[i]).collect()
+            else:
+                bdi[i] = bdi[i].vstack(x.select(Resp_NamesPrefxd[i]).collect())
+            #db2[k, (sc):(sc+nnm)] -= x.to_numpy().reshape((1,nnm))
+        sc+=nnm
+    
+    
+    db2=bdi[1].hstack(bdi[2]*0).vstack((bdi[1]*0).hstack(bdi[2]))*(-1)+pl.DataFrame(db2)
+    
+    delta_betas= -np.linalg.inv(db2.to_numpy()) @ db.to_numpy()
+    betas=betas+pl.DataFrame(delta_betas)
+    sc=0
+    for i in range(1,3):
+        nnm=len(Resp_Names[1])
+        beta[i]=betas[sc:sc+nnm]
+        sc+=nnm
+
+    print(betas)
+    
+
+
+
+
 
