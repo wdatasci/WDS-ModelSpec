@@ -267,7 +267,7 @@ cpdef _fArtificials_Categorical(np.ndarray[str, ndim=2] SourceValue
                             , &nCritVals[0]
                             , &z
                             , 0
-                            , &rv[nrows,0]
+                            , &rv[i,0]
                             , nArts
                             , 1
                             , nArts
@@ -379,28 +379,34 @@ cpdef fArtificials(Source=None
     rv=None
     if trt=="Categorical":
         rv = _fArtificials_Categorical(fViewCorrectlyAsColumn(Source),trt,CriticalValues)
+        lbls = fArtificialLabels(len(CriticalValues)
+                                                , Treatment
+                                                , LabelBase=LabelBase
+                                                , LabelConnector=LabelConnector
+                                                , LabelSuffix=LabelSuffix
+                                            )
     elif trt=="CategoricalNumeric":
         if CleanLimits is None:
             rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),np.ndarray((0,0),dtype=np.double))
         else:
             rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),fViewCorrectlyAsRow(CleanLimits))
+        lbls = fArtificialLabels(len(CriticalValues)
+                                                , Treatment
+                                                , LabelBase=LabelBase
+                                                , LabelConnector=LabelConnector
+                                                , LabelSuffix=LabelSuffix
+                                            )
     else:
         CriticalValues = fViewCorrectlyAsRow(CriticalValues)
         if CleanLimits is None:
             rv = _fArtificials_Numeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,np.ndarray((0,0),dtype=np.double))
         else:
             rv = _fArtificials_Numeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,fViewCorrectlyAsRow(CleanLimits))
-    lbls = fArtificialLabels(CriticalValues.shape[1]
+        lbls = fArtificialLabels(CriticalValues.shape[1]
                                                 , Treatment
                                                 , LabelBase=LabelBase
                                                 , LabelConnector=LabelConnector
                                                 , LabelSuffix=LabelSuffix
-                                            )
-    lbls = fArtificialLabels(CriticalValues.shape[1]
-                                            , Treatment
-                                            , LabelBase=LabelBase
-                                            , LabelConnector=LabelConnector
-                                            , LabelSuffix=LabelSuffix
                                             )
     if DropIndexs:
         if type(DropIndexs) is not list:
