@@ -250,6 +250,13 @@ fid = open(__file__+'.out.system_etc.csv','w')
 fid.write(data.select(['ID','StrataID','MonthID','Age','Signal','EventClass','EventIndex']).to_csv())
 fid.close()
 
+#etc - events timed and classed
+#names in common to all subjects
+#  ID - unique subject
+#  StrataID - common denominator grouping
+#  Age - general subject age
+#  Signal - etc class
+
 base_names=['ID','StrataID','MonthID','Age','Signal']
 
 Resp1_Names = copy.copy(base_names)
@@ -268,6 +275,7 @@ base_and_Resp_Names = [ []
     , Resp2_Names
     ]
 
+#modeling indexed names
 Resp_NamesPrefxd = [ [], [], [], ]
 Resp_NamesX = [ [], [], [], ]
 Resp_NamesXd = [ [], {}, {}, ]
@@ -292,39 +300,35 @@ system_matrix = [ []
     , x2.collect() #system_matrix_Resp2.select(base_and_Resp_Names[2]) 
     ]
 
-etc_names = ['Signal']
 etc_and_base_names = copy.copy(base_names)
-#etc_and_base_names.extend(etc_names)
 
 etc_and_base = data.select(etc_and_base_names).sort(['Signal','StrataID','Age'])
-<<<<<<< Updated upstream
 
+#unique index values
 etc_denom_index = etc_and_base.mfilter(etc_and_base.Signal>0).select(['StrataID','Age','Signal']).distinct().sort(['StrataID','Age','Signal'])
 
-=======
-
-etc_denom_index = etc_and_base.mfilter(etc_and_base.Signal>0).select(['StrataID','Age','Signal']).distinct().sort(['StrataID','Age','Signal'])
-
->>>>>>> Stashed changes
-nbeta=[0
-    , len(ModelBuildingMD.effective_names('Resp1'))
-    , len(ModelBuildingMD.effective_names('Resp2'))
-    ]
-
-nbetatotal=nbeta[0]+nbeta[1]
-
+#counts split by signal
 Mn = [ etc_and_base.filter(pl.col('Signal')==0).shape[0]
     , etc_and_base.filter(pl.col('Signal')==1).shape[0]
     , etc_and_base.filter(pl.col('Signal')==2).shape[0]
     ]
 
-MtnSA=etc_and_base.filter(pl.col('Signal')>0).groupby(['StrataID','Age']).agg(pl.col('Signal').count().alias('M')).sort(['StrataID','Age'])
-<<<<<<< Updated upstream
+#counts any signal by strata and age
+MnSA=etc_and_base.filter(pl.col('Signal')>0).groupby(['StrataID','Age']).agg(pl.col('Signal').count().alias('M')).sort(['StrataID','Age'])
 
-MnSA = [ etc_and_base.filter(pl.col('Signal')==0).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
-    , etc_and_base.filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
-    , etc_and_base.filter(pl.col('Signal')==2).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+#counts by signal strata and age
+#MnSA = [ etc_and_base.filter(pl.col('Signal')==0).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+#    , etc_and_base.filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+#    , etc_and_base.filter(pl.col('Signal')==2).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+#    ]
+
+#number of betas, {\em survival} state is index 0
+nbeta=[0
+    , len(ModelBuildingMD.effective_names('Resp1'))
+    , len(ModelBuildingMD.effective_names('Resp2'))
     ]
+
+nbetatotal=nbeta[0]+nbeta[1]+nbeta[2]
 
 
 beta=[ []
@@ -332,80 +336,55 @@ beta=[ []
     , pl.DataFrame(np.random.rand(nbeta[2],1))
     ]
 
-=======
-
-MnSA = [ etc_and_base.filter(pl.col('Signal')==0).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
-    , etc_and_base.filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
-    , etc_and_base.filter(pl.col('Signal')==2).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
-    ]
-
-
-beta=[ []
-    , pl.DataFrame(np.random.rand(nbeta[1],1))
-    , pl.DataFrame(np.random.rand(nbeta[2],1))
-    ]
-
->>>>>>> Stashed changes
 for aaa in range(0,20):
     ebz=[ []
         , system_matrix[1].select(Resp_Names[1]) @ beta[1]
         , system_matrix[2].select(Resp_Names[2]) @ beta[2] 
         ]
+    ebzc = ebz[1]+ebz[2]
+    etcWebzc = copy_with_column(etc_and_base, 'ebzc', ebzc)
     
     etcWebz = [ []
-        , copy_with_column(etc_and_base, 'ebz', ebz[1])
-        , copy_with_column(etc_and_base, 'ebz', ebz[2]) 
+        , copy_with_column(etcWebzc, 'ebz', ebz[1])
+        , copy_with_column(etcWebzc, 'ebz', ebz[2]) 
         ]
-    
+
     iter_comp_1 = [ []
         , system_matrix[1].filter(pl.col('Signal')==1).select(Resp_Names[1]).sum()
         , system_matrix[2].filter(pl.col('Signal')==2).select(Resp_Names[2]).sum()
         ]
-    
-    #etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).mfilter(pl.col('Signal')==1).groupby('Signal').agg_list().select(pl.col(Resp_Names[1]).apply(np.nansum))
-    #etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).mfilter(pl.col('Signal')==1).groupby('Age').agg_list().select(pl.col(Resp_Names[1]).apply(np.nansum))
-    #etc_and_base.hstack(system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz).mfilter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg_list().select(['StrataID','Age',pl.col(Resp_Names[1]).apply(np.nansum)])
-    #system_matrix[1].select(Resp_Names[1]).transpose() @ (system_matrix[1].select(Resp_Names[1])*etcWebz[1].ebz)
+    iter_comp_12 = [ [], [], [] ]
     
     iter_comp_2 = [ [], [], [] ]
     iter_comp_22 = [ [], [], [] ]
     
-    x=(etcWebz[1].hstack(system_matrix[1].select([*Resp_Names[1],*Resp_NamesX[1]]) * etcWebz[1].ebz)).groupby(['StrataID','Age']).agg(pl.col(['ebz', *Resp_Names[1], *Resp_NamesX[1]]).sum()).sort(['StrataID','Age'])
-    xx=x.join(MtnSA, on=['StrataID','Age'], how='inner')
+    x = (etcWebz[1].hstack(system_matrix[1].select([*Resp_Names[1],*Resp_NamesX[1]]) * etcWebz[1].ebz)).groupby(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[1], *Resp_NamesX[1]]).sum()).sort(['StrataID','Age'])
+    xx = x.join(MnSA, on=['StrataID','Age'], how='inner')
     
-    iter_comp_2[1]= (xx.select([*Resp_Names[1],*Resp_NamesX[1]]) * xx.M / xx.ebz) #.sum()
-    iter_comp_22[1]= (xx.select(Resp_Names[1]) * xx.M.apply(np.sqrt) / xx.ebz) #.sum()
-    #iter_comp_22[1]= (xx.select(Resp_Names[1]) * xx.M / xx.ebz).sum()
+    iter_comp_12[1] = (xx.select(Resp_Names[1]) * xx.M / xx.ebzc).sum()
+
+    iter_comp_2[1] = (xx.select([*Resp_Names[1],*Resp_NamesX[1]]) * xx.M / xx.ebzc).sum()
+    iter_comp_22[1] = (xx.select(Resp_Names[1]) * xx.M.apply(np.sqrt) / xx.ebzc) #.sum()
     
-    x=(etcWebz[2].hstack(system_matrix[2].select([*Resp_Names[2],*Resp_NamesX[2]]) * etcWebz[2].ebz)).groupby(['StrataID','Age']).agg(pl.col(['ebz', *Resp_Names[2], *Resp_NamesX[2]]).sum()).sort(['StrataID','Age'])
-    xx=x.join(MtnSA, on=['StrataID','Age'], how='inner')
+    x = (etcWebz[2].hstack(system_matrix[2].select([*Resp_Names[2],*Resp_NamesX[2]]) * etcWebz[2].ebz)).groupby(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[2], *Resp_NamesX[2]]).sum()).sort(['StrataID','Age'])
+    xx = x.join(MnSA, on=['StrataID','Age'], how='inner')
     
-    iter_comp_2[2]= (xx.select([*Resp_Names[2],*Resp_NamesX[2]]) * xx.M / xx.ebz) #.sum()
-    iter_comp_22[2]= (xx.select(Resp_Names[2]) * xx.M.apply(np.sqrt) / xx.ebz) #.sum()
-    #iter_comp_22[2]= (xx.select(Resp_Names[2]) * xx.M / xx.ebz).sum()
-    
-    
-    #yy=system_matrix[1].select(['ID','StrataID','Signal','Age',*Resp_Names[1]]).melt(id_vars=['ID','StrataID','Signal','Age']).sort(['ID','StrataID','Signal','Age','variable']).groupby(['ID','StrataID','Signal','Age']).agg(pl.col('value').list()).with_column(pl.col('value').apply(f))
+    iter_comp_12[2] = (xx.select(Resp_Names[2]) * xx.M / xx.ebzc).sum()
+
+    iter_comp_2[2] = (xx.select([*Resp_Names[2],*Resp_NamesX[2]]) * xx.M / xx.ebzc).sum()
+    iter_comp_22[2] = (xx.select(Resp_Names[2]) * xx.M.apply(np.sqrt) / xx.ebzc) #.sum()
     
     
     
     betas = beta[1].vstack(beta[2])
-    db=iter_comp_1[1].transpose().vstack(iter_comp_1[2].transpose())- iter_comp_2[1].select(Resp_Names[1]).transpose().vstack(iter_comp_2[2].select(Resp_Names[2]).transpose())
-<<<<<<< Updated upstream
+    db=iter_comp_1[1].transpose().vstack(iter_comp_1[2].transpose())- iter_comp_12[1].transpose().vstack(iter_comp_12[2].transpose())
 
-    for i in range(0,MtnSA.shape[1]):
-        db2_10 = iter_comp_22[1].select(Resp_Names[1]).transpose().vstack(iter_comp_22[2].select(Resp_Names[2]).transpose())
+    db20agg = None
+    for i in range(0,MnSA.shape[1]):
+        db2_10 = iter_comp_22[1][i].select(Resp_Names[1]).transpose().vstack(iter_comp_22[2][i].select(Resp_Names[2]).transpose())
         db20 = (db2_10 @ db2_10.transpose())
-        if i==0:
-            db20agg = db20*MtnSA[i].ID
-        else:
-            db20agg = db20agg+db20*MtnSA[i].ID
+        db20agg = db20*MnSA[i].M[0] + ( db20agg if db20agg is not None else 0 )
 
-=======
-    db2_1 = iter_comp_22[1].select(Resp_Names[1]).transpose().vstack(iter_comp_22[2].select(Resp_Names[2]).transpose())
-    db2 = (db2_1 @ db2_1.transpose())
->>>>>>> Stashed changes
-    
     k = -1
     sc = 0
     bdi=[ [],[],[]]
@@ -425,8 +404,9 @@ for aaa in range(0,20):
         sc+=nnm
     
     
-    db2=bdi[1].hstack(bdi[2]*0).vstack((bdi[1]*0).hstack(bdi[2]))*(-1)+pl.DataFrame(db2)
+    db2=bdi[1].hstack(bdi[2]*0).vstack((bdi[1]*0).hstack(bdi[2]))*(-1)+pl.DataFrame(db20agg)
     
+    print(-np.linalg.inv(db2.to_numpy()))
     delta_betas= -np.linalg.inv(db2.to_numpy()) @ db.to_numpy()
     betas=betas+pl.DataFrame(delta_betas)
     sc=0
@@ -436,6 +416,7 @@ for aaa in range(0,20):
         sc+=nnm
 
     print(betas)
+    #break
     
 
 
