@@ -34,11 +34,20 @@ cdef extern from "../../../WDS-C/include/WDS/ModelSpec/Artificials.h":
     cdef int nArtificialIndex_First(int nCritVals, eTreatment Treatment) 
     cdef int nArtificialIndex_Last(int nCritVals, eTreatment Treatment) 
     cdef int fArtificials_Numeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double* CriticalValues, int nCritVals, double* CleanLimits, int nCleanLimits, double* Arts, int nArts, int nArtsRowCount, int nArtsColumnCount, int nArtsRowOffset, int nArtsColumnOffset, bint bRowMajor) 
-    cdef int fArtificialsScored_Numeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double* CriticalValues, int nCritVals, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets, double* Results, int nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint bRowMajor) 
+    cdef int fArtificialsScored_Numeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double* CriticalValues, int
+    nCritVals, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets, double* Results, int
+    nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint bRowMajor, bint
+    bCoefRowMajor) 
     cdef int fArtificials_CategoricalNumeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double** CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Arts, int nArts, int nArtsRowCount, int nArtsColumnCount, int nArtsRowOffset, int nArtsColumnOffset, bint bRowMajor) 
-    cdef int fArtificialsScored_CategoricalNumeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double** CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets, double* Results, int nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint bRowMajor) 
+    cdef int fArtificialsScored_CategoricalNumeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double**
+    CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets,
+    double* Results, int nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint
+    bRowMajor, bint bCoefRowMajor) 
     cdef int fArtificials_Categorical(wchar_t** SourceValue, int nSourceValueRowCount, eTreatment Treatment, wchar_t*** CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Arts, int nArts, int nArtsRowCount, int nArtsColumnCount, int nArtsRowOffset, int nArtsColumnOffset, bint bRowMajor) 
-    cdef int fArtificialsScored_Categorical(wchar_t** SourceValue, int nSourceValueRowCount, eTreatment Treatment, wchar_t*** CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets, double* Results, int nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint bRowMajor) 
+    cdef int fArtificialsScored_Categorical(wchar_t** SourceValue, int nSourceValueRowCount, eTreatment Treatment, wchar_t***
+    CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets,
+    double* Results, int nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint
+    bRowMajor, bint bCoefRowMajor) 
 
 
 cpdef _eTreatmentClean(str arg):
@@ -145,6 +154,7 @@ cpdef _fArtificialsScored_Numeric(np.ndarray[double, ndim=2] SourceValue
                             , nScores
                             , 0
                             , 0
+                            , True
                             , True) 
     if rc!=0: raise(Exception("Error in fArtificialsScored_Numeric"))
     return rv.base
@@ -224,14 +234,15 @@ cpdef _fArtificialsScored_CategoricalNumeric(np.ndarray[double, ndim=2] SourceVa
                             , CL
                             , nCL
                             , &Coefficients[0,0]
-                            , nArts
-                            , nScores
+                            , Coefficients.shape[1]
+                            , Coefficients.shape[0]
                             , &rv[0,0]
                             , nScores
                             , nrows
                             , nScores
                             , 0
                             , 0
+                            , True
                             , True) 
     return rv.base
 
@@ -296,12 +307,14 @@ cpdef _fArtificialsScored_Categorical(np.ndarray[str, ndim=2] SourceValue
     cdef int nrows=SourceValue.shape[0]
     cdef int nArts=nArtificialCount(nCritVals[0], eTreatmentClean(warg, len(Treatment))) 
     cdef int nScores=Coefficients.shape[0]
-    cdef double[:,::1] rv=np.empty((nrows, nScores))
+    #cdef double[:,::1] rv=np.empty((nrows, nScores))
+    cdef double[:,::1] rv=np.empty((nrows, nScores) ,dtype=np.double)
     cdef wchar_t* arg
     cdef int rc
 
     for i in range(0,nrows):
-        arg=SourceValue[i]
+        arg=SourceValue[i,0]
+        z=0.0
         rc= fArtificialsScored_Categorical(&arg
                             , 1
                             , eTreatmentClean(warg, len(Treatment))
@@ -314,12 +327,15 @@ cpdef _fArtificialsScored_Categorical(np.ndarray[str, ndim=2] SourceValue
                             , nScores
                             , &rv[i,0]
                             , nScores
-                            , i
+                            , 1
                             , nScores
                             , 0
                             , 0
+                            , True
                             , True) 
     return rv.base
+    #return np.asarray(rv)
+    #return rv
 
 cpdef fViewCorrectly(Source=None, as_column=True, as_float=True):
     if (type(Source) is not np.ndarray) and hasattr(Source, 'as_numpy'):
@@ -387,7 +403,8 @@ cpdef fArtificials(Source=None
                                             )
     elif trt=="CategoricalNumeric":
         if CleanLimits is None:
-            rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),np.ndarray((0,0),dtype=np.double))
+            rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,np.ndarray((0,0),dtype=np.double))
+            #rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),np.ndarray((0,0),dtype=np.double))
         else:
             rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),fViewCorrectlyAsRow(CleanLimits))
         lbls = fArtificialLabels(len(CriticalValues)
@@ -440,13 +457,14 @@ cpdef fArtificialsScored(Source=None
     cdef str trt=_eTreatmentClean(Treatment);
     Source = fViewCorrectlyAsColumn(Source)
     cdef int nrows=Source.shape[0]
-    CoefficientsSet = fViewCorrectly(CoefficientsSet)
-    cdef int nScores=CoefficientsSet.shape[0]
-    cdef double[:,::1] rv # =np.empty((nrows, nScores))
+    cdef int nScores=0
+    cdef double[:,::1] rv =np.empty((nrows, nScores), dtype=np.double)
     if trt=="Categorical":
-        if CleanLimits is None: raise("Insufficient arguments to fArtificials")
-        rv = _fArtificialsScored_Categorical(fViewCorrectlyAsColumn(Source,as_float=False),trt,CriticalValues,CleanLimits)
+        nScores=len(CoefficientsSet)
+        rv = _fArtificialsScored_Categorical(fViewCorrectlyAsColumn(Source, as_float=False),trt,CriticalValues,CoefficientsSet)
     else:
+        CoefficientsSet = fViewCorrectly(CoefficientsSet)
+        nScores=CoefficientsSet.shape[0]
         if CoefficientsSet is None: raise("Insufficient arguments to fArtificials")
         if trt=="CategoricalNumeric":
             if CleanLimits is None:
