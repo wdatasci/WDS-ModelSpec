@@ -144,6 +144,8 @@ a order by <xsl:value-of select="$BlockID"/>, <xsl:value-of select="$RowID"/>
         <xsl:variable name="ProjectName" select="@Name"/>
         <!--Pull local parameters BEGIN-->
 
+set role UDXDEVELOPER;
+
 drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> cascade;
 drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> cascade;
 drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib cascade;
@@ -213,6 +215,8 @@ comment on transform function <xsl:value-of select="$Schema"/>.<xsl:value-of sel
 ) is null;
 \set ON_ERROR_STOP on
 */
+
+set role UDXDEVELOPER;
 
 drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/> cascade;
 drop library if exists <xsl:value-of select="$Schema"/>.<xsl:value-of select="$ProjectName"/>_lib cascade;

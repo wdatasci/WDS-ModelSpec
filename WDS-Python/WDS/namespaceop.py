@@ -67,20 +67,18 @@ import inspect
 
 def namespaceop(func):
     __func = inspect.getsource(func)
+    __func_lines = inspect.getsourcelines(func)
+    __func_name = func.__name__
+    print(__func_lines)
     n = __func.count('\n',0,__func.index(':'))
     __func = compile('if True:#'+__func.replace('\n','',n),func.__name__,'exec')
     def __func_wrapped(arg):
-        eval(__func,func.__globals__,vars(arg))
+        try:
+            eval(__func,func.__globals__,vars(arg))
+        except Exception as e:
+            raise(Exception('namespaceop error in '+__func_name+' at func lineno '+str(e.__traceback__.tb_next.tb_lineno)
+                + ', file lineno '+str(__func_lines[1]+e.__traceback__.tb_next.tb_lineno)+' line:\n'+__func_lines[0][e.__traceback__.tb_next.tb_lineno]))
     return __func_wrapped
-
-def namespaceop_using__dict__(func):
-    __func = inspect.getsource(func)
-    n = __func.count('\n',0,__func.index(':'))
-    __func = compile('if True:#'+__func.replace('\n','',n),func.__name__,'exec')
-    def __func_wrapped(arg):
-        eval(__func,func.__globals__,arg)
-    return __func_wrapped
-
 
 
 if __name__=='__main__':
@@ -122,4 +120,15 @@ if __name__=='__main__':
         print('x.x = ',x.x)
     except Exception as e:
         print(str(e))
+
+    @namespaceop
+    def huh(input):
+        x = 11
+        x = z
+        a+= x
+        x+= b
+
+    #For debugging purposes, throw an error and report the function and file line numbers
+    huh(x)
+
 

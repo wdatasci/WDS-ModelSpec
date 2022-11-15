@@ -201,7 +201,7 @@ class StaticObject(object):
          vars(self).pop('self')
 
      def From(self<xsl:for-each select="./Columns/Column[@Use='I' ]">
-     <xsl:if test="@Use!='Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">
+         <xsl:if test="@Use!='Off' and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')"><xsl:text>
          ,</xsl:text><xsl:value-of select="@Name"/></xsl:if></xsl:for-each>
          ):
          vars(self).update(locals())
