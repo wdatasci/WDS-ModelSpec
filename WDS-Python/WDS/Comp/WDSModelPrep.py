@@ -68,6 +68,12 @@ import WDS.Wranglers.gXMLParsers.gWDSModel_literal as __gWDSModel_literal
 
 import numpy as np
 
+import copy
+
+import polars as pl
+
+import WDS.Comp.ArtificialsCythonWrapped as art_c
+
 import pudb
 
 # a quick expansion of hasattr
@@ -161,6 +167,7 @@ setattr(__gWDSModel.CriticalValues,"as_list",__CriticalValues_as_list)
 def __CriticalValues_as_numpy(self):
     return np.array([self.as_list()], dtype=np.float64)
 setattr(__gWDSModel.CriticalValues,"as_numpy",__CriticalValues_as_numpy)
+setattr(__gWDSModel.CriticalValues,"np",__CriticalValues_as_numpy)
 
 def __Collect_CleanLimits(self):
     if not ( hasattr(self,'CleanLimits') 
@@ -250,6 +257,7 @@ setattr(__gWDSModel.CleanLimits,"as_list",__CleanLimits_as_list)
 def __CleanLimits_as_numpy(self):
     return np.array([self.as_list()], dtype=np.float64)
 setattr(__gWDSModel.CleanLimits,"as_numpy",__CleanLimits_as_numpy)
+setattr(__gWDSModel.CleanLimits,"np",__CleanLimits_as_numpy)
 
 
 def __Responses_from(self, Responses):
@@ -445,7 +453,9 @@ def __CoefficientsSet_as_numpy(self, Responses=None):
         return self.CoefficientsSet.as_numpy(Responses)
     return np.array(self.as_list(Responses), dtype=np.float64)
 setattr(__gWDSModel.CoefficientsSet,"as_numpy",__CoefficientsSet_as_numpy)
+setattr(__gWDSModel.CoefficientsSet,"np",__CoefficientsSet_as_numpy)
 setattr(__gWDSModel.Variable,"Coefficients_as_numpy",__CoefficientsSet_as_numpy)
+setattr(__gWDSModel.Variable,"Coefficients_np",__CoefficientsSet_as_numpy)
 
 __ElementsWithPlurals = ['Project'
                         , 'Model'
@@ -558,15 +568,76 @@ def __get_Variable(self, Name=None):
     
 setattr(__gWDSModel.Model,"get_Variable",__get_Variable)
 
-
 def __add_DropIndex(self, indx):
-    mProcessList(self, just_DropIndexs=True)
-    if self.DropIndexs is None:
-        self.DropIndexs = __gWDSModel.DropIndexs(parent_object_=self)
-    mProcessList(self, just_DropIndexs=True)
-    self.DropIndexs.add_DropIndex(__gWDSModel.Int(indx, parent_object_=self.DropIndexs))
+    __DropIndexs_fix(self)
+    if type(indx) in (int, float, str):
+        indx = int(indx)
+        found = False
+        for v0 in self.DropIndexs.DropIndex:
+            if v0.valueOf_ == indx:
+                break
+        if not found:
+            self.DropIndexs.DropIndex.append(__gWDSModel.Int(indx, parent_object_=self.DropIndexs))
+    elif type(indx) is list:
+        for v in indx:
+            __add_DropIndex(self, v)
+    elif type(indx) is __gWDSModel.DropIndex:
+            __add_DropIndex(self, indx.valueOf_)
+    else:
+        raise(Exception("Cannot add type, "+str(type(indx))+", to DropIndexs"))
+
 
 setattr(__gWDSModel.Variable,"add_DropIndex",__add_DropIndex)
+
+
+def __DropIndexs_fix(self):
+    other = None
+    if bHas(self,"DropIndex") or bHas(self,"DropIndices") or bHas(self,"DropIndexs") or bHas(self,"DropIndexes"):
+        if self.DropIndexs and len(self.DropIndexs.DropIndex)>0:
+            if self.DropIndices and len(self.DropIndices.DropIndex)>0:
+                raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
+            self.DropIndices = None
+            if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
+                raise(Exception('error in mProcessList, DropIndexes and DropIndexs cannot both be used, internal is DropIndexs'))
+            self.DropIndexes = None
+        else:
+            if self.DropIndices and len(self.DropIndices.DropIndex)>0:
+                if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
+                    raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
+                self.DropIndexes = None
+                other = self.DropIndices
+            if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
+                other = self.DropIndices
+    if self.DropIndexs is None:
+        if other:
+            self.DropIndexs = __gWDSModel.DropIndexs(DropIndex=other.DropIndex
+                    , parent_object_=self, gds_collector_=self.gds_collector_)
+            if self.DropIndexs.DropIndex !=[]:
+                for v in self.DropIndexs.DropIndex:
+                    v.parent_object_ = self.DropIndexs
+            if type(other) is __gWDSModel.DropIndices:
+                __gWDSModel.DropIndices = None
+            elif type(other) is __gWDSModel.DropIndexes:
+                __gWDSModel.DropIndexes = None
+            other = None
+        else:
+            self.DropIndexs = __gWDSModel.DropIndexs(parent_object_=self, gds_collector_=self.gds_collector_)
+    if self.DropIndex != []:
+        for v in self.DropIndex:
+            self.DropIndexs.add_DropIndex(v.valueOf_)
+        self.DropIndex = []
+
+def __DropIndexs_as_list(self):
+    rv=[]
+    if self.DropIndex is not []:
+        for c in self.DropIndex:
+            rv.append(c.valueOf_)
+    return rv
+
+setattr(__gWDSModel.DropIndexs,"as_list",__DropIndexs_as_list)
+
+
+
 
 def WDSModelFromFile(filename):
     if type(filename) is str:
@@ -604,29 +675,7 @@ def mProcessElementWithList(self, nm):
 
 def mProcessList(self, just_DropIndexs=False):
     '''Takes care of any unusual DropIndexs, DropIndices, or DropIndexes and then processes List-valued elements'''
-    if bHas(self,"DropIndex") or bHas(self,"DropIndices") or bHas(self,"DropIndexs") or bHas(self,"DropIndexes"):
-        if bHas(self,"DropIndices") or bHas(self,"DropIndexs") or bHas(self,"DropIndexes"):
-            if self.DropIndexs and len(self.DropIndexs.DropIndex)>0:
-                if self.DropIndices and len(self.DropIndices.DropIndex)>0:
-                    raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
-                self.DropIndices = None
-                if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
-                    raise(Exception('error in mProcessList, DropIndexes and DropIndexs cannot both be used, internal is DropIndexs'))
-                self.DropIndexes = None
-            elif self.DropIndices and len(self.DropIndices.DropIndex)>0:
-                if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
-                    raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
-                self.DropIndexes = None
-                self.DropIndexs = self.DropIndices
-                self.DropIndices = None
-            elif self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
-                if self.DropIndices and len(self.DropIndices.DropIndices)>0:
-                    raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
-                self.DropIndexs = self.DropIndexes
-                self.DropIndexes = None
-                self.DropIndices = None
-        if bHasDropIndex(self) or bHasDropIndexs(self):
-            mPreProcessDropIndex(self)
+    __DropIndexs_fix(self)
     if not just_DropIndexs:
         for nm in __ElementsWithLists:
             mProcessElementWithList(self, nm)
@@ -681,6 +730,65 @@ def mPreProcess(self):
     elif bIsVariable(self):
         pass
        
+def plDF(arg):
+    return pl.DataFrame(arg.view(dtype=np.float64),columns=arg.dtype.fields)
+
+
+def fArtificials(arg, VariableSpec):
+    return plDF(art_c.fArtificials(arg,VariableSpec.Treatment,VariableSpec.CriticalValues.as_numpy(),VariableSpec.CleanLimits.as_numpy(),LabelBase=VariableSpec.Name))
+
+def fArtificialsScored(arg, VariableSpec):
+    return plDF(art_c.fArtificialsScored(arg,VariableSpec.Treatment,VariableSpec.CriticalValues.as_numpy(),VariableSpec.CleanLimits.as_numpy(),VariableSpec.CoefficientsSet.as_numpy(),LabelBase=VariableSpec.Name))
+
+def ModelBuildingMD_Constructor():
+    class _ModelBuildingMD(object):
+        def __init__(self, mdl):
+            self._mdl = mdl
+            self.Resp_arts_names = {}
+            self.Resp_arts_droplist ={}
+            for r in mdl.ModelDirectives.Responses.as_list():
+                self.Resp_arts_names[r]=[]
+                self.Resp_arts_droplist[r]=[]
+        def add_arts(self, vrbl, cols):
+            if vrbl.VariableModelDirectives.ResponseUse=='All':
+                for r in self._mdl.ModelDirectives.Responses.as_list():
+                    self.Resp_arts_names[r].extend(cols)
+                    if vrbl.DropIndexs.DropIndex != []:
+                        self.Resp_arts_droplist[r].extend([cols[i] for i in vrbl.DropIndexs.as_list()])
+            else:
+                r = vrbl.VariableModelDirectives.ResponseUse
+                self.Resp_arts_names[r].extend(cols)
+                if vrbl.DropIndexs.DropIndex != []:
+                    self.Resp_arts_droplist[r].extend([cols[i] for i in vrbl.DropIndexs.as_list()])
+        def effective_names(self, r):
+            return [x for x in filter(lambda x: not (x in self.Resp_arts_droplist[r]), self.Resp_arts_names[r])]
+
+    return _ModelBuildingMD
+
+def fAddToSystem(variable, arg, system_matrix_Resp1, system_matrix_Resp2):
+    if variable.get_VariableModelDirectives().ResponseUse == "All":
+        if system_matrix_Resp1:
+            system_matrix_Resp1.hstack(arg, in_place=True)
+        else:
+            system_matrix_Resp1 = arg
+        if system_matrix_Resp2:
+            system_matrix_Resp2.hstack(arg, in_place=True)
+        else:
+            system_matrix_Resp2 = copy.copy(arg)
+    elif variable.get_VariableModelDirectives().ResponseUse == "Resp1":
+        if system_matrix_Resp1:
+            system_matrix_Resp1.hstack(arg, in_place=True)
+        else:
+            system_matrix_Resp1 = arg
+    elif variable.get_VariableModelDirectives().ResponseUse == "Resp2":
+        if system_matrix_Resp2:
+            system_matrix_Resp2.hstack(arg, in_place=True)
+        else:
+            system_matrix_Resp2 = arg
+    return [system_matrix_Resp1, system_matrix_Resp2]
+
+
+
 
 if __name__=='__main__':
     global rv

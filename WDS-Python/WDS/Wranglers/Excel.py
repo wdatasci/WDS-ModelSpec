@@ -18,7 +18,7 @@ import fnmatch
 import re
 
 import math
-from datetime import date
+from datetime import date, datetime, time
 
 #old, for some reason xlrd in python3.8 will not read xlsm, duh
 ##using xlrd for reading, but will use xlsxwriter instead of xlwt
@@ -114,18 +114,27 @@ def Excel2CSV(fn
                         lrow[jM1]=s.cell(i,j).value.strip()
                     elif (s.cell(i,j).data_type=='d'): # or s.cell(i,j).is_date): 
                         try:
-                            dtm=mMonthID.CleanDateTime(s.cell(i,j).value)
+                            if type(s) is datetime:
+                                dtm=s
+                            else:
+                                dtm=mMonthID.CleanDateTime(s.cell(i,j).value)
                             lrow[jM1]=mMonthID.Date2isoformat(dtm)
                         except Exception as e:
                             try:
-                                dte=mMonthID.CleanDate(s.cell(i,j).value)
+                                if type(s) is date:
+                                    dte=s
+                                else:
+                                    dte=mMonthID.CleanDate(s.cell(i,j).value)
                                 lrow[jM1]=mMonthID.Date2isoformat(dte)
                             except Exception as e:
-                                if (math.fabs(math.trunc(s.cell(i,j).value)-s.cell(i,j).value)<1e-8):
+                                #if (math.fabs(math.trunc(s.cell(i,j).value)-s.cell(i,j).value)<1e-8):
+                                try:
                                     y,m,d,hh,mm,ss=xlrd.xldate.xldate_as_tuple(s.cell(i,j).value,w.datemode)
                                     lrow[jM1]=str(date(y,m,d)).strip()
-                                else:
-                                    lrow[jM1]=str(xlrd.xldate.xldate_as_datetime(s.cell(i,j).value,w.datemode)).strip()
+                                    #else:
+                                except Exception as e:
+                                    #lrow[jM1]=str(xlrd.xldate.xldate_as_datetime(s.cell(i,j).value,w.datemode)).strip()
+                                    lrow[jM1]=str(s).strip()
                     elif (s.cell(i,j).data_type=='b'): 
                         lrow[jM1]=s.cell(i,j).value
                     elif (s.cell(i,j).data_type=='n'): 

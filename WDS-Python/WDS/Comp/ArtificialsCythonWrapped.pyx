@@ -34,11 +34,20 @@ cdef extern from "../../../WDS-C/include/WDS/ModelSpec/Artificials.h":
     cdef int nArtificialIndex_First(int nCritVals, eTreatment Treatment) 
     cdef int nArtificialIndex_Last(int nCritVals, eTreatment Treatment) 
     cdef int fArtificials_Numeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double* CriticalValues, int nCritVals, double* CleanLimits, int nCleanLimits, double* Arts, int nArts, int nArtsRowCount, int nArtsColumnCount, int nArtsRowOffset, int nArtsColumnOffset, bint bRowMajor) 
-    cdef int fArtificialsScored_Numeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double* CriticalValues, int nCritVals, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets, double* Results, int nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint bRowMajor) 
+    cdef int fArtificialsScored_Numeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double* CriticalValues, int
+    nCritVals, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets, double* Results, int
+    nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint bRowMajor, bint
+    bCoefRowMajor) 
     cdef int fArtificials_CategoricalNumeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double** CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Arts, int nArts, int nArtsRowCount, int nArtsColumnCount, int nArtsRowOffset, int nArtsColumnOffset, bint bRowMajor) 
-    cdef int fArtificialsScored_CategoricalNumeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double** CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets, double* Results, int nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint bRowMajor) 
+    cdef int fArtificialsScored_CategoricalNumeric(double* SourceValue, int nSourceValueRowCount, eTreatment Treatment, double**
+    CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets,
+    double* Results, int nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint
+    bRowMajor, bint bCoefRowMajor) 
     cdef int fArtificials_Categorical(wchar_t** SourceValue, int nSourceValueRowCount, eTreatment Treatment, wchar_t*** CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Arts, int nArts, int nArtsRowCount, int nArtsColumnCount, int nArtsRowOffset, int nArtsColumnOffset, bint bRowMajor) 
-    cdef int fArtificialsScored_Categorical(wchar_t** SourceValue, int nSourceValueRowCount, eTreatment Treatment, wchar_t*** CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets, double* Results, int nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint bRowMajor) 
+    cdef int fArtificialsScored_Categorical(wchar_t** SourceValue, int nSourceValueRowCount, eTreatment Treatment, wchar_t***
+    CriticalValues, int* nCritVals_, double* CleanLimits, int nCleanLimits, double* Coefficients, int nCoefficients, int nCoefficientSets,
+    double* Results, int nResults, int nResultsRowCount, int nResultsColumnCount, int nResultsRowOffset, int nResultsColumnOffset, bint
+    bRowMajor, bint bCoefRowMajor) 
 
 
 cpdef _eTreatmentClean(str arg):
@@ -145,6 +154,7 @@ cpdef _fArtificialsScored_Numeric(np.ndarray[double, ndim=2] SourceValue
                             , nScores
                             , 0
                             , 0
+                            , True
                             , True) 
     if rc!=0: raise(Exception("Error in fArtificialsScored_Numeric"))
     return rv.base
@@ -224,14 +234,15 @@ cpdef _fArtificialsScored_CategoricalNumeric(np.ndarray[double, ndim=2] SourceVa
                             , CL
                             , nCL
                             , &Coefficients[0,0]
-                            , nArts
-                            , nScores
+                            , Coefficients.shape[1]
+                            , Coefficients.shape[0]
                             , &rv[0,0]
                             , nScores
                             , nrows
                             , nScores
                             , 0
                             , 0
+                            , True
                             , True) 
     return rv.base
 
@@ -267,7 +278,7 @@ cpdef _fArtificials_Categorical(np.ndarray[str, ndim=2] SourceValue
                             , &nCritVals[0]
                             , &z
                             , 0
-                            , &rv[nrows,0]
+                            , &rv[i,0]
                             , nArts
                             , 1
                             , nArts
@@ -296,12 +307,14 @@ cpdef _fArtificialsScored_Categorical(np.ndarray[str, ndim=2] SourceValue
     cdef int nrows=SourceValue.shape[0]
     cdef int nArts=nArtificialCount(nCritVals[0], eTreatmentClean(warg, len(Treatment))) 
     cdef int nScores=Coefficients.shape[0]
-    cdef double[:,::1] rv=np.empty((nrows, nScores))
+    #cdef double[:,::1] rv=np.empty((nrows, nScores))
+    cdef double[:,::1] rv=np.empty((nrows, nScores) ,dtype=np.double)
     cdef wchar_t* arg
     cdef int rc
 
     for i in range(0,nrows):
-        arg=SourceValue[i]
+        arg=SourceValue[i,0]
+        z=0.0
         rc= fArtificialsScored_Categorical(&arg
                             , 1
                             , eTreatmentClean(warg, len(Treatment))
@@ -314,15 +327,20 @@ cpdef _fArtificialsScored_Categorical(np.ndarray[str, ndim=2] SourceValue
                             , nScores
                             , &rv[i,0]
                             , nScores
-                            , i
+                            , 1
                             , nScores
                             , 0
                             , 0
+                            , True
                             , True) 
     return rv.base
+    #return np.asarray(rv)
+    #return rv
 
 cpdef fViewCorrectly(Source=None, as_column=True, as_float=True):
-    if type(Source) is np.array:
+    if (type(Source) is not np.ndarray) and hasattr(Source, 'as_numpy'):
+        return getattr(Source, 'as_numpy')()
+    if type(Source) in (np.array, np.ndarray):
         if len(Source.shape) == 2:
             return Source
         else:
@@ -370,28 +388,58 @@ cpdef fArtificials(Source=None
         , str LabelBase='Art'
         , str LabelConnector='_'
         , str LabelSuffix=""
+        , DropIndexs=None
         ):
     if Source is None or Treatment is None or CriticalValues is None: raise("Insufficient arguments to fArtificials")
     cdef str trt=_eTreatmentClean(Treatment);
     rv=None
     if trt=="Categorical":
         rv = _fArtificials_Categorical(fViewCorrectlyAsColumn(Source),trt,CriticalValues)
-    elif trt=="CategoricalNumeric":
-        if CleanLimits is None:
-            rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),np.ndarray((0,0),dtype=np.double))
-        else:
-            rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),fViewCorrectlyAsRow(CleanLimits))
-    else:
-        if CleanLimits is None:
-            rv = _fArtificials_Numeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),np.ndarray((0,0),dtype=np.double))
-        else:
-            rv = _fArtificials_Numeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),fViewCorrectlyAsRow(CleanLimits))
-    rv.dtype = [(lbl,np.double) for lbl in fArtificialLabels(CriticalValues.shape[1]
+        lbls = fArtificialLabels(len(CriticalValues)
                                                 , Treatment
                                                 , LabelBase=LabelBase
                                                 , LabelConnector=LabelConnector
                                                 , LabelSuffix=LabelSuffix
-                                                )]
+                                            )
+    elif trt=="CategoricalNumeric":
+        if CleanLimits is None:
+            rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,np.ndarray((0,0),dtype=np.double))
+            #rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),np.ndarray((0,0),dtype=np.double))
+        else:
+            rv = _fArtificials_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),fViewCorrectlyAsRow(CleanLimits))
+        lbls = fArtificialLabels(len(CriticalValues)
+                                                , Treatment
+                                                , LabelBase=LabelBase
+                                                , LabelConnector=LabelConnector
+                                                , LabelSuffix=LabelSuffix
+                                            )
+    else:
+        CriticalValues = fViewCorrectlyAsRow(CriticalValues)
+        if CleanLimits is None:
+            rv = _fArtificials_Numeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,np.ndarray((0,0),dtype=np.double))
+        else:
+            rv = _fArtificials_Numeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,fViewCorrectlyAsRow(CleanLimits))
+        lbls = fArtificialLabels(CriticalValues.shape[1]
+                                                , Treatment
+                                                , LabelBase=LabelBase
+                                                , LabelConnector=LabelConnector
+                                                , LabelSuffix=LabelSuffix
+                                            )
+    if DropIndexs:
+        if type(DropIndexs) is not list:
+            if type(DropIndexs) in (int, float):
+                DropIndexs = [int(DropIndexs)]
+            else:
+                DropIndexs = getattr(DropIndexs,'as_list')()
+        ncrits = CriticalValues.shape[1]
+        limits = [_nArtificialIndex_First(ncrits, Treatment),_nArtificialIndex_Last(ncrits, Treatment)]
+        if min(DropIndexs)<limits[0] or max(DropIndexs)>limits[1]:
+            raise(Exception("In fArtificials, index limits exceeded, "+str(DropIndexs)+" must be within "+str(limits)))
+        DropIndexs.sort(reverse=True)
+        for i in DropIndexs:
+            lbls.pop(i)
+            rv=np.delete(rv,i,1)
+    rv.dtype = [(lbl,np.double) for lbl in lbls]
     return rv.view(np.recarray)
 
 
@@ -399,7 +447,7 @@ cpdef fArtificialsScored(Source=None
                             , Treatment=None
                             , CriticalValues=None
                             , CleanLimits=None
-                            , CoefficientSets=None
+                            , CoefficientsSet=None
                             , str LabelBase='Score'
                             , str LabelConnector='_'
                             , str LabelSuffix=""
@@ -407,24 +455,27 @@ cpdef fArtificialsScored(Source=None
                             ):
     if Source is None or Treatment is None or CriticalValues is None: raise("Insufficient arguments to fArtificials")
     cdef str trt=_eTreatmentClean(Treatment);
+    Source = fViewCorrectlyAsColumn(Source)
     cdef int nrows=Source.shape[0]
-    cdef int nScores=CoefficientSets.shape[0]
-    cdef double[:,::1] rv # =np.empty((nrows, nScores))
+    cdef int nScores=0
+    cdef double[:,::1] rv =np.empty((nrows, nScores), dtype=np.double)
     if trt=="Categorical":
-        if CleanLimits is None: raise("Insufficient arguments to fArtificials")
-        rv = _fArtificialsScored_Categorical(fViewCorrectlyAsColumn(Source,as_float=False),trt,CriticalValues,CleanLimits)
+        nScores=len(CoefficientsSet)
+        rv = _fArtificialsScored_Categorical(fViewCorrectlyAsColumn(Source, as_float=False),trt,CriticalValues,CoefficientsSet)
     else:
-        if CoefficientSets is None: raise("Insufficient arguments to fArtificials")
+        CoefficientsSet = fViewCorrectly(CoefficientsSet)
+        nScores=CoefficientsSet.shape[0]
+        if CoefficientsSet is None: raise("Insufficient arguments to fArtificials")
         if trt=="CategoricalNumeric":
             if CleanLimits is None:
-                rv = _fArtificialsScored_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,np.ndarray((0,0),dtype=np.double),CoefficientSets)
+                rv = _fArtificialsScored_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,np.ndarray((0,0),dtype=np.double),CoefficientsSet)
             else:
-                rv = _fArtificialsScored_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,CleanLimits,CoefficientSets)
+                rv = _fArtificialsScored_CategoricalNumeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,CleanLimits,CoefficientsSet)
         else:
             if CleanLimits is None:
-                rv = _fArtificialsScored_Numeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,np.ndarray((0,0),dtype=np.double),fViewCorrectly(CoefficientSets))
+                rv = _fArtificialsScored_Numeric(fViewCorrectlyAsColumn(Source),trt,CriticalValues,np.ndarray((0,0),dtype=np.double),CoefficientsSet)
             else:
-                rv = _fArtificialsScored_Numeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),fViewCorrectlyAsRow(CleanLimits),fViewCorrectly(CoefficientSets))
+                rv = _fArtificialsScored_Numeric(fViewCorrectlyAsColumn(Source),trt,fViewCorrectlyAsRow(CriticalValues),fViewCorrectlyAsRow(CleanLimits),CoefficientsSet)
     rv.base.dtype = [(lbl,np.double) for lbl in fArtificialsScoredLabels(nScores
                                                 , LabelStart=LabelStart
                                                 , LabelBase=LabelBase

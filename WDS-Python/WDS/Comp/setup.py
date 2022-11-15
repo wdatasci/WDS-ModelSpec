@@ -1,6 +1,14 @@
-from setuptools import setup
+from setuptools import setup, Extension
+import numpy as np
 
 from Cython.Build import cythonize
 
-setup(ext_modules=cythonize("ArtificialsCythonWrapped.pyx",language_level="3"))
+setup(name='ArtificialsCythonWrapped',
+    ext_modules=cythonize(
+        Extension("ArtificialsCythonWrapped",
+                sources=['ArtificialsCythonWrapped.pyx',],
+                include_dirs=[np.get_include()]), 
+        ),
+    language_level="3",
+    install_requires=['numpy'])
 

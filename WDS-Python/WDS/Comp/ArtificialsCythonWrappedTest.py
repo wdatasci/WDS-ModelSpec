@@ -7,6 +7,11 @@ import numpy as np
 
 np.set_printoptions(linewidth=np.inf)
 
+import polars as pl
+pl.cfg.Config.set_tbl_cols(20)
+pl.cfg.Config.set_tbl_rows(100)
+
+
 if __name__=="__main__":
     #print(dir(art_c))
     #print(art_c.__name__)
@@ -34,11 +39,69 @@ if __name__=="__main__":
         print("XA=",XA)
         Coef=2.0-4.0*np.random.rand(3,nArtificials)
         print("Coef=",Coef,type(Coef))
-        XAS=art_c.fArtificialsScored(X,T,CriticalValues,CleanLimits=CleanLimits,CoefficientSets=Coef)
+        XAS=art_c.fArtificialsScored(X,T,CriticalValues,CleanLimits=CleanLimits,CoefficientsSet=Coef)
         print("Labels=",art_c.fArtificialsScoredLabels(Coef.shape[0]))
         print("XAS=",XAS)
         print(type(XAS))
 
+
+    Y=['']*41 #np.ndarray((41,1),dtype=str)
+    for i in range(0,41):
+        Y[i]=chr(65+i)
+    Y[2]=''
+    Y[10]=''
+    Y=pl.DataFrame({'y':Y})
+
+
+    print("Y=")
+    print(Y)
+    T='Categorical'
+    CriticalValues=[['A','D'],['e','d'],['X','Y','Z','G','x','y']]
+    print("Treatment='Categorical' with CriticalValues="+str(CriticalValues))
+    YA=art_c.fArtificials(Y.to_numpy(),T,CriticalValues)
+    nArtificials=art_c._nArtificialCount(len(CriticalValues),T)
+    Coef=2.0-4.0*np.random.rand(3,nArtificials)
+    print("YA=",YA)
+    print(type(YA))
+    YS=Y.hstack(pl.DataFrame(YA))
+    print(YS)
+
+    YAS=art_c.fArtificialsScored(Y.to_numpy(),T,CriticalValues,CoefficientsSet=Coef)
+    print("Treatment='Categorical' with CriticalValues="+str(CriticalValues))
+    print("Coef=",Coef,type(Coef))
+    print("Labels=",art_c.fArtificialsScoredLabels(Coef.shape[0]))
+    YAS=Y.hstack(pl.DataFrame(YAS))
+    print(YAS)
+
+
+
+    Y=[0]*41 #np.ndarray((41,1),dtype=str)
+    for i in range(0,41):
+        Y[i]=(65+i)
+    Y[2]=np.nan
+    Y[10]=np.nan
+    Y=pl.DataFrame({'y':Y})
+
+
+    print("Y=")
+    print(Y)
+    T='CategoricalNumeric'
+    CriticalValues=[[65, 69],[103,108],[110,112,114,115,118]]
+    print("Treatment=" + T + " with CriticalValues="+str(CriticalValues))
+    YA=art_c.fArtificials(Y.to_numpy(),T,CriticalValues)
+    nArtificials=art_c._nArtificialCount(len(CriticalValues),T)
+    Coef=2.0-4.0*np.random.rand(3,nArtificials)
+    print("YA=",YA)
+    print(type(YA))
+    YS=Y.hstack(pl.DataFrame(YA))
+    print(YS)
+
+    YAS=art_c.fArtificialsScored(Y.to_numpy(),T,CriticalValues,CoefficientsSet=Coef)
+    print("Treatment='Categorical' with CriticalValues="+str(CriticalValues))
+    print("Coef=",Coef,type(Coef))
+    print("Labels=",art_c.fArtificialsScoredLabels(Coef.shape[0]))
+    YAS=Y.hstack(pl.DataFrame(YAS))
+    print(YAS)
 
 
 

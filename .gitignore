@@ -73,3 +73,9 @@ WDS-Python/WDS/Comp/ArtificialsCythonWrapped.h
 hey*.*
 foo*.*
 *.out
+*.aux
+*.aux
+*.idx
+*.aux
+*.out
+*.1

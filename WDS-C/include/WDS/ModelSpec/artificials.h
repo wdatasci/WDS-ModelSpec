@@ -920,6 +920,7 @@ int fArtificialsScored_Numeric(double* SourceValue  // possibly a vector
         , int nResultsRowOffset // generally = 0, but can be used to imbed result into a system matrix
         , int nResultsColumnOffset // generally = 0, but can be used to imbed result into a system matrix
         , bool bRowMajor
+        , bool bCoefRowMajor
         ) {
 
     switch (Treatment) {
@@ -1016,13 +1017,21 @@ int fArtificialsScored_Numeric(double* SourceValue  // possibly a vector
 
         switch (Treatment) {
             case e_None:
-                for (ir = 0; ir < nCoefficientSets; ir++)
-                    Results[score_at_(r, ir)] = tempval * Coefficients[ir];
+                if (bCoefRowMajor)
+                    for (ir = 0; ir < nCoefficientSets; ir++)
+                        Results[score_at_(r, ir)] = tempval * Coefficients[ir*nCoefficients];
+                else
+                    for (ir = 0; ir < nCoefficientSets; ir++)
+                        Results[score_at_(r, ir)] = tempval * Coefficients[ir];
                 break;
 
             case e_Constant:
-                for (ir = 0; ir < nCoefficientSets; ir++)
-                    Results[score_at_(r, ir)] = Cnstnt * Coefficients[ir];
+                if (bCoefRowMajor)
+                    for (ir = 0; ir < nCoefficientSets; ir++)
+                        Results[score_at_(r, ir)] = Cnstnt * Coefficients[ir*nCoefficients];
+                else
+                    for (ir = 0; ir < nCoefficientSets; ir++)
+                        Results[score_at_(r, ir)] = Cnstnt * Coefficients[ir];
                 break;
 
             case e_Categorical:
@@ -1046,8 +1055,12 @@ int fArtificialsScored_Numeric(double* SourceValue  // possibly a vector
 
                     ir = 0;
 
-                    for (ir = 0; ir < nCoefficientSets; ir++)
-                        Results[score_at_(r, ir)] = Coefficients[ir];
+                    if (bCoefRowMajor)
+                        for (ir = 0; ir < nCoefficientSets; ir++)
+                            Results[score_at_(r, ir)] = Coefficients[ir*nCoefficients];
+                    else
+                        for (ir = 0; ir < nCoefficientSets; ir++)
+                            Results[score_at_(r, ir)] = Coefficients[ir];
 
                 }
                 else {
@@ -1059,8 +1072,12 @@ int fArtificialsScored_Numeric(double* SourceValue  // possibly a vector
 
                     for (ir = 0; ir < nCoefficientSets; ir++) {
                         Results[score_at_(r, ir)] = 0.0;
-                        for (ia = 0; ia < nArts; ia++)
-                            Results[score_at_(r, ir)] += Arts[ia] * Coefficients[ia*nCoefficientSets + ir];
+                        if (bCoefRowMajor)
+                            for (ia = 0; ia < nArts; ia++)
+                                Results[score_at_(r, ir)] += Arts[ia] * Coefficients[ia + ir*nCoefficients];
+                        else
+                            for (ia = 0; ia < nArts; ia++)
+                                Results[score_at_(r, ir)] += Arts[ia] * Coefficients[ia*nCoefficientSets + ir];
                     }
                 }
 
@@ -1218,6 +1235,7 @@ int fArtificialsScored_CategoricalNumeric(double* SourceValue  // possibly a vec
         , int nResultsRowOffset // generally = 0, but can be used to imbed result into a system matrix
         , int nResultsColumnOffset // generally = 0, but can be used to imbed result into a system matrix
         , bool bRowMajor
+        , bool bCoefRowMajor
         ) {
 
     int i, j;
@@ -1304,9 +1322,14 @@ int fArtificialsScored_CategoricalNumeric(double* SourceValue  // possibly a vec
 
         bIsMissing = !(isfinite(tempval));
         if (bIsMissing) {
-            for (ir = 0; ir < nCoefficientSets; ir++) {
-                Results[score_at_(r, ir)] = Coefficients[ir];
-            }
+            if (bCoefRowMajor)
+                for (ir = 0; ir < nCoefficientSets; ir++) {
+                    Results[score_at_(r, ir)] = Coefficients[ir*nCoefficients];
+                }
+            else
+                for (ir = 0; ir < nCoefficientSets; ir++) {
+                    Results[score_at_(r, ir)] = Coefficients[ir];
+                }
         }
         else {
             found = false;
@@ -1315,19 +1338,28 @@ int fArtificialsScored_CategoricalNumeric(double* SourceValue  // possibly a vec
                     found = (fabs(tempval - CriticalValues[i][j]) < eps);
                     if (found) {
                         ia = i + 1;
-                        ia *= nCoefficientSets;
-                        for (ir = 0; ir < nCoefficientSets; ir++) {
-                            Results[score_at_(r, ir)] = Coefficients[ia + ir];
-                        }
+                        if (bCoefRowMajor)
+                            for (ir = 0; ir < nCoefficientSets; ir++) {
+                                Results[score_at_(r, ir)] = Coefficients[ia + ir*nCoefficients];
+                            }
+                        else
+                            for (ir = 0; ir < nCoefficientSets; ir++) {
+                                Results[score_at_(r, ir)] = Coefficients[ia*nCoefficientSets + ir];
+                            }
                         break;
                     }
                 }
                 if (found) break;
             }
             if (!found) {
-                for (ir = 0; ir < nCoefficientSets; ir++) {
-                    Results[score_at_(r, ir)] = Coefficients[ir];
-                }
+                if (bCoefRowMajor)
+                    for (ir = 0; ir < nCoefficientSets; ir++) {
+                        Results[score_at_(r, ir)] = Coefficients[ir*nCoefficients];
+                    }
+                else
+                    for (ir = 0; ir < nCoefficientSets; ir++) {
+                        Results[score_at_(r, ir)] = Coefficients[ir];
+                    }
             }
         }
     }
@@ -1498,6 +1530,7 @@ int fArtificials_Categorical(std::wstring* SourceValue  // possibly a vector
             , int nResultsRowOffset // generally = 0, but can be used to imbed result into a system matrix
             , int nResultsColumnOffset // generally = 0, but can be used to imbed result into a system matrix
             , bool bRowMajor
+            , bool bCoefRowMajor
             ) {
 #else
         int fArtificialsScored_Categorical(wchar_t** SourceValue  // possibly a vector
@@ -1517,6 +1550,7 @@ int fArtificials_Categorical(std::wstring* SourceValue  // possibly a vector
                 , int nResultsRowOffset // generally = 0, but can be used to imbed result into a system matrix
                 , int nResultsColumnOffset // generally = 0, but can be used to imbed result into a system matrix
                 , bool bRowMajor
+                , bool bCoefRowMajor
                 ) {
 #endif
 
@@ -1607,9 +1641,14 @@ int fArtificials_Categorical(std::wstring* SourceValue  // possibly a vector
                 bIsMissing = (lstrlenW(tempstring) < 1);
 #endif
                 if (bIsMissing) {
-                    for (ir = 0; ir < nCoefficientSets; ir++) {
-                        Results[score_at_(r, ir)] = Coefficients[ir];
-                    }
+                    if (bCoefRowMajor)
+                        for (ir = 0; ir < nCoefficientSets; ir++) {
+                            Results[score_at_(r, ir)] = Coefficients[ir*nCoefficients];
+                        }
+                    else
+                        for (ir = 0; ir < nCoefficientSets; ir++) {
+                            Results[score_at_(r, ir)] = Coefficients[ir];
+                        }
                 }
                 else {
                     found = false;
@@ -1623,19 +1662,28 @@ int fArtificials_Categorical(std::wstring* SourceValue  // possibly a vector
 #endif
                             if (found) {
                                 ia = i + 1;
-                                ia *= nCoefficientSets;
-                                for (ir = 0; ir < nCoefficientSets; ir++) {
-                                    Results[score_at_(r, ir)] = Coefficients[ia + ir];
-                                }
+                                if (bCoefRowMajor)
+                                    for (ir = 0; ir < nCoefficientSets; ir++) {
+                                        Results[score_at_(r, ir)] = Coefficients[ia + ir*nCoefficients];
+                                    }
+                                else
+                                    for (ir = 0; ir < nCoefficientSets; ir++) {
+                                        Results[score_at_(r, ir)] = Coefficients[ia*nCoefficientSets + ir];
+                                    }
                                 break;
                             }
                         }
                         if (found) break;
                     }
                     if (!found) {
-                        for (ir = 0; ir < nCoefficientSets; ir++) {
-                            Results[score_at_(r, ir)] = Coefficients[ir];
-                        }
+                        if (bCoefRowMajor)
+                            for (ir = 0; ir < nCoefficientSets; ir++) {
+                                Results[score_at_(r, ir)] = Coefficients[ir*nCoefficients];
+                            }
+                        else
+                            for (ir = 0; ir < nCoefficientSets; ir++) {
+                                Results[score_at_(r, ir)] = Coefficients[ir];
+                            }
                     }
                 }
             }
