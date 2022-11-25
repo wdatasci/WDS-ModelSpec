@@ -608,7 +608,7 @@ def __DropIndexs_fix(self):
                 other = self.DropIndices
             if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
                 other = self.DropIndices
-    if self.DropIndexs is None:
+    if bHas(self,"DropIndexs") and self.DropIndexs is None:
         if other:
             self.DropIndexs = __gWDSModel.DropIndexs(DropIndex=other.DropIndex
                     , parent_object_=self, gds_collector_=self.gds_collector_)
@@ -622,7 +622,7 @@ def __DropIndexs_fix(self):
             other = None
         else:
             self.DropIndexs = __gWDSModel.DropIndexs(parent_object_=self, gds_collector_=self.gds_collector_)
-    if self.DropIndex != []:
+    if bHas(self,"DropIndex") and self.DropIndex != []:
         for v in self.DropIndex:
             self.DropIndexs.add_DropIndex(v.valueOf_)
         self.DropIndex = []
@@ -767,21 +767,21 @@ def ModelBuildingMD_Constructor():
 
 def fAddToSystem(variable, arg, system_matrix_Resp1, system_matrix_Resp2):
     if variable.get_VariableModelDirectives().ResponseUse == "All":
-        if system_matrix_Resp1:
+        if system_matrix_Resp1 is not None and not system_matrix_Resp1.is_empty():
             system_matrix_Resp1.hstack(arg, in_place=True)
         else:
             system_matrix_Resp1 = arg
-        if system_matrix_Resp2:
+        if system_matrix_Resp2 is not None and not system_matrix_Resp2.is_empty():
             system_matrix_Resp2.hstack(arg, in_place=True)
         else:
             system_matrix_Resp2 = copy.copy(arg)
     elif variable.get_VariableModelDirectives().ResponseUse == "Resp1":
-        if system_matrix_Resp1:
+        if system_matrix_Resp1 is not None and not system_matrix_Resp1.is_empty():
             system_matrix_Resp1.hstack(arg, in_place=True)
         else:
             system_matrix_Resp1 = arg
     elif variable.get_VariableModelDirectives().ResponseUse == "Resp2":
-        if system_matrix_Resp2:
+        if system_matrix_Resp2 is not None and not system_matrix_Resp2.is_empty():
             system_matrix_Resp2.hstack(arg, in_place=True)
         else:
             system_matrix_Resp2 = arg
