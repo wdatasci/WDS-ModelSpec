@@ -74,11 +74,31 @@ def namespaceop(func):
     __func = compile('if True:#'+__func.replace('\n','',n),func.__name__,'exec')
     def __func_wrapped(arg):
         try:
-            eval(__func,func.__globals__,vars(arg))
+            if type(arg) is dict:
+                eval(__func,func.__globals__,arg)
+            else:
+                eval(__func,func.__globals__,vars(arg))
         except Exception as e:
             raise(Exception('namespaceop error in '+__func_name+' at func lineno '+str(e.__traceback__.tb_next.tb_lineno)
                 + ', file lineno '+str(__func_lines[1]+e.__traceback__.tb_next.tb_lineno)+' line:\n'+__func_lines[0][e.__traceback__.tb_next.tb_lineno]))
     return __func_wrapped
+
+def namespaceop_using__dict__(func):
+    __func = inspect.getsource(func)
+    __func_lines = inspect.getsourcelines(func)
+    __func_name = func.__name__
+    print(__func_lines)
+    n = __func.count('\n',0,__func.index(':'))
+    __func = compile('if True:#'+__func.replace('\n','',n),func.__name__,'exec')
+    def __func_wrapped(arg):
+        try:
+            eval(__func,func.__globals__,arg)
+        except Exception as e:
+            raise(Exception('namespaceop error in '+__func_name+' at func lineno '+str(e.__traceback__.tb_next.tb_lineno)
+                + ', file lineno '+str(__func_lines[1]+e.__traceback__.tb_next.tb_lineno)+' line:\n'+__func_lines[0][e.__traceback__.tb_next.tb_lineno]))
+    return __func_wrapped
+
+
 
 
 if __name__=='__main__':

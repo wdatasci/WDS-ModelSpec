@@ -16,11 +16,13 @@ Usage:
 
 '''
 #import sys
-from WDS.namespaceop import namespaceop_using__dict__
+from WDS.namespaceop import namespaceop
+#_using__dict__
 
 #if hasattr(sys,'ps1'):
 import readline
-@namespaceop_using__dict__
+#_using__dict__
+@namespaceop
 def history_init(arg):
     __history_namespace = locals()
     def history(last=None):
