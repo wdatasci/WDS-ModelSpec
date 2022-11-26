@@ -3,10 +3,10 @@ import numpy as np
 
 from Cython.Build import cythonize
 
-setup(name='ArtificialsCythonWrapped',
+setup(name='Artificials_CythonWrapped',
     ext_modules=cythonize(
-        Extension("ArtificialsCythonWrapped",
-                sources=['ArtificialsCythonWrapped.pyx',],
+        Extension("Artificials_CythonWrapped",
+                sources=['Artificials_CythonWrapped.pyx',],
                 requires=['polars','pyarrow',],
                 include_dirs=[np.get_include()]), 
         ),

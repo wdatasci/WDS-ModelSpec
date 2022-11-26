@@ -30,6 +30,8 @@ SOFTWARE.
 #include <math.h>
 #include <stdarg.h>
 
+#define compTag0 Constants
+
 #define NCRITVALS_MAX 30
 #define NARTVALS_MAX 32
 #define NRESULTVALS_MAX 32
@@ -40,6 +42,7 @@ SOFTWARE.
 #define wdsResultsLocationError -4
 #define wdsCoefficientsError -5
 
+#define compTag0e Constants
 
 #if defined(__cplusplus)
 
@@ -63,6 +66,7 @@ namespace WDS::ModelSpec {
 
 #endif
 
+#define compTag1 enum eTreatment start
 #if defined(__cplusplus)
 enum eTreatment {
 #else
@@ -89,11 +93,13 @@ eTreatment
 ;
 #endif
 
+#define compTag2 eTreatmentFromLong start
 eTreatment eTreatmentFromLong(long arg) {
     if (arg < -1 || arg >(int) e_CategoricalNumeric) return e_Unknown;
     return (eTreatment)arg;
 }
 
+#define compTag3 eTreatment_bIn start
 bool eTreatment_bIn(int vacount, ...) {
     va_list valist;
     va_start(valist, vacount);
@@ -106,6 +112,7 @@ bool eTreatment_bIn(int vacount, ...) {
     return rv;
 }
 
+#define compTag4 eTreatmentLabel start
 const wchar_t* eTreatmentLabel(eTreatment arg) {
     switch (arg) {
         case e_Unknown:
@@ -152,6 +159,7 @@ const wchar_t* eTreatmentLabel(eTreatment arg) {
 }
 
 
+#define compTag5 eTreatmentClean start
 
 eTreatment eTreatmentClean(wchar_t* data, int n) {
     if (n <= 0) return e_Unknown;
@@ -254,6 +262,7 @@ eTreatment eTreatmentClean(wchar_t* data, int n) {
     return e_Unknown;
 }
 
+#define compTag5 nArtificialCount start
 
 int nArtificialCount(int nCritVals, eTreatment Treatment) {
 
@@ -296,6 +305,8 @@ int nArtificialCount(int nCritVals, eTreatment Treatment) {
     return  0;
 }
 
+#define compTag6 nArtificialIndex_First start
+
 int nArtificialIndex_First(int nCritVals, eTreatment Treatment) {
 
     switch (Treatment) {
@@ -322,6 +333,8 @@ int nArtificialIndex_First(int nCritVals, eTreatment Treatment) {
 
     return 0;
 }
+
+#define compTag6 nArtificialIndex_Last start
 
 int nArtificialIndex_Last(int nCritVals, eTreatment Treatment) {
 
@@ -351,6 +364,8 @@ int nArtificialIndex_Last(int nCritVals, eTreatment Treatment) {
 
     return tmp - 1;
 }
+
+#define compTag6 __fArtificials_temp1 start
 
 int __fArtificials_temp1(eTreatment Treatment,
         int* nCleanLimits,
@@ -419,6 +434,7 @@ int __fArtificials_temp1(eTreatment Treatment,
 
 }
 
+#define compTag7 fArtificials_Numeric start
 
 #define at_(r,c) (bRowMajor) ? ((r+nArtsRowOffset)*nArtsColumnCount+c+nArtsColumnOffset) : ((r+nArtsRowOffset)+(c+nArtsColumnOffset)*nArtsRowCount)
 #define score_at_(r,c) (bRowMajor) ? ((r+nResultsRowOffset)*nResultsColumnCount+c+nResultsColumnOffset) : ((r+nResultsRowOffset)+(c+nResultsColumnOffset)*nResultsRowCount)
@@ -902,6 +918,8 @@ int fArtificials_Numeric(double* SourceValue  // possibly a vector
     return 0;
 }
 
+#define compTag8 fArtificials_Numeric start
+
 // The main Artificials and ArtificialsScored functions in C do not allocate space. 
 int fArtificialsScored_Numeric(double* SourceValue  // possibly a vector
         , int nSourceValueRowCount
@@ -1090,6 +1108,7 @@ int fArtificialsScored_Numeric(double* SourceValue  // possibly a vector
     return 0;
 }
 
+#define compTag9 fArtificials_CategoricalNumeric start
 
 // The main Artificials and ArtificialsScored functions in C do not allocate space. 
 int fArtificials_CategoricalNumeric(double* SourceValue  // possibly a vector
@@ -1216,6 +1235,7 @@ int fArtificials_CategoricalNumeric(double* SourceValue  // possibly a vector
     return 0;
 }
 
+#define compTag10 fArtificialsScored_CategoricalNumeric start
 
 // The main Artificials and ArtificialsScored functions in C do not allocate space. 
 int fArtificialsScored_CategoricalNumeric(double* SourceValue  // possibly a vector
@@ -1367,6 +1387,8 @@ int fArtificialsScored_CategoricalNumeric(double* SourceValue  // possibly a vec
     return 0;
 }
 
+#define compTag11 fArtificialsScored_Categorical start
+
 #if defined(__cplusplus)
 // The main Artificials and ArtificialsScored functions in C do not allocate space. 
 int fArtificials_Categorical(std::wstring* SourceValue  // possibly a vector
@@ -1510,6 +1532,7 @@ int fArtificials_Categorical(std::wstring* SourceValue  // possibly a vector
         return 0;
     }
 
+#define compTag12 fArtificialsScored_Categorical start
 
 #if defined(__cplusplus)
     // The main Artificials and ArtificialsScored functions in C do not allocate space. 
