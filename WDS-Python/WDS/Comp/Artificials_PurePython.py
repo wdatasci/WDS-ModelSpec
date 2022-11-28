@@ -24,6 +24,8 @@ SOFTWARE.
 from typing import Union, List, Dict, Tuple, Sequence
 from enum import Enum
 import math
+import sys
+PYTHON_VERSION=sys.version_info.major+sys.version_info.minor/10
 
 #define compTag0 Constants
 
@@ -203,42 +205,29 @@ def nArtificialCount(nCritVals: int, Treatment: Union[str,eTreatment]) -> int:
     if type(Treatment) is str:
         Treatment = eTreatmentClean(Treatment)
 
-    match Treatment:
-        case eTreatment.e_Unknown:
-            return 0
-        case eTreatment.e_None:
-            return 1
-        case eTreatment.e_Constant:
-            return 1
-        case eTreatment.e_CodedMissings:
-            return 2
-        case eTreatment.e_DiscreteLC | eTreatment.e_DiscreteRC:
-            return nCritVals + 2
-        case eTreatment.e_Hats | eTreatment.e_iHats:
-            return nCritVals + 1
-        case eTreatment.e_BSplineOrder2:
-            return nCritVals
-        case eTreatment.e_BSplineOrder3:
-            return nCritVals - 1
-        case eTreatment.e_Categorical | eTreatment.e_CategoricalNumeric:
-            return nCritVals + 1
-        case _:
-            return 0
+    if True:
+        if Treatment==eTreatment.e_Unknown: return 0
+        if Treatment==eTreatment.e_None: return 1
+        if Treatment==eTreatment.e_Constant: return 1
+        if Treatment==eTreatment.e_CodedMissings: return 2
+        if Treatment==eTreatment.e_DiscreteLC: return nCritVals+2
+        if Treatment==eTreatment.e_DiscreteRC: return nCritVals+2
+        if Treatment==eTreatment.e_Hats: return nCritVals+1
+        if Treatment==eTreatment.e_iHats: return nCritVals+1
+        if Treatment==eTreatment.e_BSplineOrder2: return nCritVals
+        if Treatment==eTreatment.e_BSplineOrder3: return nCritVals-1
+        if Treatment==eTreatment.e_Categorical: return nCritVals+1
+        if Treatment==eTreatment.e_CategoricalNumeric: return nCritVals+1
+        
     return  0
 
 #define compTag6 nArtificialIndex_First start
 
 def nArtificialIndex_First(nCritVals: int, Treatment: eTreatment) -> int:
 
-    match Treatment:
-        case eTreatment.e_Unknown:
-            return 1
-        case eTreatment.e_None:
-            return 1
-        case eTreatment.e_Constant:
-            return 1
-        case _:
-            return 0
+    if Treatment==eTreatment.e_Unknown: return 1
+    if Treatment==eTreatment.e_None: return 1
+    if Treatment==eTreatment.e_Constant: return 1
     return  0
 
 
@@ -248,45 +237,16 @@ def nArtificialIndex_Last(nCritVals: int, Treatment: eTreatment) -> int:
 
     tmp = nArtificialCount(nCritVals, Treatment)
 
-    match Treatment:
-        case eTreatment.e_Unknown:
-            return 1
-        case eTreatment.e_None:
-            return 1
-        case eTreatment.e_Constant:
-            return 1
-        case eTreatment.e_CodedMissings:
-            return 1
-        case eTreatment.e_DiscreteLC:
-            return tmp - 1
-        case eTreatment.e_DiscreteRC:
-            return tmp - 1
-        case eTreatment.e_Hats:
-            return tmp - 1
-        case eTreatment.e_iHats:
-            return tmp - 1
-        case eTreatment.e_BSplineOrder2:
-            return tmp - 1
-        case eTreatment.e_BSplineOrder3:
-            return tmp - 1
-        case eTreatment.e_Categorical:
-            return tmp - 1
-        case eTreatment.e_CategoricalNumeric:
-            return tmp - 1
-        case _:
-            return 0
+    if Treatment==eTreatment.e_Unknown: return 1
+    if Treatment==eTreatment.e_None: return 1
+    if Treatment==eTreatment.e_Constant: return 1
+    if Treatment==eTreatment.e_CodedMissings: return 1
     return tmp - 1
 
 #define compTag6 __fArtificials_temp1 start
 
 def __fArtificials_temp1(Treatment: eTreatment,
-        nCleanLimits: int,
-        CleanLimits: List,
-        bUsingCleanLimitLeft: bool,
-        CleanLimitLeftVal: float,
-        bUsingCleanLimitRight: bool,
-        CleanLimitRightVal: float,
-        nCritVals: int,
+        CleanLimits: List[Union[int,float]],
         CriticalValues: List,
         Cnstnt: float,
         dCVs: List,
@@ -298,13 +258,15 @@ def __fArtificials_temp1(Treatment: eTreatment,
         ) -> List:
 
 
+    nCleanLimits=len(CleanLimits)
     if (nCleanLimits > 0) :
-        bUsingCleanLimitLeft = True
+        bUsingCleanLimitLeftVal = True
         CleanLimitLeftVal = CleanLimits[0]
     if (nCleanLimits > 1) :
-        bUsingCleanLimitRight = True
+        bUsingCleanLimitRightVal = True
         CleanLimitRightVal = CleanLimits[1]
 
+    nCritVals = len(CriticalValues)
     nCritValsM1 = nCritVals - 1
 
     if (eTreatment_bIn(Treatment, eTreatment.e_Categorical, eTreatment.e_CategoricalNumeric)) :
@@ -327,6 +289,7 @@ def __fArtificials_temp1(Treatment: eTreatment,
                     iM1 = 0
                 else:
                     dCVs[iM1] = v - lv
+                    lv = v
                     iM1 = i
             if (Treatment == eTreatment.e_iHats):
                 dCVsdiv2 = [ 0.0 for i in range(0, nCritVals-1) ]
@@ -352,11 +315,9 @@ def __fArtificials_temp1(Treatment: eTreatment,
                 d3CVs[iM3] = CriticalValues[i] - CriticalValues[iM3]
 
     return (0,
-        nCleanLimits,
-        CleanLimits,
-        bUsingCleanLimitLeft,
+        bUsingCleanLimitLeftVal,
         CleanLimitLeftVal,
-        bUsingCleanLimitRight,
+        bUsingCleanLimitRightVal,
         CleanLimitRightVal,
         nCritVals,
         CriticalValues,
@@ -374,16 +335,14 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
         , nSourceValueRowCount: int
         , Treatment: eTreatment
         , CriticalValues: Union[int,float,List[float],List[List[float]]]
-        , nCritVals: int
-        , CleanLimits: List[float]
-        , nCleanLimits: int
+        , CleanLimits: Union[int,float,List[Union[int,float]]]
         , Arts: List[float]
         , nArts: int
         , nArtsRowCount: int
         , nArtsColumnCount: int
         , nArtsRowOffset: int
         , nArtsColumnOffset: int
-        , bRowMajor: bool
+        , bRowMajor: bool=True
         ) -> int :
 
     if bRowMajor:
@@ -396,23 +355,26 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
     if Treatment in (eTreatment.e_Unknown, eTreatment.e_Categorical, eTreatment.e_CategoricalNumeric):
         return wdsTreatmentError
 
-    #print(CriticalValues)
-    #print(type(CriticalValues))
-    #print(type(CriticalValues[0]))
     if type(CriticalValues) in (int,float):
         CriticalValues=[CriticalValues,]
     elif type(CriticalValues[0]) is list:
         CriticalValues=CriticalValues.flatten()
     elif hasattr(CriticalValues,'aslist'):
         CriticalValues=CriticalValues.aslist().flatten()
-    #print(CriticalValues)
-    #print(type(CriticalValues))
-    #print(type(CriticalValues[0]))
+    nCritVals = len(CriticalValues)
 
     if (nCritVals > NCRITVALS_MAX):
         return wdsCriticalValuesError;
     if (nArts > NARTVALS_MAX):
         return wdsArtificialsLocationError;
+
+    if type(CleanLimits) in (int,float):
+        CleanLimits=[CleanLimits,]
+    elif type(CleanLimits[0]) is list:
+        CleanLimits=CleanLimits.flatten()
+    elif hasattr(CleanLimits,'aslist'):
+        CleanLimits=CleanLimits.aslist().flatten()
+    nCleanLimits = len(CleanLimits)
 
     if (nSourceValueRowCount < 1 or nArtsRowOffset<0 or nArtsRowOffset>nArtsRowCount):
         return wdsArtificialsLocationError;
@@ -426,10 +388,6 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
     eps = 1.0e-14
     Cnstnt = 1.0
 
-    CleanLimitLeftVal = math.nan #nan(""); // NAN;
-    CleanLimitRightVal = math.nan #nan(""); // NAN;
-    bUsingCleanLimitLeft = False
-    bUsingCleanLimitRight = False
     dCVs=[]
     dCVsdiv2=[]
     d2CVs=[]
@@ -439,14 +397,8 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
     nCritValsM1 = nCritVals - 1
 
 
-    rc, nCleanLimits, CleanLimits, bUsingCleanLimitLeftVal, CleanLimitLeftVal, bUsingCleanLimitRight, CleanLimitRightVal, nCritVals, CriticalValues, Cnstnt, dCVs, dCVsdiv2, d2CVs, d2CVsdiv2, d3CVs = __fArtificials_temp1(Treatment,
-            nCleanLimits,
+    rc, bUsingCleanLimitLeftVal, CleanLimitLeftVal, bUsingCleanLimitRightVal, CleanLimitRightVal, nCritVals, CriticalValues, Cnstnt, dCVs, dCVsdiv2, d2CVs, d2CVsdiv2, d3CVs = __fArtificials_temp1(Treatment,
             CleanLimits,
-            bUsingCleanLimitLeft,
-            CleanLimitLeftVal,
-            bUsingCleanLimitRight,
-            CleanLimitRightVal,
-            nCritVals,
             CriticalValues,
             Cnstnt,
             dCVs,
@@ -474,23 +426,25 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
 
     for r in range(0, nrows):
 
+        for ia in range(0,nArts):
+            Arts[at_(r, ia)] = 0.0
+
         if nrows==1 and type(SourceValue) is not list:
             tempval = SourceValue
         else:
             tempval = SourceValue[r]
 
-        match (Treatment) :
-            case eTreatment.e_None:
+        if Treatment==eTreatment.e_None:
                 Arts[at_(r, 0)] = tempval
-            case eTreatment.e_Constant:
+        elif Treatment==eTreatment.e_Constant:
                 Arts[at_(r, 0)] = Cnstnt
-            case eTreatment.e_Categorical | eTreatment.e_CategoricalNumeric:
+        elif Treatment in (eTreatment.e_Categorical, eTreatment.e_CategoricalNumeric):
                 return wdsTreatmentError
-            case _:
+        else:
 
                 bIsMissing = math.isinf(tempval) or math.isnan(tempval)
-                bIsMissing = bIsMissing or ((not bIsMissing) and (bUsingCleanLimitLeft and (tempval < CleanLimitLeftVal)))
-                bIsMissing = bIsMissing or ((not bIsMissing) and (bUsingCleanLimitRight and (tempval > CleanLimitRightVal)))
+                bIsMissing = bIsMissing or ((not bIsMissing) and (bUsingCleanLimitLeftVal and (tempval < CleanLimitLeftVal)))
+                bIsMissing = bIsMissing or ((not bIsMissing) and (bUsingCleanLimitRightVal and (tempval > CleanLimitRightVal)))
 
                 if (bIsMissing) :
 
@@ -498,8 +452,6 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
                     ia = 0
 
                     Arts[at_(r, ia)] = 1.0
-                    for ia in range(1,nArts):
-                        Arts[at_(r, ia)] = 0.0
 
                 else:
 
@@ -510,11 +462,9 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
 
                     if (Treatment == eTreatment.e_CodedMissings) :
 
-                        Arts[at_(r, 0)] = 0.0
                         Arts[at_(r, 1)] = x
 
                     elif (x <= CriticalValues[0] + eps) :
-                        Arts[at_(r, 0)] = 0.0
                         i = 1
                         ia = 1
 
@@ -531,13 +481,7 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
 
                             Arts[at_(r, ia)] = 1.0
 
-                        for iai in range(ia+1, nArts):
-                            Arts[at_(r, ia)] = 0.0
-
                     elif (x >= CriticalValues[nCritValsM1] - eps) :
-
-                        for ia in range(0, nArts):
-                            Arts[at_(r, ia)] = 0.0
 
                         #//--'all non-missing last artificials are 1 right of the last critical value, except iHats and DiscreteLC
                         i = nCritValsM1
@@ -559,9 +503,6 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
                             Arts[at_(r, ia)] = 1.0
 
                     else:
-
-                        for ia in range(0, nArts):
-                            Arts[at_(r, ia)] = 0.0
 
                         if (Treatment == eTreatment.e_DiscreteLC):
                             found = False
@@ -602,17 +543,15 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
                                     i = j
                                     ia = i + 1
 
-                        match Treatment:
-
-                            case eTreatment.e_DiscreteLC:
+                        if Treatment==eTreatment.e_DiscreteLC:
                                 Arts[at_(r, ia)] = 1.0
-                            case eTreatment.e_DiscreteRC:
+                        elif Treatment== eTreatment.e_DiscreteRC:
                                 Arts[at_(r, ia)] = 1.0
-                            case eTreatment.e_Hats:
+                        elif Treatment== eTreatment.e_Hats:
                                 tempdouble = (x - CriticalValues[i]) / dCVs[i]
                                 Arts[at_(r, ia + 1)] = tempdouble
                                 Arts[at_(r, ia)] = (1.0 - tempdouble)
-                            case eTreatment.e_iHats:
+                        elif Treatment== eTreatment.e_iHats:
                                 tempdouble = math.pow((x - CriticalValues[i]), 2.0) / dCVs[i] / 2.0
                                 iaP1 = ia + 1
                                 Arts[at_(r, iaP1)] = tempdouble
@@ -622,7 +561,7 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
                                     iiaP1 = iia + 1
                                     Arts[at_(r, iiaP1)] += dCVsdiv2[ii]
                                     Arts[at_(r, iia)] += dCVsdiv2[ii]
-                            case eTreatment.e_BSplineOrder2:
+                        elif Treatment== eTreatment.e_BSplineOrder2:
                                 iM1 = i - 1
                                 ia = i + 2
                                 iaM1 = ia - 1
@@ -679,7 +618,7 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
                                 if (iaM2 > 0) :
                                     Arts[at_(r, iaM2)] += fo2
 
-                            case eTreatment.e_BSplineOrder3:
+                        elif Treatment== eTreatment.e_BSplineOrder3:
 
                                 iM1 = i - 1;
                                 iM2 = i - 2;
@@ -759,7 +698,7 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
                                     else:
                                         Arts[at_(r, nArts - 1)] += fo3;
 
-                            case _:
+                        else:
                                 return wdsTreatmentError
     return 0
 
@@ -768,10 +707,8 @@ def fArtificials_Numeric(SourceValue: Union[float, List[float]] # // possibly a 
 def fArtificialsScored_Numeric(SourceValue: Union[float, List] #  // possibly a vector
         , nSourceValueRowCount: int
         , Treatment: eTreatment
-        , CriticalValues: List[float]
-        , nCritVals: int
-        , CleanLimits: List[float]
-        , nCleanLimits: int
+        , CriticalValues: Union[int,float,List[Union[int,float]]]
+        , CleanLimits: Union[int,float,List[Union[int,float]]]
         , Coefficients: List[float]
         , nCoefficients: int
         , nCoefficientSets: int
@@ -781,18 +718,10 @@ def fArtificialsScored_Numeric(SourceValue: Union[float, List] #  // possibly a 
         , nResultsColumnCount: int # // generally = nArtificialsCount, but must be >= nArtificialsCount+nResultsColumnOffset
         , nResultsRowOffset: int # // generally = 0, but can be used to imbed result into a system matrix
         , nResultsColumnOffset: int # // generally = 0, but can be used to imbed result into a system matrix
-        , bRowMajor: bool
-        , bCoefRowMajor: bool
+        , bRowMajor: bool=True
         ) -> int:
 
     if bRowMajor:
-        def at_(r,c):
-            return ((r+nArtsRowOffset)*nArtsColumnCount+c+nArtsColumnOffset)
-    else:
-        def at_(r,c): 
-            return ((r+nArtsRowOffset)+(c+nArtsColumnOffset)*nArtsRowCount)
-
-    if bCoefRowMajor:
         def score_at_(r,c):
             return ((r+nResultsRowOffset)*nResultsColumnCount+c+nResultsColumnOffset) 
     else:
@@ -806,11 +735,22 @@ def fArtificialsScored_Numeric(SourceValue: Union[float, List] #  // possibly a 
         CriticalValues=[CriticalValues,]
     elif type(CriticalValues[0]) is list:
         CriticalValues=CriticalValues[0]
+    elif hasattr(CriticalValues,'aslist'):
+        CriticalValues=CriticalValues.aslist().flatten()
+    nCritVals = len(CriticalValues)
 
     if (nCritVals > NCRITVALS_MAX):
         return wdsCriticalValuesError;
     if (nResults > NRESULTVALS_MAX):
         return wdsResultsLocationError;
+
+    if type(CleanLimits) in (int,float):
+        CleanLimits=[CleanLimits,]
+    elif type(CleanLimits[0]) is list:
+        CleanLimits=CleanLimits[0]
+    elif hasattr(CleanLimits,'aslist'):
+        CleanLimits=CleanLimits.aslist().flatten()
+    nCleanLimits = len(CleanLimits)
 
     if (nSourceValueRowCount < 1 or nResultsRowOffset<0 or nResultsRowOffset>nResultsRowCount):
         return wdsResultsLocationError;
@@ -824,10 +764,6 @@ def fArtificialsScored_Numeric(SourceValue: Union[float, List] #  // possibly a 
     eps = 0.0000000001;
     Cnstnt = 1.0;
 
-    CleanLimitLeftVal = math.nan #nan(""); // NAN;
-    CleanLimitRightVal = math.nan #nan(""); // NAN;
-    bUsingCleanLimitLeft = False
-    bUsingCleanLimitRight = False
     dCVs=[]
     dCVsdiv2=[]
     d2CVs=[]
@@ -837,14 +773,8 @@ def fArtificialsScored_Numeric(SourceValue: Union[float, List] #  // possibly a 
     nCritValsM1 = nCritVals - 1
 
 
-    rc, nCleanLimits, CleanLimits, bUsingCleanLimitLeftVal, CleanLimitLeftVal, bUsingCleanLimitRight, CleanLimitRightVal, nCritVals, CriticalValues, Cnstnt, dCVs, dCVsdiv2, d2CVs, d2CVsdiv2, d3CVs = __fArtificials_temp1(Treatment,
-            nCleanLimits,
+    rc, bUsingCleanLimitLeftVal, CleanLimitLeftVal, bUsingCleanLimitRightVal, CleanLimitRightVal, nCritVals, CriticalValues, Cnstnt, dCVs, dCVsdiv2, d2CVs, d2CVsdiv2, d3CVs = __fArtificials_temp1(Treatment,
             CleanLimits,
-            bUsingCleanLimitLeft,
-            CleanLimitLeftVal,
-            bUsingCleanLimitRight,
-            CleanLimitRightVal,
-            nCritVals,
             CriticalValues,
             Cnstnt,
             dCVs,
@@ -876,35 +806,40 @@ def fArtificialsScored_Numeric(SourceValue: Union[float, List] #  // possibly a 
     # */
 
     for r in range(0, nrows):
+        for ir in range(0, nCoefficientSets):
+            Results[score_at_(r, ir)] = 0.0
 
-        tempval = SourceValue[r];
+        if nrows==1 and type(SourceValue) is not list:
+            tempval = SourceValue
+        else:
+            tempval = SourceValue[r]
 
-        match Treatment:
-            case eTreatment.e_None:
-                if (bCoefRowMajor):
+
+        if Treatment== eTreatment.e_None:
+                if False:
                     for ir in range(0, nCoefficientSets):
                         Results[score_at_(r, ir)] = tempval * Coefficients[ir*nCoefficients]
                 else:
                     for ir in range(0, nCoefficientSets):
                         Results[score_at_(r, ir)] = tempval * Coefficients[ir]
-            case eTreatment.e_Constant:
-                if (bCoefRowMajor):
+        elif Treatment== eTreatment.e_Constant:
+                if False:
                     for ir in range(0, nCoefficientSets):
                         Results[score_at_(r, ir)] = Cnstnt * Coefficients[ir*nCoefficients];
                 else:
                     for ir in range(0, nCoefficientSets):
                         Results[score_at_(r, ir)] = Cnstnt * Coefficients[ir];
 
-            case eTreatment.e_Categorical:
+        elif Treatment== eTreatment.e_Categorical:
                 return wdsTreatmentError
-            case eTreatment.e_CategoricalNumeric:
+        elif Treatment== eTreatment.e_CategoricalNumeric:
                 return wdsTreatmentError
 
-            case eTreatment.e_CodedMissings | eTreatment.e_Hats | eTreatment.e_iHats | eTreatment.e_DiscreteLC | eTreatment.e_DiscreteRC | eTreatment.e_BSplineOrder2 | eTreatment.e_BSplineOrder3:
+        elif Treatment in( eTreatment.e_CodedMissings, eTreatment.e_Hats, eTreatment.e_iHats, eTreatment.e_DiscreteLC, eTreatment.e_DiscreteRC, eTreatment.e_BSplineOrder2, eTreatment.e_BSplineOrder3):
 
                 bIsMissing = math.isinf(tempval) or math.isnan(tempval)
-                bIsMissing = bIsMissing or ((not bIsMissing) and (bUsingCleanLimitLeft and (tempval < CleanLimitLeftVal)))
-                bIsMissing = bIsMissing or ((not bIsMissing) and (bUsingCleanLimitRight and (tempval > CleanLimitRightVal)))
+                bIsMissing = bIsMissing or ((not bIsMissing) and (bUsingCleanLimitLeftVal and (tempval < CleanLimitLeftVal)))
+                bIsMissing = bIsMissing or ((not bIsMissing) and (bUsingCleanLimitRightVal and (tempval > CleanLimitRightVal)))
 
                 if (bIsMissing) :
 
@@ -917,16 +852,15 @@ def fArtificialsScored_Numeric(SourceValue: Union[float, List] #  // possibly a 
 
                     Arts = [0.0 for i in range(0, nArts)]
 
-                    rc = fArtificials_Numeric(tempval, 1, Treatment, CriticalValues, nCritVals, CleanLimits, nCleanLimits, Arts, nArts, 1, nArts, 0, 0, bRowMajor);
+                    rc = fArtificials_Numeric(tempval, 1, Treatment, CriticalValues, CleanLimits, Arts, nArts, 1, nArts, 0, 0, bRowMajor);
 
                     #print(Coefficients)
                     #print(type(Coefficients))
                     for ir in range(0, nCoefficientSets):
-                        Results[score_at_(r, ir)] = 0.0;
                         for ia in range(0, nArts):
                             Results[score_at_(r, ir)] += Arts[ia] * Coefficients[ir][ia]
 
-            case _:
+        else:
                 return wdsTreatmentError
 
     return 0
@@ -936,10 +870,8 @@ def fArtificialsScored_Numeric(SourceValue: Union[float, List] #  // possibly a 
 def fArtificials_CategoricalNumeric(SourceValue: Union[int, float, List] #  // possibly a vector
         , nSourceValueRowCount: int
         , Treatment: eTreatment
-        , CriticalValues: List[int | float]
-        , nCritVals_: List[int]
-        , CleanLimits: List[int | float]
-        , nCleanLimits: int
+        , CriticalValues: Union[List[Union[int, float]],List[List[Union[int,float]]]]
+        , CleanLimits: Union[None,List[Union[int, float]]]
         , Arts: List[float]
         , nArts: int #            // just the column count expected to be returned with (Treatment, nCritVals)
          #// This could be determined within, but generally has already be calculated to allocate
@@ -961,7 +893,7 @@ def fArtificials_CategoricalNumeric(SourceValue: Union[int, float, List] #  // p
     if Treatment != eTreatment.e_CategoricalNumeric:
         return wdsTreatmentError
 
-    nCritVals = nCritVals_[0]
+    nCritVals = len(CriticalValues)
 
     if (nCritVals > NCRITVALS_MAX):
         return wdsCriticalValuesError
@@ -981,7 +913,10 @@ def fArtificials_CategoricalNumeric(SourceValue: Union[int, float, List] #  // p
 
     nrows = nSourceValueRowCount
 
-    print(SourceValue)
+    for i, v in enumerate(CriticalValues):
+        if type(v) is not list:
+            CriticalValues[i]=[v,]
+
     for r in range(0, nrows):
 
         if nrows==1 and type(tempval) is not list:
@@ -998,10 +933,12 @@ def fArtificials_CategoricalNumeric(SourceValue: Union[int, float, List] #  // p
         else:
             found = False
             for i, v in enumerate(CriticalValues):
-                for j, vv in enumerate(v):
-                    found = (math.fabs(tempval - vv) < eps)
-                    if found:
-                        break
+                found = ( tempval in v )
+                if not found:
+                    for j, vv in enumerate(v):
+                        found = (math.fabs(tempval - vv) < eps)
+                        if found:
+                            break
                 if found:
                     Arts[at_(r,i+1)] = 1.0
                     break
@@ -1016,7 +953,6 @@ def fArtificialsScored_CategoricalNumeric(SourceValue: Union[int, float, list[Un
         , nSourceValueRowCount: int
         , Treatment: eTreatment
         , CriticalValues: list[list[Union[int, float]]]
-        , nCritVals_: int
         , CleanLimits: List[Union[int, float]]
         , nCleanLimits: int
         , Coefficients: List[List[float]]
@@ -1028,18 +964,10 @@ def fArtificialsScored_CategoricalNumeric(SourceValue: Union[int, float, list[Un
         , nResultsColumnCount: int # // generally = nArtificialsCount, but must be >= nArtificialsCount+nResultsColumnOffset
         , nResultsRowOffset: int # // generally = 0, but can be used to imbed result into a system matrix
         , nResultsColumnOffset: int # // generally = 0, but can be used to imbed result into a system matrix
-        , bRowMajor: bool
-        , bCoefRowMajor: bool
+        , bRowMajor: bool=True
         ) -> int:
 
     if bRowMajor:
-        def at_(r,c):
-            return ((r+nArtsRowOffset)*nArtsColumnCount+c+nArtsColumnOffset)
-    else:
-        def at_(r,c): 
-            return ((r+nArtsRowOffset)+(c+nArtsColumnOffset)*nArtsRowCount)
-
-    if bCoefRowMajor:
         def score_at_(r,c):
             return ((r+nResultsRowOffset)*nResultsColumnCount+c+nResultsColumnOffset) 
     else:
@@ -1049,7 +977,7 @@ def fArtificialsScored_CategoricalNumeric(SourceValue: Union[int, float, list[Un
     if Treatment != eTreatment.e_CategoricalNumeric:
         return wdsTreatmentError
 
-    nCritVals = nCritVals_[0]
+    nCritVals = len(CriticalValues)
 
     if (nCritVals > NCRITVALS_MAX):
         return wdsCriticalValuesError;
@@ -1084,6 +1012,11 @@ def fArtificialsScored_CategoricalNumeric(SourceValue: Union[int, float, list[Un
     #   --]]
     # */
 
+    for i, v in enumerate(CriticalValues):
+        if type(v) is not list:
+            CriticalValues[i]=[v,]
+
+
     for r in range(0, nrows):
 
         if nrows==1 and type(tempval) is not list:
@@ -1098,10 +1031,12 @@ def fArtificialsScored_CategoricalNumeric(SourceValue: Union[int, float, list[Un
         else:
             found = False
             for i, v in enumerate(CriticalValues):
-                for j, vv in enumerate(v):
-                    found = (math.fabs(tempval - vv) < eps)
-                    if found:
-                        break
+                found = ( tempval in v )
+                if not found:
+                    for j, vv in enumerate(v):
+                        found = (math.fabs(tempval - vv) < eps)
+                        if found:
+                            break
                 if found:
                     iP1=i+1
                     for ir in range(0, nCoefficientSets):
@@ -1120,7 +1055,6 @@ def fArtificials_Categorical(SourceValue: Union[str, List[str]]
     , nSourceValueRowCount: int
     , Treatment: eTreatment
     , CriticalValues: List[List[str]]
-    , nCritVals_: int
     , CleanLimits: List[None] #   // meaningless for Categorical, left in for argument list consistency
     , nCleanLimits: int #   // meaningless for Categorical, left in for argument list consistency
     , Arts: List[List[float]]
@@ -1144,7 +1078,7 @@ def fArtificials_Categorical(SourceValue: Union[str, List[str]]
     if Treatment != eTreatment.e_Categorical:
         return wdsTreatmentError
 
-    nCritVals = nCritVals_[0]
+    nCritVals = len(CriticalValues)
 
     if (nCritVals > NCRITVALS_MAX):
         return wdsCriticalValuesError
@@ -1173,8 +1107,11 @@ def fArtificials_Categorical(SourceValue: Union[str, List[str]]
     #   --]]
     # */
 
-    print("SourceValue")
-    print(SourceValue)
+    for i, v in enumerate(CriticalValues):
+        if type(v) is not list:
+            CriticalValues[i]=[v,]
+
+
     for r in range(0, nrows):
 
         if nrows==1 and type(SourceValue) is not list:
@@ -1192,10 +1129,7 @@ def fArtificials_Categorical(SourceValue: Union[str, List[str]]
         else:
             found = False
             for i, v in enumerate(CriticalValues):
-                for j, vv in enumerate(v):
-                    found = (tempstring == vv)
-                    if found:
-                        break
+                found = (tempstring in v)
                 if found:
                     Arts[at_(r,i+1)] = 1.0
                     break
@@ -1210,7 +1144,6 @@ def fArtificialsScored_Categorical(SourceValue: Union[str, List[str]]
         , nSourceValueRowCount: int
         , Treatment: eTreatment
         , CriticalValues: List[List[str]]
-        , nCritVals_: List[int]
         , CleanLimits: List[None] #   // meaningless for Categorical, left in for argument list consistency
         , nCleanLimits: int #   // meaningless for Categorical, left in for argument list consistency
         , Coefficients: List[List[float]]
@@ -1222,13 +1155,12 @@ def fArtificialsScored_Categorical(SourceValue: Union[str, List[str]]
         , nResultsColumnCount: int # // generally = nArtificialsCount, but must be >= nArtificialsCount+nResultsColumnOffset
         , nResultsRowOffset: int # // generally = 0, but can be used to imbed result into a system matrix
         , nResultsColumnOffset: int # // generally = 0, but can be used to imbed result into a system matrix
-        , bRowMajor: bool
-        , bCoefRowMajor: bool
+        , bRowMajor: bool=True
         ):
     if Treatment != eTreatment.e_Categorical: 
         return wdsTreatmentError
 
-    if bCoefRowMajor:
+    if bRowMajor:
         def score_at_(r,c):
             return ((r+nResultsRowOffset)*nResultsColumnCount+c+nResultsColumnOffset) 
     else:
@@ -1236,7 +1168,7 @@ def fArtificialsScored_Categorical(SourceValue: Union[str, List[str]]
             return ((r+nResultsRowOffset)+(c+nResultsColumnOffset)*nResultsRowCount)
 
 
-    nCritVals = nCritVals_[0]
+    nCritVals = len(CriticalValues)
 
     if (nCritVals > NCRITVALS_MAX):
         return wdsCriticalValuesError;
@@ -1270,6 +1202,11 @@ def fArtificialsScored_Categorical(SourceValue: Union[str, List[str]]
     #   --]]
     # */
     
+    for i, v in enumerate(CriticalValues):
+        if type(v) is not list:
+            CriticalValues[i]=[v,]
+
+
     for r in range(0, nrows):
 
         if nrows==1 and type(SourceValue) is not list:
@@ -1284,7 +1221,7 @@ def fArtificialsScored_Categorical(SourceValue: Union[str, List[str]]
         else:
             found = False
             for i, v in enumerate(CriticalValues):
-                found = ( tempstring in vv )
+                found = ( tempstring in v )
                 if found:
                     iP1=i+1
                     for ir in range(0, nCoefficientSets):
@@ -1340,20 +1277,11 @@ def _fArtificials_Numeric(SourceValue: Union[float, List[float]]
     nArts=nArtificialCount(nCrits, Treatment) 
     Arts=[0.0 for i in range(0, nrows*nArts)]
 
-    CL=None
-    if type(CleanLimits) in(int, float):
-        CL=[CleanLimits,]
-    else:
-        CL=CleanLimits
-    nCL=len(CL)
-
     rc = fArtificials_Numeric(SourceValue
                             , nrows
                             , Treatment
                             , CriticalValues
-                            , nCrits
-                            , CL
-                            , nCL
+                            , CleanLimits
                             , Arts
                             , nArts
                             , nrows
@@ -1394,15 +1322,13 @@ def _fArtificialsScored_Numeric(SourceValue: Union[float, List[float]]
     nCoefficientSets = len(Coefficients)
     nCoefficients = len(Coefficients[0])
     nArts=nArtificialCount(nCrits, Treatment) 
-    rv=[0.0 for i in range(0, nrows*nCoefficients)]
+    rv=[0.0 for i in range(0, nrows*nCoefficientSets)]
 
     rc= fArtificialsScored_Numeric(SourceValue
                             , nrows
                             , Treatment
                             , CriticalValues
-                            , nCrits
                             , CleanLimits
-                            , nCL
                             , Coefficients
                             , nCoefficients
                             , nCoefficientSets
@@ -1413,7 +1339,7 @@ def _fArtificialsScored_Numeric(SourceValue: Union[float, List[float]]
                             , 0
                             , 0
                             , True
-                            , True) 
+                            ) 
     if rc!=0: 
         raise(Exception("Error in fArtificialsScored_Numeric"))
     return rv
@@ -1435,10 +1361,6 @@ def _fArtificials_CategoricalNumeric(_SourceValue: Union[int, float, List[Union[
     else:
         Treatment = _Treatment
     nCritVals = len(_CriticalValues)
-    nCritVals_ = [0 for i in range(0, nCritVals+1)]
-    nCritVals_[0]=len(_CriticalValues)
-    for i in range(0, nCritVals):
-        nCritVals_[i+1] = len(_CriticalValues[i])
     nrows=len(SourceValue)
     nArts=nArtificialCount(nCritVals, Treatment)
     rv = [0.0 for i in range(0, nrows * nArts)]
@@ -1452,9 +1374,7 @@ def _fArtificials_CategoricalNumeric(_SourceValue: Union[int, float, List[Union[
                             , nrows
                             , Treatment
                             , _CriticalValues
-                            , nCritVals_
                             , CL
-                            , nCL
                             , rv
                             , nArts
                             , nrows
@@ -1479,11 +1399,7 @@ def _fArtificialsScored_CategoricalNumeric(_SourceValue: Union[int, float, List[
         Treatment = eTreatmentClean(_Treatment, len(_Treatment))
     else:
         Treatment = _Treatment
-    nCritVals = len(_CriticalValues)
-    nCritVals_ = [0 for i in range(0, nCritVals+1)]
-    nCritVals_[0]=len(_CriticalValues)
-    for i in range(0, nCritVals):
-        nCritVals_[i+1] = len(_CriticalValues[i])
+    nCritVals=len(_CriticalValues)
     nrows=len(SourceValue)
     nArts=nArtificialCount(nCritVals, Treatment)
     rv = [0.0 for i in range(0, nrows * nArts)]
@@ -1500,7 +1416,6 @@ def _fArtificialsScored_CategoricalNumeric(_SourceValue: Union[int, float, List[
                             , nrows
                             , Treatment
                             , _CriticalValues
-                            , nCritVals_
                             , CL
                             , nCL
                             , Coefficients
@@ -1513,7 +1428,7 @@ def _fArtificialsScored_CategoricalNumeric(_SourceValue: Union[int, float, List[
                             , 0
                             , 0
                             , True
-                            , True) 
+                            ) 
     return rv
 
 
@@ -1531,17 +1446,12 @@ def _fArtificials_Categorical(_SourceValue: Union[str, List[str]]
         SourceValue=_SourceValue
     nrows = len(SourceValue)
     nCritVals = len(_CriticalValues)
-    nCritVals_ = [0 for i in range(0, nCritVals+1) ]
-    nCritVals_[0]=nCritVals
-    for i in range(0,nCritVals_[0]):
-        nCritVals_[i+1]=len(_CriticalValues[i])
     nArts=nArtificialCount(nCritVals, Treatment)
     rv=[0.0 for i in range(0, nrows*nArts)]
     rc = fArtificials_Categorical(SourceValue
                             , nrows
                             , Treatment
                             , _CriticalValues
-                            , nCritVals_
                             , []
                             , 0
                             , rv
@@ -1568,9 +1478,6 @@ def _fArtificialsScored_Categorical(_SourceValue: Union[str, List[str]]
         SourceValue=_SourceValue
     nrows = len(SourceValue)
     nCritVals = len(_CriticalValues)
-    nCritVals_ = [0 for i in range(0, nCritVals+1) ]
-    for i in range(0,nCritVals_[0]):
-        nCritVals_[i+1]=len(_CriticalValues[i])
     nArts=nArtificialCount(nCritVals, Treatment)
     nCoefficientSets=len(Coefficients)
     nCoefficients=len(Coefficients[0])
@@ -1580,7 +1487,6 @@ def _fArtificialsScored_Categorical(_SourceValue: Union[str, List[str]]
                             , nrows
                             , Treatment
                             , _CriticalValues
-                            , nCritVals_
                             , []
                             , 0
                             , Coefficients
@@ -1593,7 +1499,7 @@ def _fArtificialsScored_Categorical(_SourceValue: Union[str, List[str]]
                             , 0
                             , 0
                             , True
-                            , True) 
+                            ) 
     return rv
 
 _eTreatmentClean = eTreatmentClean
@@ -1706,7 +1612,6 @@ def fArtificialsScored(Source=None
                             , bShow:bool=False
                             , bShowInputs:bool=False
                             ):
-    bRowMajor=True
     if Source is None or Treatment is None or CriticalValues is None: raise("Insufficient arguments to fArtificials")
     trt=_eTreatmentClean(Treatment);
     nrows=len(Source)
@@ -1736,6 +1641,7 @@ def fArtificialsScored(Source=None
                                                 , LabelSuffix=LabelSuffix
                                                 )
 
+    bRowMajor = True
     if bRowMajor:
         rv1=rv
         rv=[[0.0 for j in range(0,nScores)] for i in range(0, nrows)]
@@ -1766,6 +1672,9 @@ def fArtificialsScored(Source=None
                 else:
                     print(i,srv)
 
+    rv=[]
+    for i in range(0,nScores):
+        rv.append(rv1[i::nScores])
     return [rv, labels]
 
 def fArtificialLabels(nCriticalValues:int, sTreatment:str, LabelBase:str="X", LabelConnector:str="", LabelSuffix:str=""):
