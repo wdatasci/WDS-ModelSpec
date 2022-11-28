@@ -34,14 +34,14 @@ if __name__=="__main__":
         print("CriticalValues=",CriticalValues)
         print("CleanLimits=",CleanLimits)
         print("nArtificials=",nArtificials)
-        XA=art_c.fArtificials(X.flatten().tolist(),T,CriticalValues,CleanLimits)
         print("Labels=",art_c.fArtificialLabels(len(CriticalValues),T))
-        print("XA=",XA)
+        XA=art_c.fArtificials(X.flatten().tolist(),T,CriticalValues,CleanLimits,bShow=True,bShowInputs=True)
+        #print("XA=",XA)
         Coef=2.0-4.0*np.random.rand(3,nArtificials)
         print("Coef=",Coef,type(Coef))
-        XAS=art_c.fArtificialsScored(X.flatten().tolist(),T,CriticalValues,CleanLimits=CleanLimits,CoefficientsSet=Coef.tolist())
         print("Labels=",art_c.fArtificialsScoredLabels(Coef.shape[0]))
-        print("XAS=",XAS)
+        XAS=art_c.fArtificialsScored(X.flatten().tolist(),T,CriticalValues,CleanLimits=CleanLimits,CoefficientsSet=Coef.tolist(),bShow=True,bShowInputs=True)
+        #print("XAS=",XAS)
         print(type(XAS))
 
 
@@ -59,20 +59,24 @@ if __name__=="__main__":
     T='Categorical'
     CriticalValues=[['A','D'],['e','d'],['X','Y','Z','G','x','y']]
     print("Treatment='Categorical' with CriticalValues="+str(CriticalValues))
-    YA,YALabels=art_c.fArtificials(Y.to_numpy().flatten().tolist(),T,CriticalValues)
+    print("YA=")
+    YA,YALabels=art_c.fArtificials(Y.to_numpy().flatten().tolist(),T,CriticalValues,bShow=True,bShowInputs=True)
     nArtificials=art_c._nArtificialCount(len(CriticalValues),T)
     Coef=2.0-4.0*np.random.rand(3,nArtificials)
-    print("YA=",YA)
     print(type(YA))
     #YS=Y.hstack(pl.DataFrame(YA))
     #print(YS)
+    print("Treatment="+T+" with CriticalValues="+str(CriticalValues))
+    print("Coef=",Coef,type(Coef))
+    print("Coef=",Coef.tolist(),type(Coef))
 
-    YAS=art_c.fArtificialsScored(Y.to_numpy().flatten().tolist(),T,CriticalValues,CoefficientsSet=Coef.tolist())
+    print("YAS=")
+    YAS=art_c.fArtificialsScored(Y.to_numpy().flatten().tolist(),T,CriticalValues,CoefficientsSet=Coef.tolist(),bShow=True,bShowInputs=True)
     print("Treatment='Categorical' with CriticalValues="+str(CriticalValues))
     print("Coef=",Coef,type(Coef))
     print("Labels=",art_c.fArtificialsScoredLabels(Coef.shape[0]))
     #YAS=Y.hstack(pl.DataFrame(YAS))
-    print(YAS)
+    exit()
 
 
 
@@ -89,21 +93,21 @@ if __name__=="__main__":
     T='CategoricalNumeric'
     CriticalValues=[[65, 69],[103,108],[110,112,114,115,118]]
     print("Treatment=" + T + " with CriticalValues="+str(CriticalValues))
-    YA,YALabels=art_c.fArtificials(Y.to_numpy(),T,CriticalValues)
+    print("YA=")
+    YA,YALabels=art_c.fArtificials(Y.to_numpy(),T,CriticalValues,bShow=True,bShowInputs=True)
     nArtificials=art_c._nArtificialCount(len(CriticalValues),T)
     Coef=2.0-4.0*np.random.rand(3,nArtificials)
-    print("YA=",YA)
     print(type(YA))
     #YS=Y.hstack(pl.DataFrame(YA))
-    print(YA)
-    print("=YA=")
+    #print(YA)
 
-    YAS=art_c.fArtificialsScored(Y.to_numpy(),T,CriticalValues,CoefficientsSet=Coef.tolist(),bRowMajor=True)
-    print("Treatment='Categorical' with CriticalValues="+str(CriticalValues))
+    print("Treatment="+T+" with CriticalValues="+str(CriticalValues))
     print("Coef=",Coef,type(Coef))
     print("Labels=",art_c.fArtificialsScoredLabels(Coef.shape[0]))
+    print("YAS=")
+    YAS=art_c.fArtificialsScored(Y.to_numpy(),T,CriticalValues,CoefficientsSet=Coef.tolist(),bShow=True,bShowInputs=True)
     #YAS=Y.hstack(pl.DataFrame(YAS))
-    print(YAS)
+    #print(YAS)
 
 
 

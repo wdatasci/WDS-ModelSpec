@@ -1228,6 +1228,14 @@ def fArtificialsScored_Categorical(SourceValue: Union[str, List[str]]
     if Treatment != eTreatment.e_Categorical: 
         return wdsTreatmentError
 
+    if bCoefRowMajor:
+        def score_at_(r,c):
+            return ((r+nResultsRowOffset)*nResultsColumnCount+c+nResultsColumnOffset) 
+    else:
+        def score_at_(r,c):
+            return ((r+nResultsRowOffset)+(c+nResultsColumnOffset)*nResultsRowCount)
+
+
     nCritVals = nCritVals_[0]
 
     if (nCritVals > NCRITVALS_MAX):
@@ -1276,10 +1284,7 @@ def fArtificialsScored_Categorical(SourceValue: Union[str, List[str]]
         else:
             found = False
             for i, v in enumerate(CriticalValues):
-                for j, vv in enumerate(v):
-                    found = (tempstring==vv)
-                    if found:
-                        break
+                found = ( tempstring in vv )
                 if found:
                     iP1=i+1
                     for ir in range(0, nCoefficientSets):
@@ -1608,8 +1613,10 @@ def fArtificials(Source=None
         , LabelConnector:str='_'
         , LabelSuffix:str=""
         , DropIndexs:Union[None,int,List[int]]=None
-        , bRowMajor:bool=False
+        , bShow:bool=False
+        , bShowInputs:bool=False
         ):
+    bRowMajor=True
     if Source is None or Treatment is None or CriticalValues is None: raise("Insufficient arguments to fArtificials")
     if type(Source) in (int, float, str):
         nrows=1
@@ -1652,7 +1659,7 @@ def fArtificials(Source=None
     nArts = nArtificialCount(ncrits, trt)
     rv1=[]
     for i in range(0,nArts):
-        rv1.append(rv[i:nrows:nrows*nArts])
+        rv1.append(rv[i::nArts])
     rv=rv1
     if DropIndexs:
         if type(DropIndexs) is not list:
@@ -1669,13 +1676,21 @@ def fArtificials(Source=None
             DropIndexs.sort(reverse=True)
             for i in DropIndexs:
                 lbls.pop(i)
-                rv[i-limits[0]]=None
-    if bRowMajor:
-        rv1=rv
-        rv=[[0.0 for j in range(0,len(lbls))] for i in range(0, len(rv1[0]))]
-        for j in range(0,len(lbls)):
-            for i in range(0,len(rv1[0])):
-                rv[i][j]=rv1[i][j]
+                rv.pop(i)
+
+    if True: #Even though bRowMajor==True, rv has already been mapped to columns
+        if bShow:
+            nlbls=len(lbls)
+            print("Labels", lbls)
+            srv=[0.0 for j in range(0, nlbls)]
+            for i in range(0,nrows):
+                for j in range(0,nlbls):
+                    srv[j]=rv[j][i]
+                if bShowInputs:
+                    print(i,Source[i], srv)
+                else:
+                    print(i,srv)
+
     return [rv,lbls]
 
 
@@ -1688,20 +1703,20 @@ def fArtificialsScored(Source=None
                             , LabelConnector:str='_'
                             , LabelSuffix:str=""
                             , LabelStart:int=1
-                            , bRowMajor:bool=False
+                            , bShow:bool=False
+                            , bShowInputs:bool=False
                             ):
+    bRowMajor=True
     if Source is None or Treatment is None or CriticalValues is None: raise("Insufficient arguments to fArtificials")
     trt=_eTreatmentClean(Treatment);
     nrows=len(Source)
     nScores=0
     rv=[0.0 for i in range(0, nrows*nScores)]
     if trt==eTreatment.e_Categorical:
-        nScores=len(CoefficientsSet)
         rv = _fArtificialsScored_Categorical(Source,trt,CriticalValues,CoefficientsSet)
     else:
         if CoefficientsSet is None: 
             raise("Insufficient arguments to fArtificials")
-        nScores=len(CoefficientsSet)
         if trt==eTreatment.e_CategoricalNumeric:
             if CleanLimits is None:
                 rv = _fArtificialsScored_CategoricalNumeric(Source,trt,CriticalValues,[],CoefficientsSet)
@@ -1713,25 +1728,45 @@ def fArtificialsScored(Source=None
             else:
                 rv = _fArtificialsScored_Numeric(Source,trt,CriticalValues,CleanLimits,CoefficientsSet)
 
+    nScores=len(CoefficientsSet)
+    labels = fArtificialsScoredLabels(nScores
+                                                , LabelStart=LabelStart
+                                                , LabelBase=LabelBase
+                                                , LabelConnector=LabelConnector
+                                                , LabelSuffix=LabelSuffix
+                                                )
+
     if bRowMajor:
         rv1=rv
         rv=[[0.0 for j in range(0,nScores)] for i in range(0, nrows)]
         for i in range(0,nrows):
             for j in range(0,nScores):
                 rv[i][j]=rv1[i*nScores+j]
+        if bShow:
+            print("Labels", labels)
+            for i in range(0,nrows):
+                if bShowInputs:
+                    print(i, Source[i], rv[i])
+                else:
+                    print(i, rv[i])
     else:
         rv1=rv
         rv=[[0.0 for i in range(0,nrows)] for i in range(0, nScores)]
         for j in range(0,nScores):
             for i in range(0,nrows):
                 rv[j][i]=rv1[i+j*nrows]
+        if bShow:
+            print("Labels", labels)
+            srv=[0.0 for j in range(0, nScores)]
+            for i in range(0,nrows):
+                for j in range(0,nScores):
+                    srv[j]=rv[j][i]
+                if bShowInputs:
+                    print(i,Source[i], srv)
+                else:
+                    print(i,srv)
 
-    return [rv, fArtificialsScoredLabels(nScores
-                                                , LabelStart=LabelStart
-                                                , LabelBase=LabelBase
-                                                , LabelConnector=LabelConnector
-                                                , LabelSuffix=LabelSuffix
-                                                )]
+    return [rv, labels]
 
 def fArtificialLabels(nCriticalValues:int, sTreatment:str, LabelBase:str="X", LabelConnector:str="", LabelSuffix:str=""):
     n=_nArtificialCount(nCriticalValues, sTreatment)
