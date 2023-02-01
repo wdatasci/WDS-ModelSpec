@@ -71,8 +71,9 @@ import numpy as np
 import copy
 
 import polars as pl
+import pandas as pd
 
-import WDS.Comp.ArtificialsCythonWrapped as art_c
+import WDS.Comp.Artificials_CythonWrapped as art_c
 
 import pudb
 
@@ -536,7 +537,14 @@ def WDSModel(Name=None, Responses=None):
         rv.Responses_from(Responses)
     return rv
 
-def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None):
+def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None
+        , DropIndexs=None
+        , Source=None
+        , ResponseUse=None
+        , SegmentedBy=None
+        , Static=None
+        , ProcessFirst=None
+        ):
     rv = __gWDSModel.Variable(Name=Name, Handle=Name, Treatment=Treatment, parent_object_=Model, gds_collector_=Model.gds_collector_)
     if Model.Variables is None:
         Model.Variables = __gWDSModel.Variables(parent_object_=Model, gds_collector_=Model.gds_collector_)
@@ -547,11 +555,25 @@ def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, Cle
         rv.CleanLimits_from_list(CleanLimits)
     if Coefficients:
         rv.CoefficientsSet_from(Coefficients)
+    rv.DropIndexs_from_list(DropIndexs)
+    if Source and type(Source) is str:
+        rv.Source[0].valueOf_ = Source
     rv.VariableModelDirectives = __gWDSModel.VariableModelDirectiveType(parent_object_=rv, gds_collector_=Model.gds_collector_)
+    rv.VariableModelDirectives.ResponseUse = ResponseUse
+    if Static:
+        if type(Static) is bool:
+            rv.VariableModelDirectives.Static = 'Yes' if Static else 'No'
+        else:
+            rv.VariableModelDirectives.Static = Static
+    if ProcessFirst:
+        if type(ProcessFirst) is bool:
+            rv.VariableModelDirectives.ProcessFirst = 'Yes' if ProcessFirst else 'No'
+        else:
+            rv.VariableModelDirectives.ProcessFirst = ProcessFirst
     return rv
 
-def __add_Variable(self, Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None):
-    return add_Variable(Model=self, Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None)
+def __add_Variable(self, **args): #Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None
+    return add_Variable(Model=self, **args) #Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None
 
 setattr(__gWDSModel.Model,"add_Variable",__add_Variable)
 
@@ -608,7 +630,7 @@ def __DropIndexs_fix(self):
                 other = self.DropIndices
             if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
                 other = self.DropIndices
-    if bHas(self,"DropIndexs") and self.DropIndexs is None:
+    if bHas(self,"DropIndexs") == False or self.DropIndexs is None:
         if other:
             self.DropIndexs = __gWDSModel.DropIndexs(DropIndex=other.DropIndex
                     , parent_object_=self, gds_collector_=self.gds_collector_)
@@ -626,6 +648,7 @@ def __DropIndexs_fix(self):
         for v in self.DropIndex:
             self.DropIndexs.add_DropIndex(v.valueOf_)
         self.DropIndex = []
+        
 
 def __DropIndexs_as_list(self):
     rv=[]
@@ -635,6 +658,21 @@ def __DropIndexs_as_list(self):
     return rv
 
 setattr(__gWDSModel.DropIndexs,"as_list",__DropIndexs_as_list)
+
+def __DropIndexs_from_list(self,DropIndexs):
+    if DropIndexs is None:
+        return
+    if type(DropIndexs) in (list,tuple):
+        if type(DropIndexs[0]) in (list,tuple):
+            DropIndexs = DropIndexs[0]
+    if type(DropIndexs) not in (list, tuple):
+        DropIndexs = [int(DropIndexs)]
+    if len(DropIndexs) is None:
+        return
+    for di in DropIndexs:
+        self.add_DropIndex(di)
+
+setattr(__gWDSModel.Variable,"DropIndexs_from_list",__DropIndexs_from_list)
 
 
 
@@ -787,6 +825,126 @@ def fAddToSystem(variable, arg, system_matrix_Resp1, system_matrix_Resp2):
             system_matrix_Resp2 = arg
     return [system_matrix_Resp1, system_matrix_Resp2]
 
+def fModelPrep(data, modelspec):
+    rv={}
+    rv['woSuffix']={}
+    for resp in modelspec.ModelDirectives.Responses.as_list():
+        rv[resp]={}
+    
+    if type(data) is pd.DataFrame:
+        #first past to gather ProcessFirst variables that are used for segmentation purposes only
+        for v in modelspec.Variables.Variable:
+            if v.VariableModelDirectives.ProcessFirst=='Yes' and v.VariableModelDirectives.SpecialUse=='SegmentationOnly':
+                if v.Treatment=='Categorical':
+                    rv['woSuffix'][v.Name]=pd.DataFrame(art_c.fArtificials(data[v.Source[0].valueOf_].to_numpy()
+                        ,v.Treatment
+                        ,CriticalValues=v.CriticalValues.as_list()
+                        ,LabelBase=v.Name).flatten())
+                else:
+                    rv['woSuffix'][v.Name]=pd.DataFrame(art_c.fArtificials(data[v.Source[0].valueOf_].to_numpy()
+                        ,v.Treatment
+                        ,CriticalValues=v.CriticalValues
+                        ,CleanLimits=v.CleanLimits
+                        ,LabelBase=v.Name).flatten())
+
+        #second pass is to gather the rest of the process first variables that may depend on segmentation variables
+        for v in modelspec.Variables.Variable:
+            if v in rv['woSuffix']:
+                continue
+            elif v.VariableModelDirectives.ProcessFirst=='Yes':
+                if v.Treatment=='Categorical':
+                    rv['woSuffix'][v.Name]=pd.DataFrame(art_c.fArtificials(data[v.Source[0].valueOf_].to_numpy()
+                        ,v.Treatment
+                        ,CriticalValues=v.CriticalValues.as_list()
+                        ,LabelBase=v.Name).flatten())
+                else:
+                    rv['woSuffix'][v.Name]=pd.DataFrame(art_c.fArtificials(data[v.Source[0].valueOf_].to_numpy()
+                        ,v.Treatment
+                        ,CriticalValues=v.CriticalValues
+                        ,CleanLimits=v.CleanLimits
+                        ,LabelBase=v.Name).flatten())
+
+            else:
+                continue
+
+        #process drops for early processed variables
+        for v in modelspec.Variables.Variable:
+            if v in rv['woSuffix']:
+                if v.DropIndexs:
+                    drops=v.DropIndexs.as_list()
+                    drops.sort(reverse=True)
+                    for i in drops:
+                        rv['woSuffix'][v.Name].drop(rv['woSuffix'][v.Name].columns[i],axis=1,inplace=True)
+
+        #process segmentation variables for early processed variables
+        for v in modelspec.Variables.Variable:
+            if v in rv['woSuffix']:
+                if v.Name in rv['woSuffix'] and v.SegmentedBy:
+                    for i in range(rv['woSuffix'][v.Name].shape[1]):
+                        rv['woSuffix'][v.Name].iloc[:,i]*=rv['woSuffix'][v.SegmentedBy.Name].iloc[:,max(1,rv['woSuffix'][v.SegmentedBy.Name].shape[1]-1)]
+
+        #segmentation only variables are not used in modeling, but for the others>>>
+        #add suffixes as needed to track model and static use:
+        for v in modelspec.Variables.Variable:
+            if v.Name in rv['woSuffix']:
+                if v.VariableModelDirectives.ResponseUse == 'All' or v.VariableModelDirectives.ResponseUse in modelspec.ModelDirectives.Responses.as_list():
+                    Static_Suffix = '_Static' if (v.VariableModelDirectives.Static == 'Yes') else ''
+                    if v.VariableModelDirectives.ResponseUse == 'All':
+                        respset = modelspec.ModelDirectives.Responses.as_list()
+                    else:
+                        respset = [v.VariableModelDirectives.ResponseUse]
+                    for resp in respset:
+                        tmp = rv['woSuffix'][v.Name]
+                        tmpc = tmp.columns
+                        tmprn = {}
+                        for c in tmpc:
+                            tmprn[c]=c+Static_Suffix+'_'+resp
+                        rv[resp][v.Name+'_'+resp] = tmp.rename(columns=tmprn)
+
+
+        #now process remaining
+        for v in modelspec.Variables.Variable:
+            if v.Name in rv['woSuffix']:
+                pass
+            else:
+                if v.Treatment=='Categorical':
+                    rv['woSuffix'][v.Name]=pd.DataFrame(art_c.fArtificials(data[v.Source[0].valueOf_].to_numpy()
+                        ,v.Treatment
+                        ,CriticalValues=v.CriticalValues.as_list()
+                        ,LabelBase=v.Name).flatten())
+                else:
+                    rv['woSuffix'][v.Name]=pd.DataFrame(art_c.fArtificials(data[v.Source[0].valueOf_].to_numpy()
+                        ,v.Treatment
+                        ,CriticalValues=v.CriticalValues
+                        ,CleanLimits=v.CleanLimits
+                        ,LabelBase=v.Name).flatten())
+        
+                if v.DropIndexs:
+                    drops=v.DropIndexs.as_list()
+                    drops.sort(reverse=True)
+                    for i in drops:
+                        rv['woSuffix'][v.Name].drop(rv['woSuffix'][v.Name].columns[i],axis=1,inplace=True)
+        
+                if v.SegmentedBy:
+                    for i in range(rv['woSuffix'][v.Name].shape[1]):
+                        rv['woSuffix'][v.Name].iloc[:,i]*=rv['woSuffix'][v.SegmentedBy.Name].iloc[:,1]
+
+                if v.VariableModelDirectives.ResponseUse == 'All' or v.VariableModelDirectives.ResponseUse in modelspec.ModelDirectives.Responses.as_list():
+                    Static_Suffix = '_Static' if (v.VariableModelDirectives.Static == 'Yes') else ''
+                    if v.VariableModelDirectives.ResponseUse == 'All':
+                        respset = modelspec.ModelDirectives.Responses.as_list()
+                    else:
+                        respset = [v.VariableModelDirectives.ResponseUse]
+                    for resp in respset:
+                        tmp = rv['woSuffix'][v.Name]
+                        tmpc = tmp.columns
+                        tmprn = {}
+                        for c in tmpc:
+                            tmprn[c]=c+Static_Suffix+'_'+resp
+                        rv[resp][v.Name+'_'+resp] = tmp.rename(columns=tmprn)
+
+
+    return rv
 
 
 

@@ -21,7 +21,10 @@ except:
     pl.DataFrame.to_csv = pl.DataFrame.write_csv
     pl.DataFrame.distinct = pl.DataFrame.unique
     def __monkey__matmul__(self,a):
-        return self.to_numpy() @ a.to_numpy()
+        if hasattr(self,'to_numpy') and hasattr(a,'to_numpy'):
+            return self.to_numpy() @ a.to_numpy()
+        else:
+            return self.to_numpy() @ a
     pl.DataFrame.__matmul__ = __monkey__matmul__
     pl.DataFrame.mfilter = pl.DataFrame.filter
     def add_column(df, name, value):
@@ -34,7 +37,7 @@ import math
 import copy
 from typing import *
 
-import WDS.Comp.ArtificialsCythonWrapped as art_c
+import WDS.Comp.Artificials_CythonWrapped as art_c
 
 from WDS.Comp.WDSModelPrep import *
 
@@ -206,7 +209,7 @@ def f(arg):
             break
     return i
 
-x=data2.select(['ID','Signal']).groupby('ID').agg_list().select(['ID','Signal',pl.col('Signal').apply(f).alias('EventIndex')])
+x=data2.sort(['ID','Age']).select(['ID','Signal']).groupby('ID').agg_list().select(['ID','Signal',pl.col('Signal').apply(f).alias('EventIndex')])
 x=x.select(['ID','EventIndex',pl.concat_list(['Signal','EventIndex']).apply(lambda x:x[x[-1]]).alias('EventClass')])
 
 data2=data2.join(x,on=['ID'])
@@ -338,52 +341,46 @@ beta=[ []
 
 for aaa in range(0,20):
     ebz=[ []
-        , system_matrix[1].select(Resp_Names[1]) @ beta[1]
-        , system_matrix[2].select(Resp_Names[2]) @ beta[2] 
+        , np.exp(system_matrix[1].select(Resp_Names[1]) @ beta[1])
+        , np.exp(system_matrix[2].select(Resp_Names[2]) @ beta[2])
         ]
     ebzc = ebz[1]+ebz[2]
     etcWebzc = copy_with_column(etc_and_base, 'ebzc', ebzc)
+    x=etcWebzc.groupby(['StrataID','Age']).agg(pl.col('ebzc').alias('ebzcdenom').sum())
+    etcWebzc = etcWebzc.join(x, on=['StrataID','Age'], how='inner')
     
     etcWebz = [ []
         , copy_with_column(etcWebzc, 'ebz', ebz[1])
         , copy_with_column(etcWebzc, 'ebz', ebz[2]) 
         ]
 
-    iter_comp_1 = [ []
+    iter_comp_11 = [ []
         , system_matrix[1].filter(pl.col('Signal')==1).select(Resp_Names[1]).sum()
         , system_matrix[2].filter(pl.col('Signal')==2).select(Resp_Names[2]).sum()
         ]
-    iter_comp_12 = [ [], [], [] ]
-    
-    iter_comp_2 = [ [], [], [] ]
+    iter_comp_12 = [ []
+        , etcWebz[1].join(etcWebz[1].hstack(system_matrix[1].select(Resp_Names[1]) * etcWebz[1].ebz / etcWebz[1].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[1])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==1).sum().select(Resp_Names[1])
+        , etcWebz[2].join(etcWebz[2].hstack(system_matrix[2].select(Resp_Names[2]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[2])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==2).sum().select(Resp_Names[2])
+        ]
+    db=iter_comp_11[1].transpose().vstack(iter_comp_11[2].transpose())- iter_comp_12[1].transpose().vstack(iter_comp_12[2].transpose())
+
+    iter_comp_21 = [ []
+        , etcWebz[1].join(etcWebz[1].hstack(system_matrix[1].select(Resp_NamesX[1]) * etcWebz[1].ebz / etcWebz[1].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_NamesX[1])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==1).sum().select(Resp_NamesX[1])
+        , etcWebz[2].join(etcWebz[2].hstack(system_matrix[2].select(Resp_NamesX[2]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_NamesX[2])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==2).sum().select(Resp_NamesX[2])
+        ]
+
+
     iter_comp_22 = [ [], [], [] ]
-    
-    x = (etcWebz[1].hstack(system_matrix[1].select([*Resp_Names[1],*Resp_NamesX[1]]) * etcWebz[1].ebz)).groupby(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[1], *Resp_NamesX[1]]).sum()).sort(['StrataID','Age'])
-    xx = x.join(MnSA, on=['StrataID','Age'], how='inner')
-    
-    iter_comp_12[1] = (xx.select(Resp_Names[1]) * xx.M / xx.ebzc).sum()
-
-    iter_comp_2[1] = (xx.select([*Resp_Names[1],*Resp_NamesX[1]]) * xx.M / xx.ebzc).sum()
-    iter_comp_22[1] = (xx.select(Resp_Names[1]) * xx.M.apply(np.sqrt) / xx.ebzc) #.sum()
-    
-    x = (etcWebz[2].hstack(system_matrix[2].select([*Resp_Names[2],*Resp_NamesX[2]]) * etcWebz[2].ebz)).groupby(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[2], *Resp_NamesX[2]]).sum()).sort(['StrataID','Age'])
-    xx = x.join(MnSA, on=['StrataID','Age'], how='inner')
-    
-    iter_comp_12[2] = (xx.select(Resp_Names[2]) * xx.M / xx.ebzc).sum()
-
-    iter_comp_2[2] = (xx.select([*Resp_Names[2],*Resp_NamesX[2]]) * xx.M / xx.ebzc).sum()
-    iter_comp_22[2] = (xx.select(Resp_Names[2]) * xx.M.apply(np.sqrt) / xx.ebzc) #.sum()
-    
-    
-    
-    betas = beta[1].vstack(beta[2])
-    db=iter_comp_1[1].transpose().vstack(iter_comp_1[2].transpose())- iter_comp_12[1].transpose().vstack(iter_comp_12[2].transpose())
+    x=etcWebz[1].hstack(system_matrix[1].select(pl.col(Resp_Names[1])) * etcWebz[1].ebz / etcWebz[1].ebzcdenom).groupby(['StrataID','Age']).sum().sort(['StrataID','Age'])
+    iter_comp_22[1] = x
+    x=etcWebz[2].hstack(system_matrix[2].select(pl.col(Resp_Names[2])) * etcWebz[2].ebz / etcWebz[1].ebzcdenom).groupby(['StrataID','Age']).sum().sort(['StrataID','Age'])
+    iter_comp_22[2] = x
 
     db20agg = None
     for i in range(0,MnSA.shape[1]):
         db2_10 = iter_comp_22[1][i].select(Resp_Names[1]).transpose().vstack(iter_comp_22[2][i].select(Resp_Names[2]).transpose())
         db20 = (db2_10 @ db2_10.transpose())
-        db20agg = db20*MnSA[i].M[0] + ( db20agg if db20agg is not None else 0 )
+        db20agg = db20*np.float64(MnSA[i].M[0]) + ( db20agg if db20agg is not None else 0 )
 
     k = -1
     sc = 0
@@ -392,7 +389,7 @@ for aaa in range(0,20):
         nnm = len(Resp_Names[i])
         for j,nm in enumerate(Resp_Names[i]):
             k+=1
-            x = iter_comp_2[i].lazy()
+            x = iter_comp_21[i].lazy()
             x = x.select(Resp_NamesXd[i][nm])
             for l,lnm in enumerate(Resp_NamesXd[i][nm]):
                 x = x.with_column(pl.col(lnm).alias(Resp_NamesPrefxd[i][l]))
@@ -403,23 +400,144 @@ for aaa in range(0,20):
             #db2[k, (sc):(sc+nnm)] -= x.to_numpy().reshape((1,nnm))
         sc+=nnm
     
-    
     db2=bdi[1].hstack(bdi[2]*0).vstack((bdi[1]*0).hstack(bdi[2]))*(-1)+pl.DataFrame(db20agg)
+    #break
+    #x=etcWebz[1].join(x.groupby(['StrataID','Age']).sum(), on=['StrataID','Age'], how='inner')
+    #iter_comp_22[1] = x.filter(pl.col('Signal')==1).select(Resp_Names[1]).sum()
+
+    ##/ etcWebz[1].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[1])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==1).sum().select(Resp_Names[1])
+#   # , etcWebz[2].join(etcWebz[2].hstack(system_matrix[2].select(Resp_Names[2]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[2])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==2).sum().select(Resp_Names[2])
+#   # ]
+    #db=iter_comp_11[1].transpose().vstack(iter_comp_11[2].transpose())- iter_comp_12[1].transpose().vstack(iter_comp_12[2].transpose())
+    #iter_comp_22 = [ [], [], [] ]
+    #
+    #x = (etcWebz[1].hstack(system_matrix[1].select([*Resp_Names[1],*Resp_NamesX[1]]) * etcWebz[1].ebz / etcWebz[1].ebzcdenom)).groupby(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[1], *Resp_NamesX[1]]).sum()).sort(['StrataID','Age'])
+    #xx = x.join(MnSA, on=['StrataID','Age'], how='inner')
+    #
+    ##iter_comp_12[1] = (xx.select(Resp_Names[1]) * xx.M / xx.ebzc).sum()
+
+    #iter_comp_22[1] = (xx.select(Resp_Names[1]) * xx.M.apply(np.sqrt) / xx.ebzc) #.sum()
+    #
+    #x = (etcWebz[2].hstack(system_matrix[2].select([*Resp_Names[2],*Resp_NamesX[2]]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom)).groupby(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[2], *Resp_NamesX[2]]).sum()).sort(['StrataID','Age'])
+    #xx = x.join(MnSA, on=['StrataID','Age'], how='inner')
+    #
+    ##iter_comp_12[2] = (xx.select(Resp_Names[2]) * xx.M / xx.ebzc).sum()
+
+    #iter_comp_2[2] = (xx.select([*Resp_Names[2],*Resp_NamesX[2]]) * xx.M / xx.ebzc).sum()
+    #iter_comp_22[2] = (xx.select(Resp_Names[2]) * xx.M.apply(np.sqrt) / xx.ebzc) #.sum()
+    #
+    #
+    #
+    betas = beta[1].vstack(beta[2])
+    ##db=iter_comp_1[1].transpose().vstack(iter_comp_1[2].transpose())- iter_comp_12[1].transpose().vstack(iter_comp_12[2].transpose())
+
+    #db20agg = None
+    #for i in range(0,MnSA.shape[1]):
+    #    db2_10 = iter_comp_22[1][i].select(Resp_Names[1]).transpose().vstack(iter_comp_22[2][i].select(Resp_Names[2]).transpose())
+    #    db20 = (db2_10 @ db2_10.transpose())
+    #    db20agg = db20*MnSA[i].M[0] + ( db20agg if db20agg is not None else 0 )
+
+    #k = -1
+    #sc = 0
+    #bdi=[ [],[],[]]
+    #for i in range(1,3):
+    #    nnm = len(Resp_Names[i])
+    #    for j,nm in enumerate(Resp_Names[i]):
+    #        k+=1
+    #        x = iter_comp_2[i].lazy()
+    #        x = x.select(Resp_NamesXd[i][nm])
+    #        for l,lnm in enumerate(Resp_NamesXd[i][nm]):
+    #            x = x.with_column(pl.col(lnm).alias(Resp_NamesPrefxd[i][l]))
+    #        if j==0:
+    #            bdi[i] = x.select(Resp_NamesPrefxd[i]).collect()
+    #        else:
+    #            bdi[i] = bdi[i].vstack(x.select(Resp_NamesPrefxd[i]).collect())
+    #        #db2[k, (sc):(sc+nnm)] -= x.to_numpy().reshape((1,nnm))
+    #    sc+=nnm
+    #
+    #
+    #db2=bdi[1].hstack(bdi[2]*0).vstack((bdi[1]*0).hstack(bdi[2]))*(-1)+pl.DataFrame(db20agg)
     
     print(-np.linalg.inv(db2.to_numpy()))
     delta_betas= -np.linalg.inv(db2.to_numpy()) @ db.to_numpy()
     betas=betas+pl.DataFrame(delta_betas)
     sc=0
     for i in range(1,3):
-        nnm=len(Resp_Names[1])
-        beta[i]=betas[sc:sc+nnm]
+        nnm=len(Resp_Names[i-1])
+        beta[i]=betas[nnm:(nnm+len(Resp_Names[i]))]
         sc+=nnm
 
     print(betas)
-    #break
     
 
+#import tensorflow as tf
+#
+## Create needed objects
+#sgd = tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.9)
+#var = tf.Variable(2.5)
+#cost = lambda: 2 + var ** 2
+#
+## Perform optimization
+#for _ in range(100):
+#    sgd.minimize(cost, var_list=[var])
+#
+## Extract results
+#var.numpy()
+#
+#cost().numpy()
+#
+#def L(betas):
+#    global system_matrix, Resp_Names 
+#    beta1=betas[0:len(Resp_Names[1])]
+#    beta2=betas[len(Resp_Names[1]):-1]
+#    ebz=[ []
+#        , system_matrix[1].select(Resp_Names[1]) @ beta[1]
+#        , system_matrix[2].select(Resp_Names[2]) @ beta[2] 
+#        ]
+#    ebzc = ebz[1]+ebz[2]
+#    etcWebzc = copy_with_column(etc_and_base, 'ebzc', ebzc)
+#    x=etcWebzc.groupby(['StrataID','Age']).agg(pl.col('ebzc').alias('ebzcdenom').sum())
+#    etcWebzc = etcWebzc.join(x, on=['StrataID','Age'], how='inner')
+    
 
+def LL(betas):
+    global system_matrix, Resp_Names, etc_and_base,  etcWebzc
+    beta1=betas[0:len(Resp_Names[1])]
+    beta2=betas[len(Resp_Names[1]):len(Resp_Names[1])+len(Resp_Names[2])]
+    bz=[ []
+        , np.minimum(10.0, np.maximum(-10.0,system_matrix[1].select(Resp_Names[1]) @ beta1 ))
+        , np.minimum(10.0, np.maximum(-10.0,system_matrix[2].select(Resp_Names[2]) @ beta2 ))
+        ]
+    ebz=[ []
+        , np.exp(bz[1])
+        , np.exp(bz[2])
+        ]
+    ebzc = ebz[1]+ebz[2]
+    etcWebzc = copy_with_column(etc_and_base, 'ebzc', ebzc)
+    x=etcWebzc.groupby(['StrataID','Age']).agg(pl.col('ebzc').alias('ebzcdenom').sum())
+    etcWebzc = etcWebzc.join(x, on=['StrataID','Age'], how='inner').with_column(pl.Series((bz[1]*ebz[1]).flatten()).alias('bz1'))
+    etcWebzc = etcWebzc.with_column(pl.Series((bz[2]*ebz[2]).flatten()).alias('bz2'))
+    return etcWebzc.filter(pl.col('Signal')==1).bz1.sum()+etcWebzc.filter(pl.col('Signal')==2).bz2.sum()-(etcWebzc.filter(pl.col('Signal')>0).ebzcdenom.apply(np.log)).sum()
+    return etcWebzc
+    rv=etcWebzc.filter(pl.col('Signal')==1).select([pl.col('bz1')/pl.col('ebzcdenom')]).filter(pl.col('bz1')>0).apply(np.log).sum()
+    rv+=etcWebzc.filter(pl.col('Signal')==2).select([pl.col('bz2')/pl.col('ebzcdenom')]).filter(pl.col('bz2')>0).apply(np.log).sum()
+    return rv.column_0[0]
+    etcWebzc.ebz2 = ebz[2] / etcWebzc.ebzcdenom
+    rv = bz[1].filter(pl.col('Signal')==1).ebz1.sum()
+   
+
+betas=[.3,.8,.3, .1, .3, .8, -.3, -.2, -.3, .17, -.3, -.2]
+from scipy.optimize import minimize
+minimize(LL,betas)
+
+import matplotlib
+import matplotlib.pyplot as plt
+
+
+#matplotlib.style.use('_mpl-gallery')
+fig, ax = plt.subplots()
+ax.scatter(etc_and_base.Age,etc_and_base.Signal)
+fig.savefig('figone')
 
 
 

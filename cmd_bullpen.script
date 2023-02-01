@@ -29,8 +29,8 @@ endif
         endif
         ${python} setup.py build_ext --inplace
         ${python} setup.py clean --all
-        /usr/bin/rm ArtificialsCythonWrapped.c
-        /usr/bin/rm ArtificialsCythonWrapped.h
+        /usr/bin/rm Artificials_CythonWrapped.c
+        /usr/bin/rm Artificials_CythonWrapped.h
     cd -
 
     #generating Bindings

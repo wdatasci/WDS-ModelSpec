@@ -1,4 +1,4 @@
-#!/usr/bin/env tcsh
+#!/usr/bin/tcsh
 
 
 #called from parent of WDS-Python

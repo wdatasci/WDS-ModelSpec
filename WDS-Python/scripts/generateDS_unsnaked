@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/python3.11
 '''
 A small monkey-patch to generateDS to stop snake-casing names
 '''

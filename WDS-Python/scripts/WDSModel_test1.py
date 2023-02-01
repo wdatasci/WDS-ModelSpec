@@ -12,6 +12,10 @@ import re
 import string
 import datetime
 
+import WDS
+import WDS.Comp
+import WDS.Wranglers
+
 from WDS.Wranglers.gXMLParsers import gWDSModel
 from WDS.Wranglers.gXMLParsers import gWDSModel_literal
 
