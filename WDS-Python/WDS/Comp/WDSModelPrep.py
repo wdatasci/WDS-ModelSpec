@@ -560,6 +560,8 @@ def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, Cle
         rv.Source[0].valueOf_ = Source
     rv.VariableModelDirectives = __gWDSModel.VariableModelDirectiveType(parent_object_=rv, gds_collector_=Model.gds_collector_)
     rv.VariableModelDirectives.ResponseUse = ResponseUse
+    if SegmentedBy:
+        rv.SegmentedBy=SegmentedBy
     if Static:
         if type(Static) is bool:
             rv.VariableModelDirectives.Static = 'Yes' if Static else 'No'
@@ -881,7 +883,7 @@ def fModelPrep(data, modelspec):
             if v in rv['woSuffix']:
                 if v.Name in rv['woSuffix'] and v.SegmentedBy:
                     for i in range(rv['woSuffix'][v.Name].shape[1]):
-                        rv['woSuffix'][v.Name].iloc[:,i]*=rv['woSuffix'][v.SegmentedBy.Name].iloc[:,max(1,rv['woSuffix'][v.SegmentedBy.Name].shape[1]-1)]
+                        rv['woSuffix'][v.Name].iloc[:,i]=rv['woSuffix'][v.Name].iloc[:,i]*rv['woSuffix'][v.SegmentedBy.Name].iloc[:,1]
 
         #segmentation only variables are not used in modeling, but for the others>>>
         #add suffixes as needed to track model and static use:
@@ -927,7 +929,7 @@ def fModelPrep(data, modelspec):
         
                 if v.SegmentedBy:
                     for i in range(rv['woSuffix'][v.Name].shape[1]):
-                        rv['woSuffix'][v.Name].iloc[:,i]*=rv['woSuffix'][v.SegmentedBy.Name].iloc[:,1]
+                        rv['woSuffix'][v.Name].iloc[:,i]=rv['woSuffix'][v.Name].iloc[:,i]*rv['woSuffix'][v.SegmentedBy.Name].iloc[:,1]
 
                 if v.VariableModelDirectives.ResponseUse == 'All' or v.VariableModelDirectives.ResponseUse in modelspec.ModelDirectives.Responses.as_list():
                     Static_Suffix = '_Static' if (v.VariableModelDirectives.Static == 'Yes') else ''
