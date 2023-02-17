@@ -206,14 +206,14 @@ def __CleanLimits_from_list(self, CleanLimits):
     nclms = len(CleanLimits)
     cself.v = []
     cself.CleanLimit = []
-    if (nclms == 2) and CleanLimits[0] and CleanLimits[1]:
+    if (nclms == 2) and (CleanLimits[0] is not None) and (CleanLimits[1] is not None):
         tmp = []
         for i, v in enumerate(CleanLimits):
             tmp.append(__gWDSModel.CleanLimit(Position=i, valueOf_=v
                 , gds_collector_=cself.gds_collector_, parent_object_=cself))
         cself.set_CleanLimit(tmp)
     elif (nclms == 2):
-        if CleanLimits[0]:
+        if CleanLimits[0] is not None:
             self.set_LeftLimit(__gWDSModel.LeftLimit(valueOf_=CleanLimits[0]
                 , gds_collector_=cself.gds_collector_, parent_object=cself))
         else:
@@ -324,7 +324,7 @@ def __Responses_as_list(self):
 setattr(__gWDSModel.Responses,"as_list",__Responses_as_list)
 
 def __CoefficientsSet_from(self, Coefficients, Responses_as_list=None):
-    if not Responses_as_list:
+    if Responses_as_list in (None,'',[]):
         try:
             # path down is:
             #   Models/Model/ComponentModels/ComponentModel/Variables/Variable
@@ -458,6 +458,10 @@ setattr(__gWDSModel.CoefficientsSet,"np",__CoefficientsSet_as_numpy)
 setattr(__gWDSModel.Variable,"Coefficients_as_numpy",__CoefficientsSet_as_numpy)
 setattr(__gWDSModel.Variable,"Coefficients_np",__CoefficientsSet_as_numpy)
 
+__ElementsWithSets = ['Coefficients'
+                        ,
+                        ]
+
 __ElementsWithPlurals = ['Project'
                         , 'Model'
                         , 'ComponentModel'
@@ -524,6 +528,16 @@ for w in __ElementsWithLists:
     sOuter += '''
     if (arg2=="'''+w+'List") and (bHas'+w+'List(arg)): return True'''
 
+for w in __ElementsWithSets:
+    s='def bHas' + w + '''Set(arg):
+    return hasattr(arg,"''' + w + 'Set") and (arg.'+w+'Set is not None)'
+    #print(s)
+    eval(compile(s, 'bHas'+w+'Set', 'exec'), globals(), globals())
+    sOuter += '''
+    if (arg2=="'''+w+'Set") and (bHas'+w+'Set(arg)): return True'''
+
+sOuter += '''
+    return False'''
 eval(compile(sOuter, 'bHas', 'exec'), globals(), globals())
 
 del s
@@ -536,6 +550,20 @@ def WDSModel(Name=None, Responses=None):
     if Responses:
         rv.Responses_from(Responses)
     return rv
+
+def __add_new_ComponentModel(Model=None, Name=None, Responses=None):
+    rv = __gWDSModel.ComponentModel(Name=Name, Handle=Name)
+    Model.add_ComponentModel(rv)
+    if Responses:
+        rv.Responses_from(Responses)
+    else:
+        Responses = Model.ModelDirectives.Responses.as_list()
+        if Responses:
+            rv.Responses_from(Responses)
+    return rv
+
+
+setattr(__gWDSModel.Model,"add_new_ComponentModel",__add_new_ComponentModel)
 
 def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None
         , DropIndexs=None
@@ -578,6 +606,7 @@ def __add_Variable(self, **args): #Name=None, Treatment=None, CriticalValues=Non
     return add_Variable(Model=self, **args) #Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None
 
 setattr(__gWDSModel.Model,"add_Variable",__add_Variable)
+setattr(__gWDSModel.ComponentModel,"add_Variable",__add_Variable)
 
 def __get_Variable(self, Name=None):
     if Name is not None:
@@ -591,6 +620,7 @@ def __get_Variable(self, Name=None):
         return None
     
 setattr(__gWDSModel.Model,"get_Variable",__get_Variable)
+setattr(__gWDSModel.ComponentModel,"get_Variable",__get_Variable)
 
 def __add_DropIndex(self, indx):
     __DropIndexs_fix(self)
@@ -625,12 +655,12 @@ def __DropIndexs_fix(self):
                 raise(Exception('error in mProcessList, DropIndexes and DropIndexs cannot both be used, internal is DropIndexs'))
             self.DropIndexes = None
         else:
-            if self.DropIndices and len(self.DropIndices.DropIndex)>0:
+            if bHas(self,'DropIndices') and len(self.DropIndices.DropIndex)>0:
                 if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
                     raise(Exception('error in mProcessList, DropIndices and DropIndexs cannot both be used, internal is DropIndexs'))
                 self.DropIndexes = None
                 other = self.DropIndices
-            if self.DropIndexes and len(self.DropIndexes.DropIndex)>0:
+            if bHas(self,'DropIndexes') and len(self.DropIndexes.DropIndex)>0:
                 other = self.DropIndices
     if bHas(self,"DropIndexs") == False or self.DropIndexs is None:
         if other:
@@ -684,7 +714,8 @@ def WDSModelFromFile(filename):
         rv = __gWDSModel.parse(filename)
     else:
         rv = __gWDSModel.parse(filename.read())
-    #print(rv)
+    print(rv)
+    print()
     mPreProcess(rv)
     #print(rv)
     return rv
@@ -722,6 +753,12 @@ def mProcessList(self, just_DropIndexs=False):
 
 def mPreProcess(self):
     mProcessList(self)
+
+    if bHasCriticalValue(self) or bHasCriticalValues(self):
+        mPreProcessCriticalValue(self)
+        for m in self.CriticalValues.CriticalValue:
+            mPreProcess(m)
+
     if bHasCleanLimit(self) or bHasCleanLimits(self):
         mPreProcessCleanLimit(self)
         for m in self.CleanLimits.CleanLimit:
@@ -732,7 +769,7 @@ def mPreProcess(self):
         for v in self.Variables.Variable:
             mPreProcess(v)
 
-    if bHasResponses(self) or bHasResponse(self):
+    if (bHasResponses(self) or bHasResponse(self)) and not (bIsCoefficients(self)):
         mPreProcessResponse(self)
 
     if bHasProject(self) or bHasProjects(self):
@@ -761,13 +798,32 @@ def mPreProcess(self):
     elif bIsVariable(self):
         if bHasCleanLimit(self) or bHasCleanLimits(self):
             mPreProcessCleanLimit(self)
-            for m in self.CleanLimits.CleanLimit:
-                mPreProcess(m)
-        if bHasVariable(self) or bHasVariables(self):
-            mPreProcessVariable(self)
-            for v in self.Variables.Variable:
-                mPreProcess(v)
-    elif bIsVariable(self):
+            #for m in self.CleanLimits.CleanLimit:
+                #mPreProcess(m)
+        if bHasCriticalValue(self) or bHasCriticalValues(self):
+            mPreProcessCriticalValue(self)
+            #for v in self.CriticalValues.CriticalValue:
+                #mPreProcess(v)
+        if bHas(self,'CoefficientsSet'):
+            for cs in self.CoefficientsSet.Coefficients:
+                mPreProcess(cs)
+    elif bIsCoefficients(self):
+        for c in self.Coefficient:
+            mPreProcess(c)
+    elif bIsCleanLimit(self) or bIsCriticalValue(self) or bIsCoefficient(self):
+        if type(self.valueOf_) is str:
+            if len(self.valueOf_) == 0:
+                if bIsCoefficient(self):
+                    self.valueOf_ = 0.0
+                else:
+                    self.valueOf_=None
+            else:
+                try:
+                    v=eval(self.valueOf_)
+                    self.valueOf_=v
+                except:
+                    pass
+    else:
         pass
        
 def plDF(arg):
@@ -827,17 +883,23 @@ def fAddToSystem(variable, arg, system_matrix_Resp1, system_matrix_Resp2):
             system_matrix_Resp2 = arg
     return [system_matrix_Resp1, system_matrix_Resp2]
 
-def fModelPrep(data, modelspec):
+def fModelPrep(data, modelspec, to_score=False, score_basename='Score' ):
     rv={}
     rv['woSuffix']={}
-    for resp in modelspec.ModelDirectives.Responses.as_list():
+    resplist = modelspec.ModelDirectives.Responses.as_list()
+    if to_score:
+        rv[score_basename]=0.0
+    for resp in resplist:
         rv[resp]={}
+        if to_score:
+            rv[resp+'_'+score_basename]={}
+            rv[resp+'_'+score_basename][score_basename]=0.0
     
     if type(data) is pd.DataFrame:
         #first past to gather ProcessFirst variables that are used for segmentation purposes only
         for v in modelspec.Variables.Variable:
             if v.VariableModelDirectives.ProcessFirst=='Yes' and v.VariableModelDirectives.SpecialUse=='SegmentationOnly':
-                if v.Treatment=='Categorical':
+                if v.Treatment in('Categorical','NCategorical'):
                     rv['woSuffix'][v.Name]=pd.DataFrame(art_c.fArtificials(data[v.Source[0].valueOf_].to_numpy()
                         ,v.Treatment
                         ,CriticalValues=v.CriticalValues.as_list()
@@ -854,7 +916,7 @@ def fModelPrep(data, modelspec):
             if v in rv['woSuffix']:
                 continue
             elif v.VariableModelDirectives.ProcessFirst=='Yes':
-                if v.Treatment=='Categorical':
+                if v.Treatment in('Categorical','NCategorical'):
                     rv['woSuffix'][v.Name]=pd.DataFrame(art_c.fArtificials(data[v.Source[0].valueOf_].to_numpy()
                         ,v.Treatment
                         ,CriticalValues=v.CriticalValues.as_list()
@@ -870,13 +932,14 @@ def fModelPrep(data, modelspec):
                 continue
 
         #process drops for early processed variables
-        for v in modelspec.Variables.Variable:
-            if v in rv['woSuffix']:
-                if v.DropIndexs:
-                    drops=v.DropIndexs.as_list()
-                    drops.sort(reverse=True)
-                    for i in drops:
-                        rv['woSuffix'][v.Name].drop(rv['woSuffix'][v.Name].columns[i],axis=1,inplace=True)
+        if to_score == False:  # for now, hold drops, later, valid unsegmented by flag will be passed into fArtificialsScored
+            for v in modelspec.Variables.Variable:
+                if v in rv['woSuffix']:
+                    if v.DropIndexs:
+                        drops=v.DropIndexs.as_list()
+                        drops.sort(reverse=True)
+                        for i in drops:
+                            rv['woSuffix'][v.Name].drop(rv['woSuffix'][v.Name].columns[i],axis=1,inplace=True)
 
         #process segmentation variables for early processed variables
         for v in modelspec.Variables.Variable:
@@ -897,6 +960,12 @@ def fModelPrep(data, modelspec):
                         respset = [v.VariableModelDirectives.ResponseUse]
                     for resp in respset:
                         tmp = rv['woSuffix'][v.Name]
+                        if to_score:
+                            ri = resplist.index(resp)
+                            coefs = v.CoefficientsSet.as_list()[ri]
+                            rv[resp+'_'+score_basename][v.Name+Static_Suffix+'_'+resp] = tmp @ coefs
+                            rv[resp+'_'+score_basename][score_basename] = rv[resp+'_'+score_basename][score_basename]+rv[resp+'_'+score_basename][v.Name+Static_Suffix+'_'+resp]
+                            rv[score_basename] = rv[score_basename]+rv[resp+'_'+score_basename][v.Name+Static_Suffix+'_'+resp]
                         tmpc = tmp.columns
                         tmprn = {}
                         for c in tmpc:
@@ -909,7 +978,7 @@ def fModelPrep(data, modelspec):
             if v.Name in rv['woSuffix']:
                 pass
             else:
-                if v.Treatment=='Categorical':
+                if v.Treatment in('Categorical','NCategorical'):
                     rv['woSuffix'][v.Name]=pd.DataFrame(art_c.fArtificials(data[v.Source[0].valueOf_].to_numpy()
                         ,v.Treatment
                         ,CriticalValues=v.CriticalValues.as_list()
@@ -921,11 +990,12 @@ def fModelPrep(data, modelspec):
                         ,CleanLimits=v.CleanLimits
                         ,LabelBase=v.Name).flatten())
         
-                if v.DropIndexs:
-                    drops=v.DropIndexs.as_list()
-                    drops.sort(reverse=True)
-                    for i in drops:
-                        rv['woSuffix'][v.Name].drop(rv['woSuffix'][v.Name].columns[i],axis=1,inplace=True)
+                if to_score == False:
+                    if v.DropIndexs:
+                        drops=v.DropIndexs.as_list()
+                        drops.sort(reverse=True)
+                        for i in drops:
+                            rv['woSuffix'][v.Name].drop(rv['woSuffix'][v.Name].columns[i],axis=1,inplace=True)
         
                 if v.SegmentedBy:
                     for i in range(rv['woSuffix'][v.Name].shape[1]):
@@ -939,6 +1009,12 @@ def fModelPrep(data, modelspec):
                         respset = [v.VariableModelDirectives.ResponseUse]
                     for resp in respset:
                         tmp = rv['woSuffix'][v.Name]
+                        if to_score:
+                            ri = resplist.index(resp)
+                            coefs = v.CoefficientsSet.as_list()[ri]
+                            rv[resp+'_'+score_basename][v.Name+Static_Suffix+'_'+resp] = tmp @ coefs
+                            rv[resp+'_'+score_basename][score_basename] = rv[resp+'_'+score_basename][score_basename]+rv[resp+'_'+score_basename][v.Name+Static_Suffix+'_'+resp]
+                            rv[score_basename] = rv[score_basename]+rv[resp+'_'+score_basename][v.Name+Static_Suffix+'_'+resp]
                         tmpc = tmp.columns
                         tmprn = {}
                         for c in tmpc:
