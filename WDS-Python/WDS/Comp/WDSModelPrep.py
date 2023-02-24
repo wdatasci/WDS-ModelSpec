@@ -588,6 +588,8 @@ def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, Cle
         rv.Source[0].valueOf_ = Source
     rv.VariableModelDirectives = __gWDSModel.VariableModelDirectiveType(parent_object_=rv, gds_collector_=Model.gds_collector_)
     rv.VariableModelDirectives.ResponseUse = ResponseUse
+    if ResponseUse == 'SegmentationOnly':
+        rv.VariableModelDirectives.set_SpecialUse('SegmentationOnly')
     if SegmentedBy:
         rv.SegmentedBy=SegmentedBy
     if Static:
@@ -597,9 +599,9 @@ def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, Cle
             rv.VariableModelDirectives.Static = Static
     if ProcessFirst:
         if type(ProcessFirst) is bool:
-            rv.VariableModelDirectives.ProcessFirst = 'Yes' if ProcessFirst else 'No'
+            rv.VariableModelDirectives.set_ProcessFirst('Yes' if ProcessFirst else 'No')
         else:
-            rv.VariableModelDirectives.ProcessFirst = ProcessFirst
+            rv.VariableModelDirectives.set_ProcessFirst(ProcessFirst)
     return rv
 
 def __add_Variable(self, **args): #Name=None, Treatment=None, CriticalValues=None, CleanLimits=None, Coefficients=None
@@ -975,6 +977,7 @@ def fModelPrep(data, modelspec, to_score=False, score_basename='Score' ):
 
         #now process remaining
         for v in modelspec.Variables.Variable:
+            print('Processing ',v.Name)
             if v.Name in rv['woSuffix']:
                 pass
             else:
@@ -1023,6 +1026,373 @@ def fModelPrep(data, modelspec, to_score=False, score_basename='Score' ):
 
 
     return rv
+
+def fVariable2SQL(v,to_score=True):
+    sql = ''
+    artlist=[]
+    if v.Treatment in('Categorical','NCategorical'):
+
+        sql = sql + '\n        , if( not ( false '
+        for cvi,cv in enumerate(v.CriticalValues.as_list()):
+            sql = sql + '\n              or ' + v.Source[0].valueOf_ + ' in ' + str(tuple(cv)).replace(',)',')')
+        sql = sql + '\n            ),1,0)'
+        if v.SegmentedBy:
+            sql = sql + ' * ' + v.SegmentedBy.Name + '_1'
+        sql = sql + '\n          as ' + v.Name+'_'+'0'
+        artlist.append(v.Name+'_'+'0')
+
+        for cvi,cv in enumerate(v.CriticalValues.as_list()):
+            sql = sql + '\n        , if(' + v.Source[0].valueOf_ 
+            sql = sql + ' in ' + str(tuple(cv)).replace(',)',')')
+            sql = sql + '\n            ,1,0)'
+            if v.SegmentedBy:
+                sql = sql + ' * ' + v.SegmentedBy.Name + '_1'
+            sql = sql + '\n          as ' + v.Name+'_'+str(cvi+1)
+            artlist.append(v.Name+'_'+str(cvi+1))
+
+    elif v.Treatment == 'DiscreteLC':
+        CleanLimit = [v.CleanLimits.CleanLimit[0].valueOf_, v.CleanLimits.CleanLimit[1].valueOf_]
+        cvl = v.CriticalValues.as_list()
+        cvln = len(cvl)
+
+        sql = sql + ('\n        , if(' + v.Source[0].valueOf_ + ' is null or ' + v.Source[0].valueOf_ + ' not between (' +
+                str(CleanLimit[0]) + ') and (' + str(CleanLimit[1]) + ') ,1,0)')
+        if v.SegmentedBy:
+            sql = sql + '\n            * ' + v.SegmentedBy.Name + '_1'
+        sql = sql + '\n       as ' + v.Name+'_'+'0'
+        artlist.append(v.Name+'_0')
+
+        for cvi in range(0,cvln+1):
+            if cvi == 0:
+                cv = cvl[cvi]
+                sql = sql + ('\n        , if(' + v.Source[0].valueOf_ + ' is not null and ' + v.Source[0].valueOf_ + ' between (' +
+                        str(CleanLimit[0]) + ') and (' + str(CleanLimit[1]) + ') and  ' + v.Source[0].valueOf_ + ' <= (' +
+                        str(cv) + ') ,1,0)')
+            elif cvi == cvln:                                      
+                sql = sql + ('\n        , if(' + v.Source[0].valueOf_ + ' is not null and (' + v.Source[0].valueOf_ + ') between (' +
+                        str(CleanLimit[0]) + ') and (' + str(CleanLimit[1]) + ') and ' + v.Source[0].valueOf_ + ' > (' + str(cv)
+                        + ') ,1,0)')
+            else:                                                  
+                cvr = cvl[cvi]                                     
+                sql = sql + ('\n        , if(' + v.Source[0].valueOf_ + ' is not null and ' + v.Source[0].valueOf_ + ' between (' +
+                        str(CleanLimit[0]) + ') and (' + str(CleanLimit[1]) + ') and ' + v.Source[0].valueOf_ + ' > (' + str(cv)
+                        + ') and ' +  v.Source[0].valueOf_ + ' <= (' + str(cvr) + ') ,1,0)' )
+                cv = cvr
+            if v.SegmentedBy:
+                sql = sql + '\n            * ' + v.SegmentedBy.Name + '_1'
+            sql = sql + '\n           as ' + v.Name+'_'+str(cvi+1)
+            artlist.append(v.Name+'_'+str(cvi+1))
+
+    elif v.Treatment == 'Hats':
+        
+        cvlist = v.CriticalValues.as_list()
+        cvln = len(cvlist)
+        cvlist.append(cvlist[-1])
+        CleanLimit = [v.CleanLimits.CleanLimit[0].valueOf_, v.CleanLimits.CleanLimit[1].valueOf_]
+
+        sql = sql + ('\n        , if(' + v.Source[0].valueOf_ + ' is null or ' + v.Source[0].valueOf_ + ' not between (' +
+                str(CleanLimit[0]) + ') and (' + str(CleanLimit[1]) + ') ,1,0)')
+        if v.SegmentedBy:
+            sql = sql + '\n            * ' + v.SegmentedBy.Name + '_1'
+        sql = sql + '\n           as ' + v.Name+'_'+'0'
+        artlist.append(v.Name+'_0')
+
+        for cvi in range(0,cvln):
+            if cvi == 0:
+                cv = cvlist[cvi]
+                cvr = cvlist[cvi+1]
+                sql = sql + ('\n        , if(' + v.Source[0].valueOf_ + ' is not null and ' + v.Source[0].valueOf_ + ' between (' +
+                        str(CleanLimit[0]) + ') and (' + str(CleanLimit[1]) + ') and  ' + v.Source[0].valueOf_ + ' <= (' +
+                        str(cvr) + ')' )
+                sql = sql + '\n            ,if(' + v.Source[0].valueOf_ + ' <= (' + str(cv) + ')'
+                sql = sql + '\n                ,1'
+                sql = sql + '\n                ,( (' + str(cvr) + ') - ' + v.Source[0].valueOf_ + ' ) / ( ' + str( cvr - cv ) + ' ) '
+                sql = sql + '\n                )'
+                sql = sql + '\n            ,0)'
+            elif cvi == cvln-1:                                      
+                cvl = cv
+                cv = cvr
+                sql = sql + ('\n        , if(' + v.Source[0].valueOf_ + ' is not null and ' + v.Source[0].valueOf_ + ' between (' +
+                        str(CleanLimit[0]) + ') and (' + str(CleanLimit[1]) + ') and ' + v.Source[0].valueOf_ + ' > (' +
+                        str(cvl) + ')' )
+                sql = sql + '\n            ,if(' + v.Source[0].valueOf_ + ' <= (' + str(cv) + ')'
+                sql = sql + '\n                ,( ' + v.Source[0].valueOf_ + ' - (' + str(cvl) + ') ) / ( ' + str( cv - cvl ) + ' ) '
+                sql = sql + '\n                ,1'
+                sql = sql + '\n                )'
+                sql = sql + '\n            ,0)'
+            else:                                                  
+                cvl = cv
+                cv = cvr
+                cvr = cvlist[cvi+1]                                     
+                sql = sql + ('\n        , if(' + v.Source[0].valueOf_ + ' is not null and ' + v.Source[0].valueOf_ + ' between (' +
+                        str(CleanLimit[0]) + ') and (' + str(CleanLimit[1]) + ') and ' + v.Source[0].valueOf_ + ' > (' + str(cvl)
+                        + ') and ' +  v.Source[0].valueOf_ + ' <= (' + str(cvr) + ')' )
+                sql = sql + '\n            ,if(' + v.Source[0].valueOf_ + ' <= (' + str(cv) + ')'
+                sql = sql + '\n                ,( ' + v.Source[0].valueOf_ + ' - (' + str(cvl) + ') ) / ( ' + str( cv - cvl ) + ' ) '
+                sql = sql + '\n                ,( (' + str(cvr) + ') - ' + v.Source[0].valueOf_ + ' ) / ( ' + str( cvr - cv ) + ' ) '
+                sql = sql + '\n               )'
+                sql = sql + '\n            ,0)'
+            if v.SegmentedBy:
+                sql = sql + '\n            * ' + v.SegmentedBy.Name + '_1'
+            sql = sql + '\n           as ' + v.Name+'_'+str(cvi+1)
+            artlist.append(v.Name+'_'+str(cvi+1))
+
+    else: #else is not implemented here
+        raise(Exception('treatment ' + v.Treatment + ' is not implemented here'))
+
+    return [sql, artlist]
+
+
+def fCompModelToSQL(modelspec, source_table='data', score_basename='Score', score_prefix='', score_suffix='', join_keys=None, to_score=True,
+        starting_with=True, final_with=True, 
+        with_prefix='pass', with_final_tag='final', with_marginals=True, with_statics=True):
+
+    if bHasComponentModels(modelspec):
+        if starting_with:
+            sql = 'with '
+        else:
+            sql = ' '
+        for i in range(0, len(modelspec.ComponentModels.ComponentModel)):
+            cmdl = modelspec.ComponentModels.ComponentModel[i]
+            if i:
+                sql = sql + '\n, '
+            sql = sql + '\n' + fCompModelToSQL(cmdl
+                    , source_table=source_table
+                    , score_basename=cmdl.Name
+                    , final_with=False
+                    , starting_with=False
+                    , with_prefix='prep'+cmdl.Name
+                    , with_final_tag=cmdl.Name
+                    , with_marginals=(with_marginals and len(cmdl.ModelDirectives.Responses.as_list())>1)
+                    , with_statics=(with_statics and (cmdl.Name not in ('Applicability','Baseline','PreCond','PreConditioning')))
+                    , join_keys=join_keys
+                    )
+    
+        return '---\n'+sql+'\n---'
+
+    else:
+
+        rv={}
+        rv['woSuffix']={}
+        resplist = modelspec.ModelDirectives.Responses.as_list()
+        for resp in resplist:
+            rv[resp]={}
+    
+        found = False
+        for v in modelspec.Variables.Variable:
+            if v.VariableModelDirectives.ProcessFirst=='Yes' and v.VariableModelDirectives.SpecialUse=='SegmentationOnly':
+                found = True
+                break
+
+        sql1 = ''
+        if found:
+            for v in modelspec.Variables.Variable:
+                if v.VariableModelDirectives.ProcessFirst=='Yes' and v.VariableModelDirectives.SpecialUse=='SegmentationOnly':
+                    if v.Treatment in('Categorical','NCategorical'):
+                        vsql, artlist = fVariable2SQL(v)
+                        sql1 = sql1 + vsql
+                    else: #else is not implemented here
+                        raise(Exception('Non [N]Categoricals not for segmentation only is not implemented here'))
+                    rv['woSuffix'][v.Name] = artlist
+
+        if starting_with:
+            sql = 'with '
+        else:
+            sql = ''
+
+        anyyet = False
+
+        if sql1:
+            anyyet = True
+            sql = sql + with_prefix + '1 as ('
+            sql = sql + '\n    select 1 as _in' + with_prefix + '1'
+            for k in join_keys:
+                sql = sql + '\n        , pass0.' + k
+            sql = sql + sql1
+            sql = sql + '\n    from ' + source_table + ' pass0)'
+        
+        found = False
+        for v in modelspec.Variables.Variable:
+            if v.Name in rv['woSuffix']:
+                pass
+            elif v.VariableModelDirectives.ProcessFirst=='Yes':
+                found = True
+                break
+
+        sql2 = ''
+        if found:
+            #second pass to gather other ProcessFirst variables that are not used for segmentation purposes only
+            for v in modelspec.Variables.Variable:
+                if v in rv['woSuffix']:
+                    continue
+                elif v.VariableModelDirectives.ProcessFirst=='Yes':
+                    found = True
+                    vsql, artlist = fVariable2SQL(v,to_score= ( v.VariableModelDirectives.ResponseUse == 'All' or v.VariableModelDirectives.ResponseUse in resplist ))
+                    sql2 = sql2 + vsql
+                    rv['woSuffix'][v.Name] = artlist
+
+        if sql2:
+            if anyyet:
+                sql = sql + '\n, ' + with_prefix + '2 as ('
+            else:
+                sql = sql + with_prefix + '2 as ('
+            sql = sql + '\n    select 1 as _in' + with_prefix + '2'
+            for k in join_keys:
+                sql = sql + '\n        , pass0.' + k
+            sql = sql + sql2
+            sql = sql + '\n    from ' + source_table + ' pass0 '
+            if anyyet:
+                sql = sql + '    join ' + with_prefix + '1 on ' 
+                for i,k in enumerate(join_keys):
+                    if i:
+                        sql = sql + ' and '
+                    sql = sql + ' pass0.'+k+'=' + with_prefix + '1.'+k
+            sql = sql + ')'
+            anyyet = True
+        
+        found = False
+        for v in modelspec.Variables.Variable:
+            if v.Name in rv['woSuffix']:
+                pass
+            elif v.VariableModelDirectives.ResponseUse == 'All' or v.VariableModelDirectives.ResponseUse in resplist:
+                found = True
+                break
+
+        sql3 = ''
+        if found:
+            #third pass is to gather the rest
+            #now process remaining
+            for v in modelspec.Variables.Variable:
+                if v.Name in rv['woSuffix']:
+                    pass
+                else:
+                    vsql, artlist = fVariable2SQL(v,to_score= ( v.VariableModelDirectives.ResponseUse == 'All' or v.VariableModelDirectives.ResponseUse in resplist ))
+                    sql3 = sql3 + vsql
+                    rv['woSuffix'][v.Name] = artlist
+    
+        if sql3:
+            if anyyet:
+                sql = sql + '\n, ' + with_prefix + '3 as ('
+            else:
+                sql = sql + with_prefix + '3 as ('
+            sql = sql + '\n    select 1 as _in' + with_prefix + '3'
+            for k in join_keys:
+                sql = sql + '\n        , pass0.' + k
+            sql = sql + sql3
+            sql = sql + '\n    from ' + source_table + ' pass0 '
+            if anyyet:
+                if sql1:
+                    sql = sql + '\n    join ' + with_prefix + '1 on ' 
+                    for i,k in enumerate(join_keys):
+                        if i:
+                            sql = sql + ' and '
+                        sql = sql + ' pass0.'+k+'=' + with_prefix + '1.'+k
+                if sql2:
+                    sql = sql + '\n    join ' + with_prefix + '2 on ' 
+                    for i,k in enumerate(join_keys):
+                        if i:
+                            sql = sql + ' and '
+                        sql = sql + ' pass0.'+k+'=' + with_prefix + '2.'+k
+            sql = sql + ')'
+            anyyet = True
+        
+    
+        if to_score:
+
+            sql = sql + '\n, ' + with_prefix + 'marginals as ( select 1 as _in' + with_prefix + 'marginals'
+            for k in join_keys:
+                sql = sql + '\n        , pass0.' + k
+            marginals = []
+            for v in modelspec.Variables.Variable:
+                if v.Name in rv['woSuffix']:
+                    if v.VariableModelDirectives.ResponseUse == 'All' or v.VariableModelDirectives.ResponseUse in modelspec.ModelDirectives.Responses.as_list():
+                        Static_Suffix = '_Static' if (v.VariableModelDirectives.Static == 'Yes') else ''
+                        if v.VariableModelDirectives.ResponseUse == 'All':
+                            respset = resplist
+                        else:
+                            respset = [v.VariableModelDirectives.ResponseUse]
+                        for resp in respset:
+                            if to_score:
+                                ri = resplist.index(resp)
+                                coefs = v.CoefficientsSet.as_list()[ri]
+                                sql = sql + '\n        , ( 0.0 '
+                                for arti, art in enumerate(rv['woSuffix'][v.Name]):
+                                    sql = sql + ' + (' + str(coefs[arti]) + ')*'+art
+                                sql = sql + ' ) as ' + v.Name + Static_Suffix + '_' + resp
+                                marginals.append(v.Name + Static_Suffix + '_' + resp)
+
+            sql = sql + '\n    from ' + source_table + ' pass0 '
+            if anyyet:
+                if sql1:
+                    sql = sql + '\n    join ' + with_prefix + '1 on ' 
+                    for i,k in enumerate(join_keys):
+                        if i:
+                            sql = sql + ' and '
+                        sql = sql + ' pass0.'+k+'=' + with_prefix + '1.'+k
+                if sql2:
+                    sql = sql + '\n    join ' + with_prefix + '2 on ' 
+                    for i,k in enumerate(join_keys):
+                        if i:
+                            sql = sql + ' and '
+                        sql = sql + ' pass0.'+k+'=' + with_prefix + '2.'+k
+                if sql3:
+                    sql = sql + '\n    join ' + with_prefix + '3 on ' 
+                    for i,k in enumerate(join_keys):
+                        if i:
+                            sql = sql + ' and '
+                        sql = sql + ' pass0.'+k+'=' + with_prefix + '3.'+k
+            sql = sql + ')'
+        
+            sql = sql + '\n, ' + with_prefix + with_final_tag +' as ( select 1 as _in' + with_prefix + with_final_tag
+            for k in join_keys:
+                sql = sql + '\n        , pass0.' + k
+            sql = sql + '\n        , ( 0.0 '
+            for nm in marginals:
+                sql = sql + ' + ' + nm 
+            sql = sql + ' ) as ' + score_basename
+            if with_marginals:
+                for r in resplist:
+                    sql = sql + '\n        , ( 0.0 '
+                    for nm in marginals:
+                        if nm.endswith(r):
+                            sql = sql + ' + ' + nm
+                    sql = sql + ' ) as ' + score_basename + '_' + r
+            if with_statics:
+                for r in resplist:
+                    sql = sql + '\n        , ( 0.0 '
+                    for nm in marginals:
+                        if nm.endswith(r) and (nm.find('_Static_')>-1):
+                            sql = sql + ' + ' + nm
+                    sql = sql + ' ) as ' + score_basename + '_Static_' + r
+    
+            sql = sql + '\n    from ' + source_table + ' pass0 '
+            if anyyet:
+                if sql1:
+                    sql = sql + '\n    join ' + with_prefix + '1 on ' 
+                    for i,k in enumerate(join_keys):
+                        if i:
+                            sql = sql + ' and '
+                        sql = sql + ' pass0.'+k+'=' + with_prefix + '1.'+k
+                if sql2:
+                    sql = sql + '\n    join ' + with_prefix + '2 on ' 
+                    for i,k in enumerate(join_keys):
+                        if i:
+                            sql = sql + ' and '
+                        sql = sql + ' pass0.'+k+'=' + with_prefix + '2.'+k
+                if sql3:
+                    sql = sql + '\n    join ' + with_prefix + '3 on ' 
+                    for i,k in enumerate(join_keys):
+                        if i:
+                            sql = sql + ' and '
+                        sql = sql + ' pass0.'+k+'=' + with_prefix + '3.'+k
+            sql = sql + '\n    join ' + with_prefix + 'marginals on ' 
+            for i,k in enumerate(join_keys):
+                if i:
+                    sql = sql + ' and '
+                sql = sql + ' pass0.'+k+'=' + with_prefix + 'marginals.'+k
+            sql = sql + ')'
+    
+    return sql
 
 
 
