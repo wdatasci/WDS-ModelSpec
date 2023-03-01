@@ -1050,6 +1050,25 @@ def fVariable2SQL(v,to_score=True):
             sql = sql + '\n          as ' + v.Name+'_'+str(cvi+1)
             artlist.append(v.Name+'_'+str(cvi+1))
 
+    elif v.Treatment == 'CodedMissings':
+        CleanLimit = [v.CleanLimits.CleanLimit[0].valueOf_, v.CleanLimits.CleanLimit[1].valueOf_]
+        cvl = v.CriticalValues.as_list()
+        cvln = len(cvl)
+
+        sql = sql + ('\n        , if(' + v.Source[0].valueOf_ + ' is null or ' + v.Source[0].valueOf_ + ' not between (' +
+                str(CleanLimit[0]) + ') and (' + str(CleanLimit[1]) + ') ,1,0)')
+        if v.SegmentedBy:
+            sql = sql + '\n            * ' + v.SegmentedBy.Name + '_1'
+        sql = sql + '\n       as ' + v.Name+'_'+'0'
+        artlist.append(v.Name+'_0')
+
+        sql = sql + ('\n        , if( not (' + v.Source[0].valueOf_ + ' is null or ' + v.Source[0].valueOf_ + ' not between (' +
+                str(CleanLimit[0]) + ') and (' + str(CleanLimit[1]) + ') ) ,' + v.Source[0].valueOf_ + ',0)')
+        if v.SegmentedBy:
+            sql = sql + '\n            * ' + v.SegmentedBy.Name + '_1'
+        sql = sql + '\n       as ' + v.Name+'_'+'1'
+        artlist.append(v.Name+'_1')
+
     elif v.Treatment == 'DiscreteLC':
         CleanLimit = [v.CleanLimits.CleanLimit[0].valueOf_, v.CleanLimits.CleanLimit[1].valueOf_]
         cvl = v.CriticalValues.as_list()
