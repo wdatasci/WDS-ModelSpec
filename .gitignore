@@ -79,3 +79,11 @@ foo*.*
 *.aux
 *.out
 *.1
+WDS-Python/WDS/CompetingRisks/tests/test_ph_3.py.out.data.csv
+WDS-Python/WDS/CompetingRisks/tests/test_ph_3.py.out.system_etc.csv
+WDS-Python/WDS/CompetingRisks/tests/test_ph_3.py.out.system_matrix_Resp1.csv
+WDS-Python/WDS/CompetingRisks/tests/test_ph_3.py.out.system_matrix_Resp2.csv
+WDS-Python/WDS/CompetingRisks/tests/test_ph_4.py.out.data.csv
+WDS-Python/WDS/CompetingRisks/tests/test_ph_4.py.out.system_etc.csv
+WDS-Python/WDS/CompetingRisks/tests/test_ph_4.py.out.system_matrix_Resp1.csv
+WDS-Python/WDS/CompetingRisks/tests/test_ph_4.py.out.system_matrix_Resp2.csv

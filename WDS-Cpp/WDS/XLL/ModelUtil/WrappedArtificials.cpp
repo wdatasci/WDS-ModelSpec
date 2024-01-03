@@ -625,7 +625,7 @@ WDS_ModelSpec_ArtificialsScored(
 
 			int rc;
 
-			rc = fArtificialsScored_Categorical(X, nrows, Treatment, Crits, nCrits, NULL, 0, Coeffs.memptr(), nCoef_ncols, nCoef_nrows, A, nCoef_nrows, nrows, nCoef_nrows, 0, 0, false);
+			rc = fArtificialsScored_Categorical(X, nrows, Treatment, Crits, nCrits, NULL, 0, Coeffs.memptr(), nCoef_ncols, nCoef_nrows, A, nCoef_nrows, nrows, nCoef_nrows, 0, 0, false, false);
 			for (i = 0; i < nCrit_ncols; i++) {
 				delete[] Crits[i];
 			}
@@ -692,7 +692,7 @@ WDS_ModelSpec_ArtificialsScored(
 
 			int rc;
 
-			rc = fArtificialsScored_CategoricalNumeric(X, nrows, Treatment, Crits, nCrits, NULL, 0, Coeffs.memptr(), nCoef_ncols, nCoef_nrows, A, nCoef_nrows, nrows, nCoef_nrows, 0, 0, false);
+			rc = fArtificialsScored_CategoricalNumeric(X, nrows, Treatment, Crits, nCrits, NULL, 0, Coeffs.memptr(), nCoef_ncols, nCoef_nrows, A, nCoef_nrows, nrows, nCoef_nrows, 0, 0, false, false);
 			for (i = 0; i < nCrit_ncols; i++) {
 				free(Crits[i]);
 			}
@@ -775,7 +775,7 @@ WDS_ModelSpec_ArtificialsScored(
 
 			int rc;
 
-			rc = fArtificialsScored_Numeric(X, nrows, Treatment, Crits, nCrits, CLs, nCLs, Coeffs.memptr(), nCoef_ncols, nCoef_nrows, A, nCoef_nrows, nrows, nCoef_nrows, 0, 0, false);
+			rc = fArtificialsScored_Numeric(X, nrows, Treatment, Crits, nCrits, CLs, nCLs, Coeffs.memptr(), nCoef_ncols, nCoef_nrows, A, nCoef_nrows, nrows, nCoef_nrows, 0, 0, false, false);
 
 			result = new OPER12(nrows, nCoef_nrows);
 			for (j = 0, ij = 0; j < nCoef_nrows; j++) {
