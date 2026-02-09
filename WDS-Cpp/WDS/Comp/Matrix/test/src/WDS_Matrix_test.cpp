@@ -49,11 +49,11 @@ int main() //array<System::String> args)
 	std::cout << "inv(A): " << std::endl << inv(A) << std::endl;
 
 	// save matrix as a text file
-	A.save("output/A.txt", raw_ascii);
+	A.save("Output/A.txt", raw_ascii);
 
 	// load from file
 	dMatrix B;
-	B.load("output/A.txt");
+	B.load("Output/A.txt");
 
 	// submatrices
 	std::cout << "B( span(0,2), span(3,4) ):" << std::endl << B(span(0, 2), span(3, 4)) << std::endl;

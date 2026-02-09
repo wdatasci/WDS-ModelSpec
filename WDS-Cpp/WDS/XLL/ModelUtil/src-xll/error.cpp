@@ -1,7 +1,8 @@
 //The xll12 error messaging manipulates the registry, which is avoided here.
 
 #include <exception>
-#include "error.h" // the xll12 error header
+//#include "error.h" // the xll12 error header
+#include "alert.h" // the xll24 alert/error header
 
 using namespace std;
 
@@ -39,5 +40,5 @@ XLL_WARNING(const char* e, bool force)
 int
 XLL_INFO(const char* e, bool force)
 {
-	return XLL_ALERT(e, "Information", XLL_ALERT_INFO, MB_ICONINFORMATION, force);
+	return XLL_ALERT(e, "Information", XLL_ALERT_INFORMATION, MB_ICONINFORMATION, force);
 }

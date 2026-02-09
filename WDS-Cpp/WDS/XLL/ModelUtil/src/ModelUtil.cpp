@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 Wypasek Data Science, Inc. (WDataSci, WDS)
+Copyright (c) 2019-2026 Wypasek Data Science, Inc. (WDataSci, WDS)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,9 @@ SOFTWARE.
 #include "ModelUtil.h"
 #include "MatrixUtil.h"
 #include <string>
-#include "xlcall.h"
+#include "XLCALL.H"
 #include "oper.h"
+#include <cmath>
 
 using namespace xll;
 using namespace std;
@@ -609,28 +610,27 @@ dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, double defv) {
 
 
 
-/*
-static AddIn XLL_WDS_Comp_zzzInternal_SubMatrix(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_zzzInternal_SubMatrix", 4), L"WDS.Comp.zzzInternal.SubMatrix")
-	.Arg(XLL_LPXLOPER, L"Arg0", L"is a LPXLOPER12")
-	.Arg(XLL_LONG, L"direction", L"is a 0/1 indicator for 0-Across Rows (vertical) or 1-Across Columns (horizontal)",L"0")
-	.Arg(XLL_LONG, L"startrow", L"is the 1-Based beginrowng row (outside of limits defaults to input size).",L"1")
-	.Arg(XLL_LONG, L"endrow", L"is the 1-Based ending row (outside of limits defaults to input size).",L"1")
-	.Arg(XLL_LONG, L"startcolumn", L"is the 1-Based beginrowng column (outside of limits defaults to input size).",L"1")
-	.Arg(XLL_LONG, L"endcolumn", L"is the 1-Based ending column(outside of limits defaults to input size).",L"1")
-	.Uncalced()
-	.Category(L"WDS.Comp.zzzInternal")
-	.FunctionHelp(L"SubMatrix - A non-volatile sub-matrix of a rectangular object.")
-);
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
-*/
-LPOPER12
+//AddIn XLL_WDS_Comp_zzzInternal_SubMatrix(
+//	Function(XLL_LPOPER, "WDS_Comp_zzzInternal_SubMatrix", "WDS.Comp.zzzInternal.SubMatrix")
+//	.Arguments({
+//		Arg(XLL_LPXLOPER, "Arg0", "is a LPXLOPER12")
+//		,Arg(XLL_LONG, "direction", "is a 0/1 indicator for 0-Across Rows (vertical) or 1-Across Columns (horizontal)","0")
+//		,Arg(XLL_LONG, "startrow", "is the 1-Based beginrowng row (outside of limits defaults to input size).","1")
+//		,Arg(XLL_LONG, "endrow", "is the 1-Based ending row (outside of limits defaults to input size).","1")
+//		,Arg(XLL_LONG, "startcolumn", "is the 1-Based beginrowng column (outside of limits defaults to input size).","1")
+//		,Arg(XLL_LONG, "endcolumn", "is the 1-Based ending column(outside of limits defaults to input size).","1")
+//		})
+//	.Uncalced()
+//	.Category("WDS.Comp.zzzInternal")
+//	.FunctionHelp("SubMatrix - A non-volatile sub-matrix of a rectangular object.")
+//);
+LPOPER
 WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=1, long endrow=1, long startcolumn=1, long endcolumn=1)
 {
 
 	int nrows, ncols;
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(Arg0);
 	LPXLOPER12 cmArg0 = nullptr;
 	bool bWasArg0Coerced = false;
@@ -662,7 +662,7 @@ WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=
 		startcolumn -= 1;
 
 		if (direction == 0) {
-			result = new OPER12(endrow - startrow, endcolumn - startcolumn);
+			result = new OPER(endrow - startrow, endcolumn - startcolumn);
 			int i, j, ri, rj, ij;
 			for (rj = 0, j = startcolumn; j < endcolumn; rj++, j++) {
 				for (ri = 0, i = startrow; i < endrow; ri++, i++) {
@@ -697,7 +697,7 @@ WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=
 			}
 		}
 		else {
-			result = new OPER12(endcolumn - startcolumn, endrow - startrow);
+			result = new OPER(endcolumn - startcolumn, endrow - startrow);
 			int i, j, ri, rj;
 			for (rj = 0, j = startcolumn; j < endcolumn; rj++, j++) {
 				for (ri = 0, i = startrow; i < endrow; ri++, i++) {
@@ -709,7 +709,7 @@ WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or sub matrix");
+		result = new OPER(L"Error, in coercion or sub matrix");
 	}
 
 	lFreeIfNecessary(cmArg0, bWasArg0Coerced);
@@ -723,22 +723,24 @@ WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=
 
 
 
-
-static AddIn XLL_WDS_Comp_Matrix_SubMatrix(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_Matrix_SubMatrix", 4), L"WDS.Comp.Matrix.SubMatrix")
-	.Arg(XLL_LPXLOPER, L"Arg0", L"is a LPXLOPER12")
-	.Arg(XLL_LONG, L"direction", L"is a 0/1 indicator for 0-Across Rows (vertical) or 1-Across Columns (horizontal)")
-	.Arg(XLL_LPXLOPER, L"opts", L"is an optional array of {MaxRows}, {BeginRow, EndRow}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"SubMatrix - A non-volatile sub-matrix of a rectangular object.")
+AddIn XLL_WDS_Comp_Matrix_SubMatrix(
+	Function(XLL_LPOPER, "WDS_Comp_Matrix_SubMatrix", "WDS.Comp.Matrix.SubMatrix")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg0", "is a LPXLOPER12")
+		,Arg(XLL_LONG, "direction", "is a 0/1 indicator for 0-Across Rows (vertical) or 1-Across Columns (horizontal)")
+		,Arg(XLL_LPXLOPER, "opts", "is an optional array of {MaxRows}, {BeginRow, EndRow}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("SubMatrix - A non-volatile sub-matrix of a rectangular object.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_Matrix_SubMatrix(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 {
+#pragma XLLEXPORT
 
 	long beginrow = 0, endi = -1, beginj = 0, endj = -1;
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg0);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
@@ -771,7 +773,7 @@ WDS_Comp_Matrix_SubMatrix(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or sum across");
+		result = new OPER(L"Error, in coercion or sum across");
 		result->xltype = result->xltype | xlbitXLFree;
 	}
 
@@ -781,21 +783,24 @@ WDS_Comp_Matrix_SubMatrix(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 
 
 
-static AddIn XLL_WDS_Comp_Matrix_Rows(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_Matrix_Rows", 4), L"WDS.Comp.Matrix.Rows")
-	.Arg(XLL_LPXLOPER, L"Arg0", L"is a LPXLOPER12")
-	.Arg(XLL_LPXLOPER, L"Ind", L"is a (1-based) single value or array of {SingleRowIndex}, {BeginRow, EndRow}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
-	.Arg(XLL_LPXLOPER, L"opts", L"is an optional maximum number of columns.")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"Rows - A subset of the rows of a rectangular object.")
+AddIn XLL_WDS_Comp_Matrix_Rows(
+	Function(XLL_LPOPER, "WDS_Comp_Matrix_Rows", "WDS.Comp.Matrix.Rows")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg0", "is a LPXLOPER12")
+		,Arg(XLL_LPXLOPER, "Ind", "is a (1-based) single value or array of {SingleRowIndex}, {BeginRow, EndRow}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
+		,Arg(XLL_LPXLOPER, "opts", "is an optional maximum number of columns.")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("Rows - A subset of the rows of a rectangular object.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_Matrix_Rows(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 {
+#pragma XLLEXPORT
 
 	long beginrow = LONG_MAX, endrow = LONG_MAX, begincol = LONG_MAX, endcol = LONG_MAX;
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg0);
 	require_usual_suspect_LPXLOPER(Ind);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
@@ -825,7 +830,7 @@ WDS_Comp_Matrix_Rows(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 			iMatrix lOpts = iMatrixFromLPXLOPER(Opts, true, 0);
 			long tmp = lOpts(0, 0);
 			if (tmp == 0) {
-				result = new OPER12();
+				result = new OPER();
 				result->xltype = result->xltype | xlbitXLFree;
 				return result;
 			}
@@ -841,7 +846,7 @@ WDS_Comp_Matrix_Rows(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or sum across rows");
+		result = new OPER(L"Error, in coercion or sum across rows");
 		result->xltype = result->xltype | xlbitXLFree;
 	}
 
@@ -851,21 +856,24 @@ WDS_Comp_Matrix_Rows(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 
 
 
-static AddIn XLL_WDS_Comp_Matrix_Columns(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_Matrix_Columns", 4), L"WDS.Comp.Matrix.Columns")
-	.Arg(XLL_LPXLOPER, L"Arg0", L"is a LPXLOPER12")
-	.Arg(XLL_LPXLOPER, L"Ind", L"is a (1-based) single value or array of {SingleColumnIndex}, {BeginColumn, EndColumn}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
-	.Arg(XLL_LPXLOPER, L"opts", L"is an optional maximum number of rows.")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"Columns - A subset of the columns of a rectangular object.")
+AddIn XLL_WDS_Comp_Matrix_Columns(
+	Function(XLL_LPOPER, "WDS_Comp_Matrix_Columns", "WDS.Comp.Matrix.Columns")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg0", "is a LPXLOPER12")
+		,Arg(XLL_LPXLOPER, "Ind", "is a (1-based) single value or array of {SingleColumnIndex}, {BeginColumn, EndColumn}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
+		,Arg(XLL_LPXLOPER, "opts", "is an optional maximum number of rows.")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("Columns - A subset of the columns of a rectangular object.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_Matrix_Columns(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 {
+#pragma XLLEXPORT
 
 	long beginrow = LONG_MAX, endrow = LONG_MAX, begincol = LONG_MAX, endcol = LONG_MAX;
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg0);
 	require_usual_suspect_LPXLOPER(Ind);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
@@ -894,7 +902,7 @@ WDS_Comp_Matrix_Columns(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 			iMatrix lOpts = iMatrixFromLPXLOPER(Opts, true, 0);
 			long tmp = lOpts(0, 0);
 			if (tmp == 0) {
-				result = new OPER12();
+				result = new OPER();
 				result->xltype = result->xltype | xlbitXLFree;
 				return result;
 			}
@@ -910,7 +918,7 @@ WDS_Comp_Matrix_Columns(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or sum across rows");
+		result = new OPER(L"Error, in coercion or sum across rows");
 		result->xltype = result->xltype | xlbitXLFree;
 	}
 
@@ -919,22 +927,25 @@ WDS_Comp_Matrix_Columns(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 }
 
 
-static AddIn XLL_WDS_Comp_Matrix_ColumnSet(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_Matrix_ColumnSet", 4), L"WDS.Comp.Matrix.ColumnSet")
-	.Arg(XLL_LPXLOPER, L"Arg0", L"is a rectangular object.")
-	.Arg(XLL_LPXLOPER, L"ColumnSet", L"is a vector of 1-Based column indices.")
-	.Arg(XLL_LPXLOPER, L"opts", L"is an optional row limit.")
-	.Category(L"WDS.Comp.Matrix")
-	.FunctionHelp(L"ColumnSet - A non-volatile sub-matrix of a rectangular object.")
+AddIn XLL_WDS_Comp_Matrix_ColumnSet(
+	Function(XLL_LPOPER, "WDS_Comp_Matrix_ColumnSet", "WDS.Comp.Matrix.ColumnSet")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg0", "is a rectangular object.")
+		,Arg(XLL_LPXLOPER, "ColumnSet", "is a vector of 1-Based column indices.")
+		,Arg(XLL_LPXLOPER, "opts", "is an optional row limit.")
+		})
+	.Category("WDS.Comp.Matrix")
+	.FunctionHelp("ColumnSet - A non-volatile sub-matrix of a rectangular object.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts)
 {
+#pragma XLLEXPORT
 
 	int nrows, ncols;
 	long beginrow = LONG_MAX, endrow = LONG_MAX, begincol = LONG_MAX, endcol = LONG_MAX;
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg0);
 	require_usual_suspect_LPXLOPER(ColumnSet);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
@@ -961,7 +972,7 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 			iMatrix lOpts = iMatrixFromLPXLOPER(Opts, true, 0);
 			long tmp = lOpts(0, 0);
 			if (tmp == 0) {
-				result = new OPER12();
+				result = new OPER();
 				result->xltype = result->xltype | xlbitXLFree;
 				return result;
 			}
@@ -976,7 +987,7 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 
 		beginrow -=1;
 
-		result = new OPER12(endrow - beginrow, rNCols);
+		result = new OPER(endrow - beginrow, rNCols);
 		int i, j, ri, rj, ij;
 		for (rj = 0; rj < rNCols; rj++) {
 			j = lColumnSet.at(rj);
@@ -1017,7 +1028,7 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or sub matrix");
+		result = new OPER(L"Error, in coercion or sub matrix");
 	}
 
 	lFreeIfNecessary(cmArg0, bWasArg0Coerced);
@@ -1032,27 +1043,30 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 
 
 
-/*
-static AddIn XLL_WDS_Comp_zzzInternal_SumAcross(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_zzzInternal_SumAcross", 4), L"WDS.Comp.zzzInternal.SumAcross")
-	.Arg(XLL_LPXLOPER, L"Arg0", L"is a LPXLOPER12")
-	.Arg(XLL_LONG, L"direction", L"is a 0/1 indicator for 0-Across Rows (vertical) or 1-Across Columns (horizontal)")
-	.Arg(XLL_LONG, L"startrow", L"is the 1-Based beginrowng row (outside of limits defaults to input size).")
-	.Arg(XLL_LONG, L"endrow", L"is the 1-Based ending row (outside of limits defaults to input size).")
-	.Arg(XLL_LONG, L"startcolumn", L"is the 1-Based beginrowng column (outside of limits defaults to input size).")
-	.Arg(XLL_LONG, L"endcolumn", L"is the 1-Based ending column(outside of limits defaults to input size).")
-	.Category(L"WDS.Comp.zzzInternal")
-	.FunctionHelp(L"Sum Across - An optimized sum across the rows or columns of a rectangular object.")
-);
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
-*/
-LPOPER12
+
+//static AddIn XLL_WDS_Comp_zzzInternal_SumAcross(
+//	Function(XLL_LPOPER, "WDS_Comp_zzzInternal_SumAcross", "WDS.Comp.zzzInternal.SumAcross")
+//	.Arguments({
+//		Arg(XLL_LPXLOPER, "Arg0", "is a LPXLOPER12")
+//		,Arg(XLL_LONG, "direction", "is a 0/1 indicator for 0-Across Rows (vertical) or 1-Across Columns (horizontal)")
+//		,Arg(XLL_LONG, "startrow", "is the 1-Based beginrowng row (outside of limits defaults to input size).")
+//		,Arg(XLL_LONG, "endrow", "is the 1-Based ending row (outside of limits defaults to input size).")
+//		,Arg(XLL_LONG, "startcolumn", "is the 1-Based beginrowng column (outside of limits defaults to input size).")
+//		,Arg(XLL_LONG, "endcolumn", "is the 1-Based ending column(outside of limits defaults to input size).")
+//		})
+//	.Category("WDS.Comp.zzzInternal")
+//	.FunctionHelp("Sum Across - An optimized sum across the rows or columns of a rectangular object.")
+//);
+//extern "C" __declspec(dllexport) LPOPER  WINAPI
+
+LPOPER
 WDS_Comp_zzzInternal_SumAcross(LPXLOPER12 Arg0, long direction, long startrow, long endrow, long startcolumn, long endcolumn)
 {
+#pragma XLLEXPORT
 
 	int nrows, ncols;
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg0);
 	
 	LPXLOPER12 cmArg0 = nullptr;
@@ -1084,7 +1098,7 @@ WDS_Comp_zzzInternal_SumAcross(LPXLOPER12 Arg0, long direction, long startrow, l
 		startcolumn -= 1;
 
 		if (direction == 0) {
-			result = new OPER12(1, endcolumn - startcolumn);
+			result = new OPER(1, endcolumn - startcolumn);
 			double s, t;
 			int i, j, ri, rj;
 			for (rj=0, j = startcolumn; j < endcolumn; rj++, j++) {
@@ -1097,7 +1111,7 @@ WDS_Comp_zzzInternal_SumAcross(LPXLOPER12 Arg0, long direction, long startrow, l
 			}
 		}
 		else {
-			result = new OPER12(endrow - startrow, 1);
+			result = new OPER(endrow - startrow, 1);
 			double s, t;
 			int i, j, ri, rj;
 			for (ri=0, i = startrow; i < endrow; ri++, i++) {
@@ -1113,7 +1127,7 @@ WDS_Comp_zzzInternal_SumAcross(LPXLOPER12 Arg0, long direction, long startrow, l
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or sum across columns");
+		result = new OPER(L"Error, in coercion or sum across columns");
 	}
 
 	lFreeIfNecessary(cmArg0, bWasArg0Coerced);
@@ -1128,21 +1142,24 @@ WDS_Comp_zzzInternal_SumAcross(LPXLOPER12 Arg0, long direction, long startrow, l
 
 
 
-static AddIn XLL_WDS_Comp_Matrix_SumAcross(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_Matrix_SumAcross", 4), L"WDS.Comp.Matrix.SumAcross")
-	.Arg(XLL_LPXLOPER, L"Arg0", L"is a LPXLOPER12")
-	.Arg(XLL_LONG, L"direction", L"is a 0/1 indicator for 0-Across Rows (vertical) or 1-Across Columns (horizontal)")
-	.Arg(XLL_LPXLOPER, L"opts", L"is an optional array of {MaxRows}, {BeginRow, EndRow}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"Sum Across - An optimized sum across the rows or columns of a Matrix/Range.")
+AddIn XLL_WDS_Comp_Matrix_SumAcross(
+	Function(XLL_LPOPER, "WDS_Comp_Matrix_SumAcross", "WDS.Comp.Matrix.SumAcross")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg0", "is a LPXLOPER12")
+		,Arg(XLL_LONG, "direction", "is a 0/1 indicator for 0-Across Rows (vertical) or 1-Across Columns (horizontal)")
+		,Arg(XLL_LPXLOPER, "opts", "is an optional array of {MaxRows}, {BeginRow, EndRow}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("Sum Across - An optimized sum across the rows or columns of a Matrix/Range.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_Matrix_SumAcross(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 {
+#pragma XLLEXPORT
 
 	long beginrow = 0, endi = -1, beginj = 0, endj = -1;
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg0);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
@@ -1175,7 +1192,7 @@ WDS_Comp_Matrix_SumAcross(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or sum across");
+		result = new OPER(L"Error, in coercion or sum across");
 		result->xltype = result->xltype | xlbitXLFree;
 	}
 
@@ -1185,20 +1202,23 @@ WDS_Comp_Matrix_SumAcross(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 
 
 
-static AddIn XLL_WDS_Comp_Matrix_SumAcrossRows(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_Matrix_SumAcrossRows", 4), L"WDS.Comp.Matrix.SumAcrossRows")
-	.Arg(XLL_LPXLOPER, L"Arg0", L"is a LPXLOPER12")
-	.Arg(XLL_LPXLOPER, L"opts", L"is an optional array of {MaxColumns}, {BeginColumn, EndColumn}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"Sum Across - An optimized sum across the rows (vertical) of a Matrix/Range.")
+AddIn XLL_WDS_Comp_Matrix_SumAcrossRows(
+	Function(XLL_LPOPER, "WDS_Comp_Matrix_SumAcrossRows", "WDS.Comp.Matrix.SumAcrossRows")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg0", "is a LPXLOPER12")
+		,Arg(XLL_LPXLOPER, "opts", "is an optional array of {MaxColumns}, {BeginColumn, EndColumn}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("Sum Across - An optimized sum across the rows (vertical) of a Matrix/Range.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_Matrix_SumAcrossRows(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 {
+#pragma XLLEXPORT
 
 	long beginrow = 0, endi = -1, beginj = 0, endj = -1;
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg0);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
@@ -1231,7 +1251,7 @@ WDS_Comp_Matrix_SumAcrossRows(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or sum across rows");
+		result = new OPER(L"Error, in coercion or sum across rows");
 		result->xltype = result->xltype | xlbitXLFree;
 	}
 
@@ -1241,20 +1261,23 @@ WDS_Comp_Matrix_SumAcrossRows(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 
 
 
-static AddIn XLL_WDS_Comp_Matrix_SumAcrossColumns(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_Matrix_SumAcrossColumns", 4), L"WDS.Comp.Matrix.SumAcrossColumns")
-	.Arg(XLL_LPXLOPER, L"Arg0", L"is a LPXLOPER12")
-	.Arg(XLL_LPXLOPER, L"opts", L"is an optional array of {MaxRows}, {BeginColumn, EndColumn}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"Sum Across Columns - An optimized sum across the columns of a Matrix/Range.")
+AddIn XLL_WDS_Comp_Matrix_SumAcrossColumns(
+	Function(XLL_LPOPER, "WDS_Comp_Matrix_SumAcrossColumns", "WDS.Comp.Matrix.SumAcrossColumns")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg0", "is a LPXLOPER12")
+		,Arg(XLL_LPXLOPER, "opts", "is an optional array of {MaxRows}, {BeginColumn, EndColumn}, or {BeginRow,EndRow,BeginColumn,EndColumn}")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("Sum Across Columns - An optimized sum across the columns of a Matrix/Range.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_Matrix_SumAcrossColumns(LPXLOPER12 Arg0, LPXLOPER12 Opts)
 {
+#pragma XLLEXPORT
 
 	long beginrow = 0, endi = -1, beginj = 0, endj = -1;
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg0);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
@@ -1288,7 +1311,7 @@ WDS_Comp_Matrix_SumAcrossColumns(LPXLOPER12 Arg0, LPXLOPER12 Opts)
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		result->xltype = result->xltype | xlbitXLFree;
-		result = new OPER12(L"Error, in coercion or sum across columns");
+		result = new OPER(L"Error, in coercion or sum across columns");
 	}
 
 	return result;
@@ -1296,23 +1319,26 @@ WDS_Comp_Matrix_SumAcrossColumns(LPXLOPER12 Arg0, LPXLOPER12 Opts)
 }
 
 
-static AddIn XLL_WDS_Comp_Matrix_RowNormed(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_Comp_Matrix_RowNormed", 4), L"WDS.Comp.Matrix.RowNormed")
-	.Arg(XLL_LPXLOPER, L"Arg", L"is an LPXLOPER12")
-	.Arg(XLL_LPXLOPER, L"bStrict", L"is a flag to throw on bad values.")
-	.Arg(XLL_LPXLOPER, L"defv", L"is the default value to use when not strict, defaults to NaN.")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"Row Normalization - Each target row is the unit sum normalized version of the source.")
+AddIn XLL_WDS_Comp_Matrix_RowNormed(
+	Function(XLL_LPXLOPER, "WDS_Comp_Matrix_RowNormed", "WDS.Comp.Matrix.RowNormed")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg", "is an LPXLOPER12")
+		,Arg(XLL_LPXLOPER, "bStrict", "is a flag to throw on bad values.")
+		,Arg(XLL_LPXLOPER, "defv", "is the default value to use when not strict, defaults to NaN.")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("Row Normalization - Each target row is the unit sum normalized version of the source.")
 );
-extern "C" __declspec(dllexport) LPXLOPER12  WINAPI
+LPXLOPER12  WINAPI
 WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 {
+#pragma XLLEXPORT
 
 	using namespace WDS::Comp::Matrix;
 
 	int i, j, nrows, ncols;
 
-	LPOPER12 result=nullptr;
+	LPOPER result=nullptr;
 	require_usual_suspect_LPXLOPER(Arg);
 	allow_missings_only_LPXLOPER_or_exit(bStrict);
 	allow_missings_only_LPXLOPER_or_exit(defv);
@@ -1322,7 +1348,7 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 	require_usual_suspect_LPXLOPER(Arg);
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
-		result = new OPER12(L"Error, in coercion in Matrix.RowNormed");
+		result = new OPER(L"Error, in coercion in Matrix.RowNormed");
 		if (result!=nullptr) result->xltype = result->xltype | xlbitXLFree;
 	return result;
 	}
@@ -1353,7 +1379,7 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 			mIndex mi = 0;
 			mIndex mj = 0;
 			int i, j;
-			result = new OPER12(nrows, ncols);
+			result = new OPER(nrows, ncols);
 			for (i = 0, mi = 0; i < nrows; i++, mi++) {
 				for (j = 0, mj = 0; j < ncols; j++, mj++) {
 					(*result)(i, j) = A[mi, mj];
@@ -1363,7 +1389,7 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 		}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or row-normalization");
+		result = new OPER(L"Error, in coercion or row-normalization");
 	}
 
 	lFreeIfNecessary(cmArg, bWasArgCoerced);
@@ -1379,18 +1405,21 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 
 
 
-static AddIn XLL_WDS_Comp_Matrix_NormedBaseOdds(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_Matrix_NormedBaseOdds", 4), L"WDS.Comp.Matrix.NormedBaseOdds")
-	.Arg(XLL_LONG, L"Offset", L"is an integer for the block offset when BaseOdds is a vertical stack of nxn matrices.")
-	.Arg(XLL_LPXLOPER, L"BaseOdds", L"is an (m*n)xn matrix of base odds where m is the number of blocks and n is the number of states.")
-	.Arg(XLL_LPXLOPER, L"Topology", L"is an nxn 0/1 matrix of valid transitions.")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"NormedBaseOdds - Returns a normalized transition matrix from a BaseOdds matrix.")
+AddIn XLL_WDS_Comp_Matrix_NormedBaseOdds(
+	Function(XLL_LPOPER, "WDS_Comp_Matrix_NormedBaseOdds", "WDS.Comp.Matrix.NormedBaseOdds")
+	.Arguments({
+		Arg(XLL_LONG, "Offset", "is an integer for the block offset when BaseOdds is a vertical stack of nxn matrices.")
+		,Arg(XLL_LPXLOPER, "BaseOdds", "is an (m*n)xn matrix of base odds where m is the number of blocks and n is the number of states.")
+		,Arg(XLL_LPXLOPER, "Topology", "is an nxn 0/1 matrix of valid transitions.")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("NormedBaseOdds - Returns a normalized transition matrix from a BaseOdds matrix.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_Matrix_NormedBaseOdds(long Offset, LPXLOPER12 BaseOdds, LPXLOPER12 Topology)
 {
-	LPOPER12 oResult = nullptr;
+#pragma XLLEXPORT
+	LPOPER oResult = nullptr;
 	require_usual_suspect_LPXLOPER(BaseOdds);
 	require_usual_suspect_LPXLOPER(Topology);
 	LPXLOPER12 cmBaseOdds = nullptr;
@@ -1413,7 +1442,7 @@ WDS_Comp_Matrix_NormedBaseOdds(long Offset, LPXLOPER12 BaseOdds, LPXLOPER12 Topo
 		dMatrix mResult = NormedBaseOdds(n, m, (int)Offset, lBaseOdds, lTopology);
 
 
-		LPOPER12 oResult = new OPER12(n, n);
+		LPOPER oResult = new OPER(n, n);
 		mIndex mi = 0, mj = 0;
 		int i = 0, j = 0;
 		for (j = 0, mj = 0; j < n; j++, mj++)
@@ -1424,7 +1453,7 @@ WDS_Comp_Matrix_NormedBaseOdds(long Offset, LPXLOPER12 BaseOdds, LPXLOPER12 Topo
 	catch (exception& e) {
 		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
-		oResult = new OPER12(L"Error, in NormedBaseOdds: "+std::wstring(ew.begin(), ew.end()));
+		oResult = new OPER(L"Error, in NormedBaseOdds: "+std::wstring(ew.begin(), ew.end()));
 	}
 	lFreeIfNecessary(cmBaseOdds, bWasBaseOddsCoerced);
 	lFreeIfNecessary(cmTopology, bWasTopologyCoerced);
@@ -1438,22 +1467,24 @@ WDS_Comp_Matrix_NormedBaseOdds(long Offset, LPXLOPER12 BaseOdds, LPXLOPER12 Topo
 
 
 
-static AddIn XLL_WDS_Comp_Matrix_ScoredAndNormedBaseOdds(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_Matrix_ScoredAndNormedBaseOdds", 4), L"WDS.Comp.Matrix.ScoredAndNormedBaseOdds")
-	.Arg(XLL_LONG, L"Index", L"is an index into Offset and vs vectors.")
-	.Arg(XLL_LONG, L"Offset", L"is a (#Rows)x1 matrix of integers for the block offset when BaseOdds is a vertical stack of nxn matrices.")
-	.Arg(XLL_LPXLOPER, L"BaseOdds", L"is an (m*n)xn matrix of base odds where m is the number of blocks and n is the number of states.")
-	.Arg(XLL_LPXLOPER, L"Topology", L"is an nxn 0/1 matrix of valid transitions.")
-	.Arg(XLL_LPXLOPER, L"IJs", L"is a 2x(#v) matrix of indices for the pre-normalized factors.")
-	.Arg(XLL_LPXLOPER, L"Vs", L"is a (#Rows)x(#v) matrix of log-domain values to apply at IJ locations prior to normalization.")
-	.Arg(XLL_BOOL, L"UseTailFactorFlag", L"is a boolean to trigger a tail factor.")
-	.Arg(XLL_LPXLOPER, L"TailFactor", L"is a factor matrix applied in the vanilla domain before normalization.")
-	.Arg(XLL_LONG, L"TailIndex", L"is an index from the end of the horizon, used against the tail cut-off.")
-	.Arg(XLL_LONG, L"TailCutOff", L"is the tail cut-off.  A TailIndex < TailCutoff triggers a additional tail factor.")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"ScoredAndNormedBaseOdds - Returns a scored and normalized transition matrix from a BaseOdds matrix.")
+AddIn XLL_WDS_Comp_Matrix_ScoredAndNormedBaseOdds(
+	Function(XLL_LPOPER, "WDS_Comp_Matrix_ScoredAndNormedBaseOdds", "WDS.Comp.Matrix.ScoredAndNormedBaseOdds")
+	.Arguments({
+		Arg(XLL_LONG, "Index", "is an index into Offset and vs vectors.")
+		,Arg(XLL_LONG, "Offset", "is a (#Rows)x1 matrix of integers for the block offset when BaseOdds is a vertical stack of nxn matrices.")
+		,Arg(XLL_LPXLOPER, "BaseOdds", "is an (m*n)xn matrix of base odds where m is the number of blocks and n is the number of states.")
+		,Arg(XLL_LPXLOPER, "Topology", "is an nxn 0/1 matrix of valid transitions.")
+		,Arg(XLL_LPXLOPER, "IJs", "is a 2x(#v) matrix of indices for the pre-normalized factors.")
+		,Arg(XLL_LPXLOPER, "Vs", "is a (#Rows)x(#v) matrix of log-domain values to apply at IJ locations prior to normalization.")
+		,Arg(XLL_BOOL, "UseTailFactorFlag", "is a boolean to trigger a tail factor.")
+		,Arg(XLL_LPXLOPER, "TailFactor", "is a factor matrix applied in the vanilla domain before normalization.")
+		,Arg(XLL_LONG, "TailIndex", "is an index from the end of the horizon, used against the tail cut-off.")
+		,Arg(XLL_LONG, "TailCutOff", "is the tail cut-off.  A TailIndex < TailCutoff triggers a additional tail factor.")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("ScoredAndNormedBaseOdds - Returns a scored and normalized transition matrix from a BaseOdds matrix.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_Matrix_ScoredAndNormedBaseOdds(long Index
 	, LPXLOPER12 Offset
 	, LPXLOPER12 BaseOdds
@@ -1465,13 +1496,14 @@ WDS_Comp_Matrix_ScoredAndNormedBaseOdds(long Index
 	, long TailIndex
 	, long TailCutOff)
 {
-	LPOPER12 result = nullptr;
+#pragma XLLEXPORT
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(BaseOdds);
 	require_usual_suspect_LPXLOPER(Topology);
 	allow_missings_only_LPXLOPER_or_exit(IJs);
 	allow_missings_only_LPXLOPER_or_exit(Vs);
 	allow_missings_only_LPXLOPER_or_exit(TailFactor);
-	LPOPER12 oResult = nullptr;
+	LPOPER oResult = nullptr;
 	LPXLOPER12 cmOffset = nullptr;
 	bool bWasOffsetCoerced = false;
 	LPXLOPER12 cmBaseOdds = nullptr;
@@ -1527,7 +1559,7 @@ WDS_Comp_Matrix_ScoredAndNormedBaseOdds(long Index
 		dMatrix mResult = ScoredAndNormedBaseOdds((int) Index, n, m, 0, lOffset, lBaseOdds, lTopology, bUseVs, lIJs, lVs
 					, bUseTailFactorFlag, lTailFactor, TailIndex, TailCutOff);
 
-		LPOPER12 oResult = new OPER12(n, n);
+		LPOPER oResult = new OPER(n, n);
 		mIndex mi = 0, mj = 0;
 		int i = 0, j = 0;
 		for (j = 0, mj = 0; j < n; j++, mj++)
@@ -1539,7 +1571,7 @@ WDS_Comp_Matrix_ScoredAndNormedBaseOdds(long Index
 	catch (exception& e) {
 		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
-		oResult = new OPER12(L"Error, in ScoredAndNormedBaseOdds: "+std::wstring(ew.begin(), ew.end()));
+		oResult = new OPER(L"Error, in ScoredAndNormedBaseOdds: "+std::wstring(ew.begin(), ew.end()));
 	oResult->xltype = oResult->xltype | xlbitXLFree;
 	}
 	lFreeIfNecessary(cmOffset, bWasOffsetCoerced);
@@ -1554,19 +1586,22 @@ WDS_Comp_Matrix_ScoredAndNormedBaseOdds(long Index
 }
 
 
-static AddIn XLL_WDS_Comp_Matrix_Mult(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_Matrix_Mult", 4), L"WDS.Comp.Matrix.Mult")
-	.Arg(XLL_LPXLOPER, L"A", L"is an m1xn1 matrix.")
-	.Arg(XLL_LPXLOPER, L"B", L"is an m2xn2 matrix.")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"Mult - Returns a simple matrix multiplication when n1==m2.")
+AddIn XLL_WDS_Comp_Matrix_Mult(
+	Function(XLL_LPOPER, "WDS_Comp_Matrix_Mult", "WDS.Comp.Matrix.Mult")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "A", "is an m1xn1 matrix.")
+		,Arg(XLL_LPXLOPER, "B", "is an m2xn2 matrix.")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("Mult - Returns a simple matrix multiplication when n1==m2.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_Matrix_Mult(LPXLOPER12 A, LPXLOPER12 B) {
-	LPOPER12 result = nullptr;
+#pragma XLLEXPORT
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(A);
 	require_usual_suspect_LPXLOPER(B);
-	LPOPER12 oResult = nullptr;
+	LPOPER oResult = nullptr;
 	LPXLOPER12 cmA = nullptr;
 	bool bWasACoerced = false;
 	LPXLOPER12 cmB = nullptr;
@@ -1584,7 +1619,7 @@ WDS_Comp_Matrix_Mult(LPXLOPER12 A, LPXLOPER12 B) {
 
 		size_t nrows = (size_t) mResult.nrows();
 		size_t ncols = (size_t) mResult.ncols();
-		LPOPER12 oResult = new OPER12(nrows,ncols);
+		LPOPER oResult = new OPER(nrows,ncols);
 		mIndex mi = 0, mj = 0;
 		size_t i = 0, j = 0;
 		for (j = 0, mj = 0; j < ncols; j++, mj++)
@@ -1595,7 +1630,7 @@ WDS_Comp_Matrix_Mult(LPXLOPER12 A, LPXLOPER12 B) {
 	catch (exception& e) {
 		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
-		oResult = new OPER12(L"Error, in Matrix.Mult: "+std::wstring(ew.begin(), ew.end()));
+		oResult = new OPER(L"Error, in Matrix.Mult: "+std::wstring(ew.begin(), ew.end()));
 		oResult->xltype = oResult->xltype | xlbitXLFree;
 	}
 	lFreeIfNecessary(cmA, bWasACoerced);
@@ -1606,20 +1641,22 @@ WDS_Comp_Matrix_Mult(LPXLOPER12 A, LPXLOPER12 B) {
 
 
 
-static AddIn XLL_WDS_Comp_RFScheduled(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_RFScheduled", 4), L"WDS.Comp.RFScheduled")
-	.Arg(XLL_LPXLOPER, L"PanelInd", L"is an indicator vector, any value other than 0 resets the schedule.  Use for panel data or to resync to a time period.")
-	.Arg(XLL_LPXLOPER, L"LoanAgeMos", L"is a loan age vector as an input.")
-	.Arg(XLL_LPXLOPER, L"PrinBal", L"is the EOM Principal Balance at LoanAgeMos where PanelInd<>0.")
-	.Arg(XLL_LPXLOPER, L"IntRatePct", L"is periodic interest rate, expressed as a percent (values<1 are corrected to *100).")
-	.Arg(XLL_LPXLOPER, L"TermMos", L"is a remaining term vector.  At LoanAgeMos=0, represents the original term.")
-	.Arg(XLL_LPXLOPER, L"PmtAmt", L"is an optional total scheduled Principal and Interest amount. If invalid or positive, recalculates based on the PMT function.")
-	.Arg(XLL_LPXLOPER, L"return_pmt_cumulatives", L"is an optional [0/1] flag to return cumulative payments.")
-	.Arg(XLL_LPXLOPER, L"stoprow", L"is an optional length limiter.")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"RFScheduled - Returns a basic closed-end loan amortization schedule [EOMPrinBal, PrinPmtAmt, IntPmtAmt, PmtAmt]. Optionally, cumulatives on payments can be returned also.")
+AddIn XLL_WDS_Comp_RFScheduled(
+	Function(XLL_LPOPER, "WDS_Comp_RFScheduled", "WDS.Comp.RFScheduled")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "PanelInd", "is an indicator vector, any value other than 0 resets the schedule.  Use for panel data or to resync to a time period.")
+		,Arg(XLL_LPXLOPER, "LoanAgeMos", "is a loan age vector as an input.")
+		,Arg(XLL_LPXLOPER, "PrinBal", "is the EOM Principal Balance at LoanAgeMos where PanelInd<>0.")
+		,Arg(XLL_LPXLOPER, "IntRatePct", "is periodic interest rate, expressed as a percent (values<1 are corrected to *100).")
+		,Arg(XLL_LPXLOPER, "TermMos", "is a remaining term vector.  At LoanAgeMos=0, represents the original term.")
+		,Arg(XLL_LPXLOPER, "PmtAmt", "is an optional total scheduled Principal and Interest amount. If invalid or positive, recalculates based on the PMT function.")
+		,Arg(XLL_LPXLOPER, "return_pmt_cumulatives", "is an optional [0/1] flag to return cumulative payments.")
+		,Arg(XLL_LPXLOPER, "stoprow", "is an optional length limiter.")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("RFScheduled - Returns a basic closed-end loan amortization schedule [EOMPrinBal, PrinPmtAmt, IntPmtAmt, PmtAmt]. Optionally, cumulatives on payments can be returned also.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_RFScheduled(
 	 LPXLOPER12 PanelInd
 	, LPXLOPER12 LoanAgeMos
@@ -1631,8 +1668,9 @@ WDS_Comp_RFScheduled(
 	, LPXLOPER12 stoprow
 	)
 {
+#pragma XLLEXPORT
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(PanelInd);
 	require_usual_suspect_LPXLOPER_or_exit(LoanAgeMos);
 	require_usual_suspect_LPXLOPER_or_exit(IntRatePct);
@@ -1641,7 +1679,7 @@ WDS_Comp_RFScheduled(
 	allow_missings_only_LPXLOPER_or_exit(return_pmt_cumulatives);
 	allow_missings_only_LPXLOPER_or_exit(stoprow);
 
-	LPOPER12 oResult = nullptr;
+	LPOPER oResult = nullptr;
 	LPXLOPER12 cmPanelInd = nullptr;
 	bool bWasPanelIndCoerced = false;
 	LPXLOPER12 cmLoanAgeMos = nullptr;
@@ -1726,9 +1764,9 @@ WDS_Comp_RFScheduled(
 
 		int i, j, iM1;
 		if (bReturnCumulatives)
-			oResult = new OPER12(nrows, 7);
+			oResult = new OPER(nrows, 7);
 		else
-			oResult = new OPER12(nrows, 4);
+			oResult = new OPER(nrows, 4);
 		double tempdouble = 0.0;
 		double tempdouble2 = 0.0;
 		long templong = 0;
@@ -1785,9 +1823,9 @@ WDS_Comp_RFScheduled(
 					(*oResult)(i, 0) = prinbal;
 					if (bReturnCumulatives) {
 						if (i > last_panelindex + 1) {
-							(*oResult)(i, 4) = (*oResult)(iM1, 4) + tempdouble2;
-							(*oResult)(i, 5) = (*oResult)(iM1, 5) + tempdouble;
-							(*oResult)(i, 6) = (*oResult)(iM1, 6) + tempdouble + tempdouble2;
+							(*oResult)(i, 4) = (double)(*oResult)(iM1, 4).val.num + tempdouble2;
+							(*oResult)(i, 5) = (double)(*oResult)(iM1, 5).val.num + tempdouble;
+							(*oResult)(i, 6) = (double)(*oResult)(iM1, 6).val.num + tempdouble + tempdouble2;
 						}
 						else {
 							(*oResult)(i, 4) = tempdouble2;
@@ -1804,9 +1842,9 @@ WDS_Comp_RFScheduled(
 					(*oResult)(i, 0) = prinbal;
 					if (bReturnCumulatives) {
 						if (i > last_panelindex + 1) {
-							(*oResult)(i, 4) = (*oResult)(iM1, 4) + tempdouble2;
-							(*oResult)(i, 5) = (*oResult)(iM1, 5) + tempdouble;
-							(*oResult)(i, 6) = (*oResult)(iM1, 6) + tempdouble - tempdouble2;
+							(*oResult)(i, 4) = (double)(*oResult)(iM1, 4).val.num + tempdouble2;
+							(*oResult)(i, 5) = (double)(*oResult)(iM1, 5).val.num + tempdouble;
+							(*oResult)(i, 6) = (double)(*oResult)(iM1, 6).val.num + tempdouble - tempdouble2;
 						}
 						else {
 							(*oResult)(i, 4) = 0.0;
@@ -1832,7 +1870,7 @@ WDS_Comp_RFScheduled(
 	catch (exception& e) {
 		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
-		oResult = new OPER12(L"Error, in RFScheduled: "+std::wstring(ew.begin(), ew.end()));
+		oResult = new OPER(L"Error, in RFScheduled: "+std::wstring(ew.begin(), ew.end()));
 	}
 	if (tempXLOPER != nullptr) Excel12f(xlFree, 0, 1, tempXLOPER);
 	lFreeIfNecessary(cmPanelInd, bWasPanelIndCoerced);
@@ -1849,37 +1887,39 @@ WDS_Comp_RFScheduled(
 
 //note to self, the xll12 decorator does not like names that are too long, PreRollInjection_Js was not functional.
 
-static AddIn XLL_WDS_Comp_RollIt(
-	Function(XLL_LPOPER, XLL_DECORATE(L"WDS_Comp_RollIt", 4), L"WDS.Comp.RollIt")
-	.Arg(XLL_LPXLOPER, L"PanelInd", L"is an indicator vector, any value other than 0 resets the schedule.  Use for panel data or to resync to a time period.")
-	.Arg(XLL_LPXLOPER, L"LoanAgeMos", L"is a loan age vector as an input.")
-	.Arg(XLL_LPXLOPER, L"WAM", L"is a remaining term vector.  At LoanAgeMos=0, represents the original term.")
-	.Arg(XLL_LPXLOPER, L"RFSched", L"is the output from RFScheduled.")
-	.Arg(XLL_LPXLOPER, L"NDist", L"is the Actuals Unit Distribution.")
-	.Arg(XLL_LPXLOPER, L"PrinBalDist", L"is the Actuals PrinBal Distribution.")
-	.Arg(XLL_LPXLOPER, L"PreRollInj_Js", L"is a 1x(#v) matrix of (Base 1) indices for the mass injected into BOP distributions.")
-	.Arg(XLL_LPXLOPER, L"PreRollInj_Vs", L"is a (#Rows)x(2*#v) matrix of masss injected into BOP distributions, first #v for NDist, second #v for PrinBal.")
-	.Arg(XLL_LPXLOPER, L"Offset", L"is a (#Rows)x1 matrix of integers for the block offset when BaseOdds is a vertical stack of nxn matrices.")
-	.Arg(XLL_LPXLOPER, L"BaseOdds", L"is an (m*n)xn matrix of base odds where m is the number of blocks and n is the number of states.")
-	.Arg(XLL_LPXLOPER, L"Topology", L"is an nxn 0/1 matrix of valid transitions.")
-	.Arg(XLL_LPXLOPER, L"DelqDelta", L"is a Topology-like matrix of expected lags in EOM vs Scheduled.")
-	.Arg(XLL_LPXLOPER, L"IJs", L"is a 2x(#v) matrix of (Base 1) indices for the pre-normalized factors.")
-	.Arg(XLL_LPXLOPER, L"Vs", L"is a (#Rows)x(#v) matrix of log-domain values to apply at IJ locations prior to normalization.")
-	//.Arg(XLL_LPXLOPER, L"PostNormFactor_IJs", L"is a 2x(#v) matrix of (Base 1) indices for the post-normalized factors.")
-	//.Arg(XLL_LPXLOPER, L"PostNormFactor_Vs", L"is a (#Rows)x(#v) matrix of vanilla-domain values to apply at IJ locations after normalization.")
-	.Arg(XLL_BOOL, L"UseTailFactorFlag", L"is a boolean to trigger a tail factor.")
-	.Arg(XLL_LPXLOPER, L"TailFactor", L"is a factor matrix applied in the vanilla domain before normalization.")
-	.Arg(XLL_LONG, L"TailIndex", L"is an index from the end of the horizon, used against the tail cut-off.")
-	.Arg(XLL_LONG, L"TailCutOff", L"is the tail cut-off.  A TailIndex < TailCutoff triggers a additional tail factor.")
-	.Arg(XLL_LPXLOPER, L"stoprow", L"is an optional length limiter.")
-	.Arg(XLL_BOOL, L"UseDbgDirective", L"is an optional boolean to a simple return of a few preprogrammed debugging directives.")
-	.Arg(XLL_LPXLOPER, L"DbgDirective", L"is an optional debugging directive.")
-	.Arg(XLL_LPXLOPER, L"DbgOption", L"is an optional secondary debugging directive.")
-	.Arg(XLL_LPXLOPER, L"DbgIndex", L"is an optional index for the debugging directive (usually a row to run through).")
-	.Category(L"WDS.Comp")
-	.FunctionHelp(L"RollIt - Roll Forward.")
+AddIn XLL_WDS_Comp_RollIt(
+	Function(XLL_LPOPER, "WDS_Comp_RollIt", "WDS.Comp.RollIt")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "PanelInd", "is an indicator vector, any value other than 0 resets the schedule.  Use for panel data or to resync to a time period.")
+		,Arg(XLL_LPXLOPER, "LoanAgeMos", "is a loan age vector as an input.")
+		,Arg(XLL_LPXLOPER, "WAM", "is a remaining term vector.  At LoanAgeMos=0, represents the original term.")
+		,Arg(XLL_LPXLOPER, "RFSched", "is the output from RFScheduled.")
+		,Arg(XLL_LPXLOPER, "NDist", "is the Actuals Unit Distribution.")
+		,Arg(XLL_LPXLOPER, "PrinBalDist", "is the Actuals PrinBal Distribution.")
+		,Arg(XLL_LPXLOPER, "PreRollInj_Js", "is a 1x(#v) matrix of (Base 1) indices for the mass injected into BOP distributions.")
+		,Arg(XLL_LPXLOPER, "PreRollInj_Vs", "is a (#Rows)x(2*#v) matrix of masss injected into BOP distributions, first #v for NDist, second #v for PrinBal.")
+		,Arg(XLL_LPXLOPER, "Offset", "is a (#Rows)x1 matrix of integers for the block offset when BaseOdds is a vertical stack of nxn matrices.")
+		,Arg(XLL_LPXLOPER, "BaseOdds", "is an (m*n)xn matrix of base odds where m is the number of blocks and n is the number of states.")
+		,Arg(XLL_LPXLOPER, "Topology", "is an nxn 0/1 matrix of valid transitions.")
+		,Arg(XLL_LPXLOPER, "DelqDelta", "is a Topology-like matrix of expected lags in EOM vs Scheduled.")
+		,Arg(XLL_LPXLOPER, "IJs", "is a 2x(#v) matrix of (Base 1) indices for the pre-normalized factors.")
+		,Arg(XLL_LPXLOPER, "Vs", "is a (#Rows)x(#v) matrix of log-domain values to apply at IJ locations prior to normalization.")
+		//,Arg(XLL_LPXLOPER, "PostNormFactor_IJs", "is a 2x(#v) matrix of (Base 1) indices for the post-normalized factors.")
+		//,Arg(XLL_LPXLOPER, "PostNormFactor_Vs", "is a (#Rows)x(#v) matrix of vanilla-domain values to apply at IJ locations after normalization.")
+		,Arg(XLL_BOOL, "UseTailFactorFlag", "is a boolean to trigger a tail factor.")
+		,Arg(XLL_LPXLOPER, "TailFactor", "is a factor matrix applied in the vanilla domain before normalization.")
+		,Arg(XLL_LONG, "TailIndex", "is an index from the end of the horizon, used against the tail cut-off.")
+		,Arg(XLL_LONG, "TailCutOff", "is the tail cut-off.  A TailIndex < TailCutoff triggers a additional tail factor.")
+		,Arg(XLL_LPXLOPER, "stoprow", "is an optional length limiter.")
+		,Arg(XLL_BOOL, "UseDbgDirective", "is an optional boolean to a simple return of a few preprogrammed debugging directives.")
+		,Arg(XLL_LPXLOPER, "DbgDirective", "is an optional debugging directive.")
+		,Arg(XLL_LPXLOPER, "DbgOption", "is an optional secondary debugging directive.")
+		,Arg(XLL_LPXLOPER, "DbgIndex", "is an optional index for the debugging directive (usually a row to run through).")
+		})
+	.Category("WDS.Comp")
+	.FunctionHelp("RollIt - Roll Forward.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Comp_RollIt(
 	 LPXLOPER12 PanelInd
 	, LPXLOPER12 LoanAgeMos
@@ -1908,7 +1948,8 @@ WDS_Comp_RollIt(
 	, LPXLOPER12 DbgIndex
 	)
 {
-	LPOPER12 result = nullptr;
+#pragma XLLEXPORT
+	LPOPER result = nullptr;
 
 	require_usual_suspect_LPXLOPER_or_exit(PanelInd);
 	require_usual_suspect_LPXLOPER_or_exit(LoanAgeMos);
@@ -1932,7 +1973,7 @@ WDS_Comp_RollIt(
 	allow_missings_only_LPXLOPER_or_exit(DbgOption);
 	allow_missings_only_LPXLOPER_or_exit(DbgIndex);
 
-	LPOPER12 oResult = nullptr;
+	LPOPER oResult = nullptr;
 	LPXLOPER12 cmPanelInd = nullptr;
 	bool bWasPanelIndCoerced = false;
 	LPXLOPER12 cmLoanAgeMos = nullptr;
@@ -2329,8 +2370,8 @@ WDS_Comp_RollIt(
 						mDbg = MPmtIntAmt;
 					bDbgStop = true;
 				}
-				dMatrix mNDistrowM1 = mNDist(rowM1, span::all);
-				dMatrix mPrinBalDistrowM1 = mPrinBalDist(rowM1, span::all);
+				dMatrix mNDistrowM1 = mNDist(rowM1, arma::span::all);
+				dMatrix mPrinBalDistrowM1 = mPrinBalDist(rowM1, arma::span::all);
 				dMatrix rollPrinBalLag1;
 				if (bUsePreRollInjection_Vs) {
 					for (j = 0, jj = nPreRollInjection_IJs; j < nPreRollInjection_IJs; j++, jj++) {
@@ -2340,29 +2381,29 @@ WDS_Comp_RollIt(
 						tempdouble = xltypeMulti_to_double(cmPreRollInjection_Vs, row, jj, false, 0);
 						mPrinBalDistrowM1.at(0, j) += tempdouble;
 					}
-					mNDist(row, span::all) = mNDistrowM1(0, span::all) * MUnits(span::all, span::all);
-					rollPrinBalLag1 = mPrinBalDistrowM1(0, span::all) * MUnits(span::all, span::all);
-					mPmtPrinAmt(row, span::all) = mNDistrowM1(0, span::all) * MPmtPrinAmt(span::all, span::all);
-					mPmtIntAmt(row, span::all) = mNDistrowM1(0, span::all) * MPmtIntAmt(span::all, span::all);
+					mNDist(row, arma::span::all) = mNDistrowM1(0, arma::span::all) * MUnits(arma::span::all, arma::span::all);
+					rollPrinBalLag1 = mPrinBalDistrowM1(0, arma::span::all) * MUnits(arma::span::all, arma::span::all);
+					mPmtPrinAmt(row, arma::span::all) = mNDistrowM1(0, arma::span::all) * MPmtPrinAmt(arma::span::all, arma::span::all);
+					mPmtIntAmt(row, arma::span::all) = mNDistrowM1(0, arma::span::all) * MPmtIntAmt(arma::span::all, arma::span::all);
 				}
 				else {
-					mNDist(row, span::all) = mNDist(rowM1, span::all) * MUnits(span::all, span::all);
-					rollPrinBalLag1 = mPrinBalDist(rowM1, span::all) * MUnits(span::all, span::all);
-					mPmtPrinAmt(row, span::all) = mNDist(rowM1, span::all) * MPmtPrinAmt(span::all, span::all);
-					mPmtIntAmt(row, span::all) = mNDist(rowM1, span::all) * MPmtIntAmt(span::all, span::all);
+					mNDist(row, arma::span::all) = mNDist(rowM1, arma::span::all) * MUnits(arma::span::all, arma::span::all);
+					rollPrinBalLag1 = mPrinBalDist(rowM1, arma::span::all) * MUnits(arma::span::all, arma::span::all);
+					mPmtPrinAmt(row, arma::span::all) = mNDist(rowM1, arma::span::all) * MPmtPrinAmt(arma::span::all, arma::span::all);
+					mPmtIntAmt(row, arma::span::all) = mNDist(rowM1, arma::span::all) * MPmtIntAmt(arma::span::all, arma::span::all);
 				}
-				mPrinBalDist(row, span::all) = rollPrinBalLag1(0, span::all) + mPmtPrinAmt(row, span::all);
+				mPrinBalDist(row, arma::span::all) = rollPrinBalLag1(0, arma::span::all) + mPmtPrinAmt(row, arma::span::all);
 				if (bUseDbgDirective && lDbgDirective == 4 && row + 1 == lDbgIndex) {
 					if (lDbgOption == 0)
-						mDbg = mPrinBalDist(rowM1, span::all);
+						mDbg = mPrinBalDist(rowM1, arma::span::all);
 					else if (lDbgOption == 1)
 						mDbg = rollPrinBalLag1;
 					else if (lDbgOption == 2)
-						mDbg = mPmtPrinAmt(row, span::all);
+						mDbg = mPmtPrinAmt(row, arma::span::all);
 					else if (lDbgOption == 3)
-						mDbg = mNDist(rowM1, span::all);
+						mDbg = mNDist(rowM1, arma::span::all);
 					else if (lDbgOption == 4)
-						mDbg = mNDist(row, span::all);
+						mDbg = mNDist(row, arma::span::all);
 					bDbgStop = true;
 				}
 				for (mj = 0; mj < NStates; mj++) {
@@ -2403,7 +2444,7 @@ WDS_Comp_RollIt(
 		}
 
 		if (!bUseDbgDirective) {
-			oResult = new OPER12(nrows, NStates * 4 + 6);
+			oResult = new OPER(nrows, NStates * 4 + 6);
 			for (k = 0; k < nrows; k++) {
 				for (j = 0; j < NStates; j++) {
 					(*oResult)(k, j) = mNDist(k, j);
@@ -2420,7 +2461,7 @@ WDS_Comp_RollIt(
 			}
 		}
 		else if (bUseDbgDirective) {
-			oResult = new OPER12((int) mDbg.n_rows,(int) mDbg.n_cols);
+			oResult = new OPER((int) mDbg.n_rows,(int) mDbg.n_cols);
 			for (k = 0; k < (int) mDbg.n_rows; k++) {
 				for (j = 0; j < (int) mDbg.n_cols; j++) {
 					(*oResult)(k, j) = mDbg(k, j);
@@ -2431,7 +2472,7 @@ WDS_Comp_RollIt(
 	catch (exception& e) {
 		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
-		oResult = new OPER12(L"Error, in RollIt: "+std::wstring(ew.begin(), ew.end()));
+		oResult = new OPER(L"Error, in RollIt: "+std::wstring(ew.begin(), ew.end()));
 	}
 	lFreeIfNecessary(cmPanelInd, bWasPanelIndCoerced);
 	lFreeIfNecessary(cmLoanAgeMos, bWasLoanAgeMosCoerced);
@@ -2462,25 +2503,28 @@ WDS_Comp_RollIt(
 
 
 
-static AddIn XLL_WDS_Util_SimpleFirsts(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_Util_SimpleFirsts", 4), L"WDS.Util.SimpleFirsts")
-	.Arg(XLL_LPXLOPER, L"Arg", L"is an column")
-	.Arg(XLL_LPXLOPER, L"inputrowlimit", L"is an optional maximum number of rows to consider.")
-	.Arg(XLL_LPXLOPER, L"outputrowlimit", L"is an optional maximum number of rows to return.")
-	.Category(L"WDS.Util")
-	.FunctionHelp(L"Return just the list of first values in panels.")
+AddIn XLL_WDS_Util_SimpleFirsts(
+	Function(XLL_LPXLOPER, "WDS_Util_SimpleFirsts", "WDS.Util.SimpleFirsts")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg", "is an column")
+		,Arg(XLL_LPXLOPER, "inputrowlimit", "is an optional maximum number of rows to consider.")
+		,Arg(XLL_LPXLOPER, "outputrowlimit", "is an optional maximum number of rows to return.")
+		})
+	.Category("WDS.Util")
+	.FunctionHelp("Return just the list of first values in panels.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 	, LPXLOPER12 inputrowlimit
 	, LPXLOPER12 outputrowlimit)
 {
+#pragma XLLEXPORT
 
 	using namespace WDS::Comp::Matrix;
 
 	int i, iM1, j, nrows, ncols;
 
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg);
 	allow_missings_only_LPXLOPER_or_exit(inputrowlimit);
 	allow_missings_only_LPXLOPER_or_exit(outputrowlimit);
@@ -2490,7 +2534,7 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 	require_usual_suspect_LPXLOPER(Arg);
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
-		result = new OPER12(L"Error, in coercion in Util.SimpleFirsts");
+		result = new OPER(L"Error, in coercion in Util.SimpleFirsts");
 		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
@@ -2546,7 +2590,7 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 			}
 			lastrow = thisrow;
 		}
-		result = new OPER12(j, 1);
+		result = new OPER(j, 1);
 		lastrow = nullptr;
 		j = -1;
 		for (i = 0, iM1 = -1; i < nrows; iM1 = i, i++) {
@@ -2589,7 +2633,7 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER12(L"Error, in coercion or SimpeFirsts");
+		result = new OPER(L"Error, in coercion or SimpeFirsts");
 	}
 
 	lFreeIfNecessary(cmArg, bWasArgCoerced);
@@ -2603,18 +2647,20 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 
 
 
-static AddIn XLL_WDS_Util_dNComp(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_Util_dNComp", 4), L"WDS.Util.dNComp")
-	.Arg(XLL_LPXLOPER, L"Arg1", L"is a range")
-	.Arg(XLL_LPXLOPER, L"Arg2", L"is a range or a value. If a range, Arg2 can be larger than Arg1, but only the upper left portion the same size as Arg1 is used.")
-	.Arg(XLL_LPXLOPER, L"Op", L"is an optional comparison op, 0: min, 1:max")
-	.Arg(XLL_LPXLOPER, L"Alternate", L"is a default value if either is not valid")
-	.Arg(XLL_LPXLOPER, L"inputrowlimit", L"optional, max length of input to consider")
-	.Arg(XLL_LPXLOPER, L"outputrowlimit", L"optional, length of output")
-	.Category(L"WDS.Util")
-	.FunctionHelp(L"Returns an array-based min(range1, range2 or single) or max, return sizes based on range1.")
+AddIn XLL_WDS_Util_dNComp(
+	Function(XLL_LPXLOPER, "WDS_Util_dNComp", "WDS.Util.dNComp")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg1", "is a range")
+		,Arg(XLL_LPXLOPER, "Arg2", "is a range or a value. If a range, Arg2 can be larger than Arg1, but only the upper left portion the same size as Arg1 is used.")
+		,Arg(XLL_LPXLOPER, "Op", "is an optional comparison op, 0: min, 1:max")
+		,Arg(XLL_LPXLOPER, "Alternate", "is a default value if either is not valid")
+		,Arg(XLL_LPXLOPER, "inputrowlimit", "optional, max length of input to consider")
+		,Arg(XLL_LPXLOPER, "outputrowlimit", "optional, length of output")
+		})
+	.Category("WDS.Util")
+	.FunctionHelp("Returns an array-based min(range1, range2 or single) or max, return sizes based on range1.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Util_dNComp(LPXLOPER12 Arg1
 	, LPXLOPER12 Arg2
 	, LPXLOPER12 Op
@@ -2622,13 +2668,14 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 	, LPXLOPER12 inputrowlimit
 	, LPXLOPER12 outputrowlimit
 ) {
+#pragma XLLEXPORT
 
 	using namespace WDS::Comp::Matrix;
 
 	int i, iM1, j, k, kP1, nrows, ncols, lOp;
 	int firsti, lasti, comp1, comp2;
 	double ldefv = 0.0;
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(Arg1);
 	require_usual_suspect_LPXLOPER_or_exit(Arg2);
 	allow_missings_only_LPXLOPER_or_exit(defv);
@@ -2641,14 +2688,14 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 	require_usual_suspect_LPXLOPER(Arg1);
 	if (lCoerceToMultiIfNecessary(Arg1, cmArg1, bWasArg1Coerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
-		result = new OPER12(L"Error, in coercion of Arg1 in Util.dNComp");
+		result = new OPER(L"Error, in coercion of Arg1 in Util.dNComp");
 		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
 
 	if (cmArg1->val.array.rows < 1) {
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
-		result = new OPER12(L"Error, Arg1 must not be empty");
+		result = new OPER(L"Error, Arg1 must not be empty");
 		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
@@ -2659,7 +2706,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 	if (lCoerceToMultiIfNecessary(Arg2, cmArg2, bWasArg2Coerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 		lFreeIfNecessary(cmArg2, bWasArg2Coerced);
-		result = new OPER12(L"Error, in coercion of Arg2 in Util.dNComp");
+		result = new OPER(L"Error, in coercion of Arg2 in Util.dNComp");
 		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
@@ -2667,7 +2714,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 	if (cmArg2->val.array.rows < 1) {
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 		lFreeIfNecessary(cmArg2, bWasArg2Coerced);
-		result = new OPER12(L"Error, Arg2 must not be empty");
+		result = new OPER(L"Error, Arg2 must not be empty");
 		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
@@ -2681,7 +2728,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 	if (!bIsArg2Atomic && ((cmArg2->val.array.rows < nrows) || (cmArg2->val.array.columns < ncols))) {
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 		lFreeIfNecessary(cmArg2, bWasArg2Coerced);
-		result = new OPER12(L"Error, Arg2 must be a single value or larger than Arg1 in Util.dNComp");
+		result = new OPER(L"Error, Arg2 must be a single value or larger than Arg1 in Util.dNComp");
 		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
@@ -2691,7 +2738,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 	} else {
 		int tempint = (int)LPOPER_to_long(Op, 0, 0);
 		if (tempint < 0 || tempint>1) {
-			result = new OPER12(L"Error, Op can only be an integer [0,1]");
+			result = new OPER(L"Error, Op can only be an integer [0,1]");
 			if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 			return result;
 		}
@@ -2721,7 +2768,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 	try {
 
 		//dMatrix dWords(nrows, ncols);
-		result = new OPER12(nrows, ncols);
+		result = new OPER(nrows, ncols);
 		LPXLOPER12 thiscell1 = nullptr;
 		LPXLOPER12 thiscell2 = nullptr;
 		for (j = 0; j < ncols; j++) {
@@ -2809,7 +2856,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
-		result = new OPER12(L"Error, in dNComp: " + std::wstring(ew.begin(), ew.end()));
+		result = new OPER(L"Error, in dNComp: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(cmArg1, bWasArg1Coerced);
@@ -2823,30 +2870,33 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 
 
 
-static AddIn XLL_WDS_Util_dNElse(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_Util_dNElse", 4), L"WDS.Util.dNElse")
-	.Arg(XLL_LPXLOPER, L"Arg", L"is an column")
-	.Arg(XLL_LPXLOPER, L"Alternate", L"is an optional value if Arg value is invalid as a double. For an invalid double, nan is returned. Value applied before Op.")
-	.Arg(XLL_LPXLOPER, L"Op", L"is an optional post operator, 0: [default] None, 1:exp, 2:ln, 3:logit, 4:invlogit, 5:positive part, 6:negative part, 7:exp(-(.)^2), 8:OddsRatio, 9:InvOddsRatio")
-	.Arg(XLL_LPXLOPER, L"inputrowlimit", L"optional, max length of input to consider")
-	.Arg(XLL_LPXLOPER, L"outputrowlimit", L"optional, length of output")
-	.Category(L"WDS.Util")
-	.FunctionHelp(L"Returns either a valid number check or common transformation.")
+AddIn XLL_WDS_Util_dNElse(
+	Function(XLL_LPXLOPER, "WDS_Util_dNElse", "WDS.Util.dNElse")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg", "is an column")
+		,Arg(XLL_LPXLOPER, "Alternate", "is an optional value if Arg value is invalid as a double. For an invalid double, nan is returned. Value applied before Op.")
+		,Arg(XLL_LPXLOPER, "Op", "is an optional post operator, 0: [default] None, 1:exp, 2:ln, 3:logit, 4:invlogit, 5:positive part, 6:negative part, 7:exp(-(.)^2), 8:OddsRatio, 9:InvOddsRatio")
+		,Arg(XLL_LPXLOPER, "inputrowlimit", "optional, max length of input to consider")
+		,Arg(XLL_LPXLOPER, "outputrowlimit", "optional, length of output")
+		})
+	.Category("WDS.Util")
+	.FunctionHelp("Returns either a valid number check or common transformation.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Util_dNElse(LPXLOPER12 Arg
 	, LPXLOPER12 defv
 	, LPXLOPER12 Op
 	, LPXLOPER12 inputrowlimit
 	, LPXLOPER12 outputrowlimit
 ) {
+#pragma XLLEXPORT
 
 	using namespace WDS::Comp::Matrix;
 
 	int i, iM1, j, k, kP1, nrows, ncols, lOp;
 	int firsti, lasti, comp1, comp2;
 	double ldefv = 0.0;
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg);
 	allow_missings_only_LPXLOPER_or_exit(defv);
 	allow_missings_only_LPXLOPER_or_exit(Op);
@@ -2858,7 +2908,7 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 	require_usual_suspect_LPXLOPER(Arg);
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
-		result = new OPER12(L"Error, in coercion in Util.dNElse");
+		result = new OPER(L"Error, in coercion in Util.dNElse");
 		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
@@ -2872,7 +2922,7 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 	} else {
 		int tempint = (int)LPOPER_to_long(Op, 0, 0);
 		if (tempint < 0 || tempint>9) {
-			result = new OPER12(L"Error, Op can only be an integer [0,9]");
+			result = new OPER(L"Error, Op can only be an integer [0,9]");
 			if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 			return result;
 		}
@@ -2901,7 +2951,7 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 
 	try {
 
-		result = new OPER12(nrows, ncols);
+		result = new OPER(nrows, ncols);
 
 		//dMatrix dWords(nrows, ncols);
 		LPXLOPER12 thiscell = nullptr;
@@ -2942,41 +2992,41 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 				if (lOp != 0 && !bthiscellnan)
 					switch (lOp) {
 					case 1:  //exp
-						(*result)(i, j) = exp((*result)(i, j));
+						(*result)(i, j) = std::exp((*result)(i, j).val.num);
 						break;
 					case 2:  //ln
-						(*result)(i, j) = log((*result)(i, j));
+						(*result)(i, j) = std::log((*result)(i, j).val.num);
 						break;
 					case 3:  //logit
-						(*result)(i, j) = exp((*result)(i, j));
-						(*result)(i, j) = (*result)(i, j) / (1.0 + (*result)(i, j));
+						(*result)(i, j) = std::exp((*result)(i, j).val.num);
+						(*result)(i, j) = ((double)(*result)(i, j).val.num) / (1.0 + (double)(*result)(i, j).val.num);
 						break;
 					case 4:  //invlogit
-						if ((*result)(i, j) <= 0.0 || (*result)(i, j) >= 1.0)
+						if ((*result)(i, j).val.num <= 0.0 || (*result)(i, j).val.num >= 1.0)
 							(*result)(i, j) = nan("");
 						else
-							(*result)(i, j) = log((*result)(i, j) / (1.0 - (*result)(i, j)));
+							(*result)(i, j) = log(((double)(*result)(i, j).val.num) / (1.0 - ((double)(*result)(i, j).val.num)));
 						break;
 					case 5: //pos
-						if ((*result)(i, j) < 0) (*result)(i, j) = 0;
+						if ((*result)(i, j).val.num < 0) (*result)(i, j) = 0;
 						break;
 					case 6: //neg
-						if ((*result)(i, j) > 0) (*result)(i, j) = 0;
+						if ((*result)(i, j).val.num > 0) (*result)(i, j) = 0;
 						break;
 					case 7: //gaussian
-						(*result)(i, j) = exp(-pow((*result)(i, j), 2.0));
+						(*result)(i, j) = std::exp(-std::pow((double)(*result)(i, j).val.num, 2.0));
 						break;
 					case 8:
-						if ((*result)(i, j) <= 0.0 || (*result)(i, j) >= 1.0)
+						if ((*result)(i, j).val.num <= 0.0 || (*result)(i, j).val.num >= 1.0)
 							(*result)(i, j) = nan("");
 						else
-							(*result)(i, j) = (*result)(i, j) / (1.0 - (*result)(i, j));
+							(*result)(i, j) = ((double)(*result)(i, j).val.num) / (1.0 - ((double)(*result)(i, j).val.num));
 						break;
 					case 9:
-						if ((*result)(i, j) <= 0.0)
+						if ((*result)(i, j).val.num <= 0.0)
 							(*result)(i, j) = nan("");
 						else
-							(*result)(i, j) = (*result)(i, j) / (1.0 + (*result)(i, j));
+							(*result)(i, j) = ((double)(*result)(i, j).val.num) / (1.0 + ((double)(*result)(i, j).val.num));
 						break;
 					default:
 						break;
@@ -2988,7 +3038,7 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
-		result = new OPER12(L"Error, in dNElse: " + std::wstring(ew.begin(), ew.end()));
+		result = new OPER(L"Error, in dNElse: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(cmArg, bWasArgCoerced);
@@ -3001,19 +3051,21 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 
 
 
-static AddIn XLL_WDS_Util_SimpleSort(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_Util_SimpleSort", 4), L"WDS.Util.SimpleSort")
-	.Arg(XLL_LPXLOPER, L"Arg", L"is an column")
-	.Arg(XLL_LPXLOPER, L"inputrowlimit", L"is an optional maximum number of rows to consider.")
-	.Arg(XLL_LPXLOPER, L"outputrowlimit", L"is an optional maximum number of rows to return.")
-	.Arg(XLL_LPXLOPER, L"bReturnJustIndices", L"is an optional flag to return just the sort indices.")
-	.Arg(XLL_LPXLOPER, L"inputcolumn", L"is an optional column of a matrix input on which to operate (1-Based).")
-	.Arg(XLL_LPXLOPER, L"bReturnJustUnique", L"is an optional flag to return just the unique values (by string rep).")
-	.Arg(XLL_LPXLOPER, L"bReverseOrder", L"is an optional flag to reverse the sort order.")
-	.Category(L"WDS.Util")
-	.FunctionHelp(L"Returns a sorted column.")
+AddIn XLL_WDS_Util_SimpleSort(
+	Function(XLL_LPXLOPER, "WDS_Util_SimpleSort", "WDS.Util.SimpleSort")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg", "is an column")
+		,Arg(XLL_LPXLOPER, "inputrowlimit", "is an optional maximum number of rows to consider.")
+		,Arg(XLL_LPXLOPER, "outputrowlimit", "is an optional maximum number of rows to return.")
+		,Arg(XLL_LPXLOPER, "bReturnJustIndices", "is an optional flag to return just the sort indices.")
+		,Arg(XLL_LPXLOPER, "inputcolumn", "is an optional column of a matrix input on which to operate (1-Based).")
+		,Arg(XLL_LPXLOPER, "bReturnJustUnique", "is an optional flag to return just the unique values (by string rep).")
+		,Arg(XLL_LPXLOPER, "bReverseOrder", "is an optional flag to reverse the sort order.")
+		})
+	.Category("WDS.Util")
+	.FunctionHelp("Returns a sorted column.")
 );
-extern "C" __declspec(dllexport) LPOPER12  WINAPI
+LPOPER  WINAPI
 WDS_Util_SimpleSort(LPXLOPER12 Arg
 	, LPXLOPER12 inputrowlimit
 	, LPXLOPER12 outputrowlimit
@@ -3022,12 +3074,13 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 	, LPXLOPER12 bReturnJustUnique
 	, LPXLOPER12 bReverseOrder
 ) {
+#pragma XLLEXPORT
 
 	using namespace WDS::Comp::Matrix;
 
 	int i, iM1, j, k, kP1, nrows, ncols;
 	int firsti, lasti, comp1, comp2;
-	LPOPER12 result = nullptr;
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg);
 	allow_missings_only_LPXLOPER_or_exit(inputrowlimit);
 	allow_missings_only_LPXLOPER_or_exit(outputrowlimit);
@@ -3039,7 +3092,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 	require_usual_suspect_LPXLOPER(Arg);
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
-		result = new OPER12(L"Error, in coercion in Util.SimpleSort");
+		result = new OPER(L"Error, in coercion in Util.SimpleSort");
 		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
@@ -3202,7 +3255,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 			}
 		}
 
-		result = new OPER12(outcount, 1);
+		result = new OPER(outcount, 1);
 		k = firsti;
 		if (lbReturnJustIndices) {
 			for (i = 0; i < outcount; i++) {
@@ -3240,7 +3293,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
-		result = new OPER12(L"Error, in SimpleSort: " + std::wstring(ew.begin(), ew.end()));
+		result = new OPER(L"Error, in SimpleSort: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(cmArg, bWasArgCoerced);

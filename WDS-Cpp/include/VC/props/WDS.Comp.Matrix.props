@@ -2,19 +2,19 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <IntelSWTools>$(IntelSWTools_ROOT)\compilers_and_libraries_2019.1.144\windows</IntelSWTools>
-    <MKLIncludeDir>$(IntelSWTools)\mkl\include</MKLIncludeDir>
-    <MKLLibDir>$(IntelSWTools)\mkl\lib\intel64_win</MKLLibDir>
-    <OmpLibDir>$(IntelSWTools)\compiler\lib\intel64_win</OmpLibDir>
-    <IPPLibDir>$(IntelSWTools)\ipp\lib\intel64_win</IPPLibDir>
-    <CPPLibDir>$(IntelSWTools)\compiler\lib\intel64_win</CPPLibDir>
-    <DAALibDir>$(IntelSWTools)\daal\lib\intel64_win</DAALibDir>
-    <CPPPath>$(IntelSWTools)\redist\intel64_win\compiler</CPPPath>
-    <Armadillo>$(CppLocalExternalPackages)\armadillo\code</Armadillo>
-    <TBBLibDir>$(IntelSWTools)\tbb\lib\intel64_win\vc_mt</TBBLibDir>
+    <IntelSWTools>$(IntelSWTools_ROOT)\2025.3\windows</IntelSWTools>
+    <MKLIncludeDir>$(IntelSWTools_ROOT)\mkl\2025.3\include</MKLIncludeDir>
+    <MKLLibDir>$(IntelSWTools_ROOT)\mkl\2025.3\lib</MKLLibDir>
+    <OmpLibDir>$(IntelSWTools_ROOT)\compiler\2025.3\lib</OmpLibDir>
+    <IPPLibDir>$(IntelSWTools_ROOT)\ipp\2025.3\lib</IPPLibDir>
+    <CPPLibDir>$(IntelSWTools_ROOT)\compiler\2025.3\lib</CPPLibDir>
+    <DAALibDir>$(IntelSWTools_ROOT)\daal\2025.3\lib</DAALibDir>
+    <CPPPath>$(IntelSWTools_ROOT)\redist\intel64_win\compiler</CPPPath>
+    <Armadillo>$(CppLocalExternalPackages)\armadillo\15.2.3</Armadillo>
+    <TBBLibDir>$(IntelSWTools_ROOT)\tbb\2025.3\lib\vc_mt</TBBLibDir>
   </PropertyGroup>
   <PropertyGroup>
-    <IncludePath>$(WDSCppLib)\include;$(Armadillo)\include;$(MKLIncludeDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <IncludePath>$(WDSCppLib)\include;$(WDSCppLib)\..\WDS-C\include;$(Armadillo)\include;$(MKLIncludeDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
     <LibraryPath>$(WDSCppLib)\lib;$(OmpLibDir);$(MKLLibDir);$(TBBLibDir);$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
@@ -26,11 +26,11 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <Lib>
-      <AdditionalDependencies>mkl_core.lib;mkl_sequential.lib;mkl_intel_lp64.lib;libiomp5md.lib;</AdditionalDependencies>
+        <AdditionalDependencies>mkl_core.lib;mkl_sequential.lib;mkl_intel_lp64.lib;libiomp5md.lib;</AdditionalDependencies>
     </Lib>
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.\src;$(WDSCppLib)\include\Comp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\src;$(WDSCppLib)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

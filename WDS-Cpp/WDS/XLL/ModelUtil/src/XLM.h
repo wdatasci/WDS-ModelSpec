@@ -1,5 +1,5 @@
 #pragma once
 
 #include "windows.h"
-#include "AddIn-xll12.h"
+#include "AddIn-xll.h"
 

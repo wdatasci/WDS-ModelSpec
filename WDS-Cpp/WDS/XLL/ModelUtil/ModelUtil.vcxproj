@@ -21,7 +21,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseIntelMKL>Sequential</UseIntelMKL>
     <UseIntelDAAL>Parallel_Dynamic</UseIntelDAAL>
@@ -29,7 +29,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseIntelMKL>Sequential</UseIntelMKL>
@@ -44,13 +44,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\include\VC\props\WDS.props" />
     <Import Project="..\..\..\include\VC\props\WDS.Comp.Matrix.props" />
-    <Import Project="..\..\..\include\VC\props\WDS.xll12.props" />
+    <Import Project="..\..\..\include\VC\props\WDS.xll.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\include\VC\props\WDS.props" />
     <Import Project="..\..\..\include\VC\props\WDS.Comp.Matrix.props" />
-    <Import Project="..\..\..\include\VC\props\WDS.xll12.props" />
+    <Import Project="..\..\..\include\VC\props\WDS.xll.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -79,6 +79,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
@@ -111,34 +112,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MatrixUtil.cpp" />
-    <ClCompile Include="WrappedArtificials.cpp" />
     <ClCompile Include="src-ExcelSDK\FRAMEWRK.C" />
     <ClCompile Include="src-ExcelSDK\MemoryManager.cpp" />
     <ClCompile Include="src-ExcelSDK\MemoryPool.cpp" />
-    <ClCompile Include="src-xll12\AddIn-xll12.cpp" />
-    <ClCompile Include="src-xll12\debug-xll12.cpp" />
-    <ClCompile Include="src-xll12\error.cpp" />
-    <ClCompile Include="src-xll12\oper.cpp" />
-    <ClCompile Include="src\ModelUtil.cpp">
-      <DeploymentContent>true</DeploymentContent>
-    </ClCompile>
+    <ClCompile Include="src-xll\AddIn-xll.cpp" />
+    <ClCompile Include="src-xll\debug-xll.cpp" />
+    <ClCompile Include="src-xll\error.cpp" />
+    <ClCompile Include="src-xll\oper.cpp" />
+    <ClCompile Include="src\MatrixUtil.cpp" />
+    <ClCompile Include="src\ModelUtil.cpp" />
     <ClCompile Include="src\TestFunctions.cpp" />
+    <ClCompile Include="src\WrappedArtificials.cpp" />
     <ClCompile Include="src\XLM.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\WDS-C\include\WDS\ModelSpec\artificials.h" />
     <ClInclude Include="src-ExcelSDK\FRAMEWRK.H" />
     <ClInclude Include="src-ExcelSDK\MemoryManager.h" />
     <ClInclude Include="src-ExcelSDK\MemoryPool.h" />
     <ClInclude Include="src-ExcelSDK\targetver.h" />
-    <ClInclude Include="src-xll12\AddIn-xll12.h" />
+    <ClInclude Include="src-xll\AddIn-xll.h" />
     <ClInclude Include="src\MatrixUtil.h" />
     <ClInclude Include="src\ModelUtil.h" />
     <ClInclude Include="src\XLM.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src-ExcelSDK\README.md" />
-    <None Include="src-xll12\README.md" />
+    <None Include="src-xll\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

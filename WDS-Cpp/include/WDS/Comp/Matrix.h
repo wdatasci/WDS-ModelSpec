@@ -87,9 +87,9 @@ namespace WDS::Comp::Matrix {
 		~mDoubleIndex() {};
 	};
 
-	inline mDoubleIndex &operator,(mIndex arg0, mIndex arg1) { mDoubleIndex rv(arg0, arg1); return rv; }
-	inline mDoubleIndex &operator,(mIndex arg0, _mI arg1) { mDoubleIndex rv(arg0, arg1); return rv; }
-	inline mDoubleIndex &operator,(_mI arg0, mIndex arg1) { mDoubleIndex rv(arg0, arg1); return rv;}
+	inline mDoubleIndex operator,(mIndex arg0, mIndex arg1) { mDoubleIndex rv(arg0, arg1); return rv; }
+	inline mDoubleIndex operator,(mIndex arg0, _mI arg1) { mDoubleIndex rv(arg0, arg1); return rv; }
+	inline mDoubleIndex operator,(_mI arg0, mIndex arg1) { mDoubleIndex rv(arg0, arg1); return rv;}
 	
 	typedef vec dColVector;
 	typedef rowvec dRowVector;

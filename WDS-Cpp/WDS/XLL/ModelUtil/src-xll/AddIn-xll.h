@@ -13,11 +13,13 @@
 extern HINSTANCE xll_hModule;
 extern HINSTANCE xll_Instance;
 
-#include "fp.h"
-#include "error.h"
-#include "on.h"
-#include "addin.h"
-#include "handle.h"
+
+#include "xll.h"
+//#include "fp.h"
+//#include "error.h"
+//#include "on.h"
+//#include "addin.h"
+//#include "handle.h"
 //#include "test.h"
 
 //#include "XLCALL.H"

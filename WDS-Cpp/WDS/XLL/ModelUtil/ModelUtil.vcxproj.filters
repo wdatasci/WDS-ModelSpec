@@ -9,7 +9,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="src-xll12">
+    <Filter Include="src-xll">
       <UniqueIdentifier>{99ee2c32-e7cc-4774-8374-3ea3ff28d0c4}</UniqueIdentifier>
     </Filter>
     <Filter Include="src-ExcelSDK">
@@ -30,31 +30,31 @@
     <ClCompile Include="src-ExcelSDK\MemoryPool.cpp">
       <Filter>src-ExcelSDK</Filter>
     </ClCompile>
-    <ClCompile Include="src-xll12\AddIn-xll12.cpp">
-      <Filter>src-xll12</Filter>
+    <ClCompile Include="src-xll\AddIn-xll.cpp">
+      <Filter>src-xll</Filter>
     </ClCompile>
-    <ClCompile Include="src-xll12\debug-xll12.cpp">
-      <Filter>src-xll12</Filter>
+    <ClCompile Include="src-xll\debug-xll.cpp">
+      <Filter>src-xll</Filter>
     </ClCompile>
-    <ClCompile Include="src-xll12\error.cpp">
-      <Filter>src-xll12</Filter>
+    <ClCompile Include="src-xll\error.cpp">
+      <Filter>src-xll</Filter>
     </ClCompile>
-    <ClCompile Include="src-xll12\oper.cpp">
-      <Filter>src-xll12</Filter>
+    <ClCompile Include="src-xll\oper.cpp">
+      <Filter>src-xll</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TestFunctions.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MatrixUtil.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WrappedArtificials.cpp">
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\ModelUtil.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\XLM.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\TestFunctions.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="WrappedArtificials.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="MatrixUtil.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,8 +65,8 @@
     <ClInclude Include="src-ExcelSDK\FRAMEWRK.H">
       <Filter>src-ExcelSDK</Filter>
     </ClInclude>
-    <ClInclude Include="src-xll12\AddIn-xll12.h">
-      <Filter>src-xll12</Filter>
+    <ClInclude Include="src-xll\AddIn-xll.h">
+      <Filter>src-xll</Filter>
     </ClInclude>
     <ClInclude Include="src-ExcelSDK\MemoryManager.h">
       <Filter>src-ExcelSDK</Filter>
@@ -83,13 +83,16 @@
     <ClInclude Include="src\MatrixUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\WDS-C\include\WDS\ModelSpec\artificials.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src-ExcelSDK\README.md">
       <Filter>src-ExcelSDK</Filter>
     </None>
-    <None Include="src-xll12\README.md">
-      <Filter>src-xll12</Filter>
+    <None Include="src-xll\README.md">
+      <Filter>src-xll</Filter>
     </None>
   </ItemGroup>
 </Project>

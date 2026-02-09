@@ -73,7 +73,7 @@
 #include <malloc.h>
 #include <wchar.h>
 #include "XLCALL.H"
-#include <xlcall.cpp>
+#include "XLCALL.CPP"
 #include "FRAMEWRK.H"
 #include "MemoryManager.h"
 #include <stdarg.h>

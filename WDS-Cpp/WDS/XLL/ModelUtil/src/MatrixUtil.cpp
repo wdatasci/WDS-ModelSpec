@@ -28,7 +28,7 @@ namespace WDS::Comp::Matrix {
 	}
 
 	dMatrix NormedBaseOdds(int n, int m, int Offset, dMatrix& BaseOdds, dMatrix& Topology) {
-		dMatrix result = BaseOdds.submat(span(Offset * n, (Offset + 1) * n), span::all);
+		dMatrix result = BaseOdds.submat(arma::span(Offset * n, (Offset + 1) * n), arma::span::all);
 		result %= Topology;
 		RowNormInPlace(result);
 		return result;
@@ -43,7 +43,7 @@ namespace WDS::Comp::Matrix {
 		, dMatrix& Topology
 	) {
 		int _Offset = Offset.at(rowindex, 0);
-		dMatrix result = BaseOdds(span(_Offset * n, (_Offset + 1) * n - 1), span(nbase * n, (nbase + 1) * n - 1));
+		dMatrix result = BaseOdds(arma::span(_Offset * n, (_Offset + 1) * n - 1), arma::span(nbase * n, (nbase + 1) * n - 1));
 		result %= Topology;
 		return result;
 	}

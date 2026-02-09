@@ -12,7 +12,7 @@ A few brief notes:
     </ul>
 <li>Major external packages:</li>
     <ul>
-        <li>xll12 - for simplifying the interface and Excel function registration.</li>
+        <li>xll ( actually, xll24 ) - for simplifying the interface and Excel function registration.</li>
         <li>The Excel 2013 XLL SDK (which works through Excel 2016).</li>
     </ul>
 <li>CW Usage note: If one readily goes back and forth between something like Ubuntu via WSL and VS (and you

@@ -7,23 +7,23 @@
     <WDSProjectBranch>master</WDSProjectBranch>
     <WDSCppLib>$(WDataSci)\$(WDSProject)\$(WDSProjectBranch)\WDS-Cpp</WDSCppLib>
     <WDSCLib>$(WDataSci)\$(WDSProject)\$(WDSProjectBranch)\WDS-C</WDSCLib>
-    <IntelSWTools>$(IntelSWTools_ROOT)\compilers_and_libraries_2019.1.144\windows</IntelSWTools>
-    <TBBIncludeDir>$(IntelSWTools)\tbb\include</TBBIncludeDir>
-    <TBBLibDir>$(IntelSWTools)\tbb\lib\intel64_win\vc_mt</TBBLibDir>
-    <MKLMajorVersion>2019</MKLMajorVersion>
-    <MKLMinorVersion>0</MKLMinorVersion>
-    <MKLProductDir>$(IntelSWTools)</MKLProductDir>
-    <IPPMajorVersion>2019</IPPMajorVersion>
-    <IPPMinorVersion>0</IPPMinorVersion>
-    <IPPIncludeDir>$(IntelSWTools)\ipp\include</IPPIncludeDir>
-    <DAALMajorVersion>2019</DAALMajorVersion>
-    <DAALMinorVersion>0</DAALMinorVersion>
-    <DAALProductDir>$(IntelSWTools)</DAALProductDir>
+    <IntelSWTools>$(IntelSWTools_ROOT)\2025.3\windows</IntelSWTools>
+    <TBBIncludeDir>$(IntelSWTools_ROOT)\tbb\2022.3\include</TBBIncludeDir>
+    <TBBLibDir>$(IntelSWTools_ROOT)\tbb\2022.3\lib\vc_mt</TBBLibDir>
+    <MKLMajorVersion>2025</MKLMajorVersion>
+    <MKLMinorVersion>3</MKLMinorVersion>
+    <MKLProductDir>$(IntelSWTools_ROOT)</MKLProductDir>
+    <IPPMajorVersion>2025</IPPMajorVersion>
+    <IPPMinorVersion>3</IPPMinorVersion>
+    <IPPIncludeDir>$(IntelSWTools_ROOT)\ipp\include</IPPIncludeDir>
+    <DAALMajorVersion>2025</DAALMajorVersion>
+    <DAALMinorVersion>3</DAALMinorVersion>
+    <DAALProductDir>$(IntelSWTools_ROOT)</DAALProductDir>
     <DAALIncludeDir>$(DAALProductDir)\include</DAALIncludeDir>
     <DAALLibDir>$(DAALProductDir)</DAALLibDir>
   </PropertyGroup>
   <PropertyGroup>
-    <IncludePath>$(WDSCppLib)\include;$(WDSCLib)\include;$(TBBIncludeDir);$(xll12_ROOT);$(IncludePath)</IncludePath>
+    <IncludePath>$(WDSCppLib)\include;$(WDSCLib)\include;$(TBBIncludeDir);$(xll_ROOT);$(IncludePath)</IncludePath>
     <SourcePath>.\src;$(WDSCppLib)\WDS\src;$(WDSCLib)\WDS\src</SourcePath>
     <LibraryPath>$(WDSCppLib)\lib;$(TBBLibDir)\vc_mt;$(LibraryPath)</LibraryPath>
     <LinkIncremental>false</LinkIncremental>

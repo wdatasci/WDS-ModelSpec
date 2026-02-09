@@ -1,14 +1,16 @@
 // WrappedArtificials.cpp : wrapping of the C code, WDS/ModelSpec/Artificials.h
 
 #include "ModelUtil.h"
+#include "WDS\ModelSpec\artificials.h"
 //#include "WDS\Comp\Matrix.h"
-using namespace WDS::Comp::Matrix;
 
+using namespace WDS::Comp::Matrix;
 
 using namespace xll;
 
-#include "WDS\ModelSpec\Artificials.h"
-namespace WDS::ModelSpec {
+using namespace WDS::ModelSpec;
+
+//namespace WDS::ModelSpec {
 
 eTreatment lCleanTreatment(LPXLOPER12 arg0) {
 	eTreatment result = e_Unknown;
@@ -35,17 +37,22 @@ eTreatment lCleanTreatment(LPXLOPER12 arg0) {
 }
 
 
-static AddIn XLL_WDS_ModelSpec_CleanTreatment(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_ModelSpec_CleanTreatment", 4), L"WDS.ModelSpec.CleanTreatment")
-	.Arg(XLL_LPXLOPER, L"TreatmentString", L"a variable treatment or alias")
-	.Category(L"WDS.ModelSpec")
-	.FunctionHelp(L"Returns the standardized treatment name given an alias")
+AddIn XLL_WDS_ModelSpec_CleanTreatment(
+	Function(XLL_LPOPER, "WDS_ModelSpec_CleanTreatment", "WDS.ModelSpec.CleanTreatment")
+	.Arguments({
+		Arg(XLL_LPOPER, "TreatmentString", "a variable treatment or alias")
+		})
+	.Category("WDS.ModelSpec")
+	.FunctionHelp("Returns the standardized treatment name given an alias")
 );
-extern "C" __declspec(dllexport) LPXLOPER12 WINAPI
-WDS_ModelSpec_CleanTreatment(LPOPER12 arg0)
+LPOPER WINAPI
+WDS_ModelSpec_CleanTreatment(LPOPER arg0)
 {
+#pragma XLLEXPORT
+
 	LPOPER result=nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(arg0);
+
 	eTreatment Treatment = lCleanTreatment(arg0);
 	std::wstring tempstring;
 	tempstring = eTreatmentLabel(Treatment);
@@ -54,16 +61,20 @@ WDS_ModelSpec_CleanTreatment(LPOPER12 arg0)
 	return result;
 }
 
-static AddIn XLL_WDS_ModelSpec_nArtificialCount(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_ModelSpec_nArtificialCount", 4), L"WDS.ModelSpec.nArtificialCount")
-	.Arg(XLL_LPXLOPER, L"nCriticalValues", L"the number of critical values used")
-	.Arg(XLL_LPXLOPER, L"TreatmentString", L"a variable treatment or alias")
-	.Category(L"WDS.ModelSpec")
-	.FunctionHelp(L"Returns the count of artificials created for a given critical value set and a treatment")
+AddIn XLL_WDS_ModelSpec_nArtificialCount(
+	Function(XLL_LPXLOPER, "WDS_ModelSpec_nArtificialCount", "WDS.ModelSpec.nArtificialCount")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "nCriticalValues", "the number of critical values used")
+		,Arg(XLL_LPXLOPER, "TreatmentString", "a variable treatment or alias")
+		})
+	.Category("WDS.ModelSpec")
+	.FunctionHelp("Returns the count of artificials created for a given critical value set and a treatment")
 );
-extern "C" __declspec(dllexport) LPXLOPER12 WINAPI
-WDS_ModelSpec_nArtificialCount(LPXLOPER12 _nCriticalValues, LPOPER12 _Treatment)
+LPXLOPER12 WINAPI
+WDS_ModelSpec_nArtificialCount(LPXLOPER12 _nCriticalValues, LPXLOPER12 _Treatment)
 {
+#pragma XLLEXPORT
+
 	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(_nCriticalValues);
 	require_usual_suspect_LPXLOPER_or_exit(_Treatment);
@@ -80,7 +91,7 @@ WDS_ModelSpec_nArtificialCount(LPXLOPER12 _nCriticalValues, LPOPER12 _Treatment)
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
-		result = new OPER12(L"Error, in nArtificialsCount: " + std::wstring(ew.begin(), ew.end()));
+		result = new OPER(L"Error, in nArtificialsCount: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(__nCriticalValues, bWas_nCriticalValuesCoerced);
@@ -89,19 +100,23 @@ WDS_ModelSpec_nArtificialCount(LPXLOPER12 _nCriticalValues, LPOPER12 _Treatment)
 	return result;
 }
 
-static AddIn XLL_WDS_ModelSpec_ArtificialLabels(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_ModelSpec_ArtificialLabels", 4), L"WDS.ModelSpec.ArtificialLabels")
-	.Arg(XLL_LPXLOPER, L"nCriticalValues", L"the number of critical values used")
-	.Arg(XLL_LPXLOPER, L"TreatmentString", L"a variable treatment or alias")
-	.Arg(XLL_LPXLOPER, L"LabelBase", L"(optional) base variable name, defaults to X")
-	.Arg(XLL_LPXLOPER, L"LabelConnector", L"(optional) connector between label parts")
-	.Arg(XLL_LPXLOPER, L"LabelSuffix", L"(optional) at the end of each label")
-	.Category(L"WDS.ModelSpec")
-	.FunctionHelp(L"Returns the count of artificials created for a given critical value set and a treatment")
+AddIn XLL_WDS_ModelSpec_ArtificialLabels(
+	Function(XLL_LPXLOPER, "WDS_ModelSpec_ArtificialLabels", "WDS.ModelSpec.ArtificialLabels")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "nCriticalValues", "the number of critical values used")
+		,Arg(XLL_LPXLOPER, "TreatmentString", "a variable treatment or alias")
+		,Arg(XLL_LPXLOPER, "LabelBase", "(optional) base variable name, defaults to X")
+		,Arg(XLL_LPXLOPER, "LabelConnector", "(optional) connector between label parts")
+		,Arg(XLL_LPXLOPER, "LabelSuffix", "(optional) at the end of each label")
+		})
+	.Category("WDS.ModelSpec")
+	.FunctionHelp("Returns the count of artificials created for a given critical value set and a treatment")
 );
-extern "C" __declspec(dllexport) LPXLOPER12 WINAPI
-WDS_ModelSpec_ArtificialLabels(LPXLOPER12 _nCriticalValues, LPOPER12 _Treatment, LPOPER12 _LabelBase, LPOPER12 _LabelConnector, LPOPER12 _LabelSuffix)
+LPXLOPER12 WINAPI
+WDS_ModelSpec_ArtificialLabels(LPXLOPER12 _nCriticalValues, LPXLOPER12 _Treatment, LPXLOPER12 _LabelBase, LPXLOPER12 _LabelConnector, LPXLOPER12 _LabelSuffix)
 {
+#pragma XLLEXPORT
+
 	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(_nCriticalValues);
 	require_usual_suspect_LPXLOPER_or_exit(_Treatment);
@@ -117,7 +132,7 @@ WDS_ModelSpec_ArtificialLabels(LPXLOPER12 _nCriticalValues, LPOPER12 _Treatment,
 		eTreatment Treatment = lCleanTreatment(_Treatment);
 		int rv = nArtificialCount(nCriticalValues, Treatment);
 		int first = nArtificialIndex_First(nCriticalValues, Treatment);
-		result = new OPER12(1,rv);
+		result = new OPER(1,rv);
 		int i, j;
 		std::wstring w;
 		for (i = 0, j = first; i < rv; i++, j++) {
@@ -128,7 +143,7 @@ WDS_ModelSpec_ArtificialLabels(LPXLOPER12 _nCriticalValues, LPOPER12 _Treatment,
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
-		result = new OPER12(L"Error, in ArtificialLabels: " + std::wstring(ew.begin(), ew.end()));
+		result = new OPER(L"Error, in ArtificialLabels: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(__nCriticalValues, bWas_nCriticalValuesCoerced);
@@ -138,18 +153,22 @@ WDS_ModelSpec_ArtificialLabels(LPXLOPER12 _nCriticalValues, LPOPER12 _Treatment,
 }
 
 
-static AddIn XLL_WDS_ModelSpec_ScoreLabels(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_ModelSpec_ScoreLabels", 4), L"WDS.ModelSpec.ScoreLabels")
-	.Arg(XLL_LPXLOPER, L"nScores", L"the number of critical values used")
-	.Arg(XLL_LPXLOPER, L"LabelBase", L"(optional) base variable name, defaults to X")
-	.Arg(XLL_LPXLOPER, L"LabelConnector", L"(optional) connector between label parts")
-	.Arg(XLL_LPXLOPER, L"LabelSuffix", L"(optional) at the end of each label")
-	.Category(L"WDS.ModelSpec")
-	.FunctionHelp(L"Returns the count of artificials created for a given critical value set and a treatment")
+AddIn XLL_WDS_ModelSpec_ScoreLabels(
+	Function(XLL_LPXLOPER, "WDS_ModelSpec_ScoreLabels", "WDS.ModelSpec.ScoreLabels")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "nScores", "the number of critical values used")
+		,Arg(XLL_LPXLOPER, "LabelBase", "(optional) base variable name, defaults to X")
+		,Arg(XLL_LPXLOPER, "LabelConnector", "(optional) connector between label parts")
+		,Arg(XLL_LPXLOPER, "LabelSuffix", "(optional) at the end of each label")
+		})
+	.Category("WDS.ModelSpec")
+	.FunctionHelp("Returns the count of artificials created for a given critical value set and a treatment")
 );
-extern "C" __declspec(dllexport) LPXLOPER12 WINAPI
-WDS_ModelSpec_ScoreLabels(LPXLOPER12 _nScores, LPOPER12 _LabelBase, LPOPER12 _LabelConnector, LPOPER12 _LabelSuffix)
+LPXLOPER12 WINAPI
+WDS_ModelSpec_ScoreLabels(LPXLOPER12 _nScores, LPXLOPER12 _LabelBase, LPXLOPER12 _LabelConnector, LPXLOPER12 _LabelSuffix)
 {
+#pragma XLLEXPORT
+
 	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(_nScores);
 	LPXLOPER12 __nScores = nullptr;
@@ -162,7 +181,7 @@ WDS_ModelSpec_ScoreLabels(LPXLOPER12 _nScores, LPOPER12 _LabelBase, LPOPER12 _La
 			throw exception("Coerce error for nScores in ScoreLabels.");
 		int nScores = (int)LPOPER_to_long(__nScores,0,0);
 		int first = 1;
-		result = new OPER12(1,nScores);
+		result = new OPER(1,nScores);
 		int i, j;
 		std::wstring w;
 		for (i = 0, j = first; i < nScores; i++, j++) {
@@ -173,7 +192,7 @@ WDS_ModelSpec_ScoreLabels(LPXLOPER12 _nScores, LPOPER12 _LabelBase, LPOPER12 _La
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
-		result = new OPER12(L"Error, in ScoreLabels: " + std::wstring(ew.begin(), ew.end()));
+		result = new OPER(L"Error, in ScoreLabels: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(__nScores, bWas_nScoresCoerced);
@@ -186,23 +205,27 @@ WDS_ModelSpec_ScoreLabels(LPXLOPER12 _nScores, LPOPER12 _LabelBase, LPOPER12 _La
 
 
 
-static AddIn XLL_WDS_ModelSpec_Artificials(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_ModelSpec_Artificials", 4), L"WDS.ModelSpec.Artificials")
-	.Arg(XLL_LPXLOPER, L"XInput", L"a column vector of source variable values")
-	.Arg(XLL_LPXLOPER, L"TreatmentString", L"variable spec treatment")
-	.Arg(XLL_LPXLOPER, L"CriticalValues", L"critical values for the variable spec")
-	.Arg(XLL_LPXLOPER, L"CleanLimits", L"(optional) clean limits for the variable spec")
-	.Category(L"WDS.ModelSpec")
-	.FunctionHelp(L"Returns a matrix of processed artificial variables based on a column input and variable specs.")
+AddIn XLL_WDS_ModelSpec_Artificials(
+	Function(XLL_LPXLOPER, "WDS_ModelSpec_Artificials", "WDS.ModelSpec.Artificials")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "XInput", "a column vector of source variable values")
+		,Arg(XLL_LPXLOPER, "TreatmentString", "variable spec treatment")
+		,Arg(XLL_LPXLOPER, "CriticalValues", "critical values for the variable spec")
+		,Arg(XLL_LPXLOPER, "CleanLimits", "(optional) clean limits for the variable spec")
+		})
+	.Category("WDS.ModelSpec")
+	.FunctionHelp("Returns a matrix of processed artificial variables based on a column input and variable specs.")
 );
-extern "C" __declspec(dllexport) LPXLOPER12 WINAPI
+LPXLOPER12 WINAPI
 WDS_ModelSpec_Artificials(
 	LPXLOPER12 XInput
 	, LPXLOPER12 TreatmentString
 	, LPXLOPER12 CriticalValues
 	, LPXLOPER12 CleanLimits
 ) {
-	LPOPER12 result = nullptr;
+#pragma XLLEXPORT
+
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(XInput);
 	require_usual_suspect_LPXLOPER_or_exit(TreatmentString);
 	allow_missings_only_LPXLOPER_or_exit(CriticalValues);
@@ -248,13 +271,13 @@ WDS_ModelSpec_Artificials(
 		if (Treatment == e_Constant) {
 			try {
 				tempdouble = LPOPER_to_double(cmCriticalValues, 0, 0);
-				result = new OPER12(nrows, ncols);
+				result = new OPER(nrows, ncols);
 				for (i = 0; i < nrows; i++)
 					(*result)(i, 0) = tempdouble;
 			}
 			catch (...) {
 				if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-				result = new OPER12(L"Error, in coercion product first element of CriticalValues");
+				result = new OPER(L"Error, in coercion product first element of CriticalValues");
 			}
 
 		}
@@ -318,7 +341,7 @@ WDS_ModelSpec_Artificials(
 			delete[] X;
 
 
-			result = new OPER12(nrows, nArts);
+			result = new OPER(nrows, nArts);
 			for (j = 0, ij = 0; j < nArts; j++) {
 				for (i = 0; i < nrows; i++, ij++) {
 					(*result)(i, j) = A[ij];
@@ -386,7 +409,7 @@ WDS_ModelSpec_Artificials(
 			free(nCrits);
 			free(X);
 
-			result = new OPER12(nrows, nArts);
+			result = new OPER(nrows, nArts);
 			for (j = 0, ij = 0; j < nArts; j++) {
 				for (i = 0; i < nrows; i++, ij++) {
 					(*result)(i, j) = A[ij];
@@ -468,7 +491,7 @@ WDS_ModelSpec_Artificials(
 
 			rc = fArtificials_Numeric(X, nrows, Treatment, Crits, nCrits, CLs, nCLs, A.memptr(), nArts, nrows, nArts, 0, 0, false);
 
-			result = new OPER12(nrows, nArts);
+			result = new OPER(nrows, nArts);
 			for (j = 0, ij = 0; j < nArts; j++) {
 				for (i = 0; i < nrows; i++, ij++) {
 					(*result)(i, j) = A[ij];
@@ -487,7 +510,7 @@ WDS_ModelSpec_Artificials(
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
-		result = new OPER12(L"Error, in Artificials: "+std::wstring(ew.begin(), ew.end()));
+		result = new OPER(L"Error, in Artificials: "+std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(cmXInput, bWasXInputCoerced);
@@ -500,17 +523,19 @@ WDS_ModelSpec_Artificials(
 
 }
 
-static AddIn XLL_WDS_ModelSpec_ArtificialsScored(
-	Function(XLL_LPXLOPER, XLL_DECORATE(L"WDS_ModelSpec_ArtificialsScored", 4), L"WDS.ModelSpec.ArtificialsScored")
-	.Arg(XLL_LPXLOPER, L"XInput", L"a column vector of source variable values")
-	.Arg(XLL_LPXLOPER, L"TreatmentString", L"variable spec treatment")
-	.Arg(XLL_LPXLOPER, L"CriticalValues", L"critical values for the variable spec")
-	.Arg(XLL_LPXLOPER, L"CleanLimits", L"(optional) clean limits for the variable spec")
-	.Arg(XLL_LPXLOPER, L"Coefficients", L"coefficient values for the variable spec, rectangular and assumed to be nScores x nArtificials")
-	.Category(L"WDS.ModelSpec")
-	.FunctionHelp(L"Returns a matrix of processed and scored artificial variables based on a column input and variable specs.")
+AddIn XLL_WDS_ModelSpec_ArtificialsScored(
+	Function(XLL_LPXLOPER, "WDS_ModelSpec_ArtificialsScored", "WDS.ModelSpec.ArtificialsScored")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "XInput", "a column vector of source variable values")
+		,Arg(XLL_LPXLOPER, "TreatmentString", "variable spec treatment")
+		,Arg(XLL_LPXLOPER, "CriticalValues", "critical values for the variable spec")
+		,Arg(XLL_LPXLOPER, "CleanLimits", "(optional) clean limits for the variable spec")
+		,Arg(XLL_LPXLOPER, "Coefficients", "coefficient values for the variable spec, rectangular and assumed to be nScores x nArtificials")
+		})
+	.Category("WDS.ModelSpec")
+	.FunctionHelp("Returns a matrix of processed and scored artificial variables based on a column input and variable specs.")
 );
-extern "C" __declspec(dllexport) LPXLOPER12 WINAPI
+LPXLOPER12 WINAPI
 WDS_ModelSpec_ArtificialsScored(
 	LPXLOPER12 XInput
 	, LPXLOPER12 TreatmentString
@@ -518,7 +543,9 @@ WDS_ModelSpec_ArtificialsScored(
 	, LPXLOPER12 CleanLimits
 	, LPXLOPER12 Coefficients
 ) {
-	LPOPER12 result = nullptr;
+#pragma XLLEXPORT
+
+	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(XInput);
 	require_usual_suspect_LPXLOPER_or_exit(TreatmentString);
 	allow_missings_only_LPXLOPER_or_exit(CriticalValues);
@@ -634,7 +661,7 @@ WDS_ModelSpec_ArtificialsScored(
 			delete[] X;
 
 
-			result = new OPER12(nrows, nCoef_nrows);
+			result = new OPER(nrows, nCoef_nrows);
 			for (j = 0, ij = 0; j < nCoef_nrows; j++) {
 				for (i = 0; i < nrows; i++, ij++) {
 					(*result)(i, j) = A[ij];
@@ -700,7 +727,7 @@ WDS_ModelSpec_ArtificialsScored(
 			free(nCrits);
 			free(X);
 
-			result = new OPER12(nrows, nCoef_nrows);
+			result = new OPER(nrows, nCoef_nrows);
 			for (j = 0, ij = 0; j < nCoef_nrows; j++) {
 				for (i = 0; i < nrows; i++, ij++) {
 					(*result)(i, j) = A[ij];
@@ -777,7 +804,7 @@ WDS_ModelSpec_ArtificialsScored(
 
 			rc = fArtificialsScored_Numeric(X, nrows, Treatment, Crits, nCrits, CLs, nCLs, Coeffs.memptr(), nCoef_ncols, nCoef_nrows, A, nCoef_nrows, nrows, nCoef_nrows, 0, 0, false, false);
 
-			result = new OPER12(nrows, nCoef_nrows);
+			result = new OPER(nrows, nCoef_nrows);
 			for (j = 0, ij = 0; j < nCoef_nrows; j++) {
 				for (i = 0; i < nrows; i++, ij++) {
 					(*result)(i, j) = A[ij];
@@ -796,7 +823,7 @@ WDS_ModelSpec_ArtificialsScored(
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
-		result = new OPER12(L"Error, in ArtificialsScored: " + std::wstring(ew.begin(), ew.end()));
+		result = new OPER(L"Error, in ArtificialsScored: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(cmXInput, bWasXInputCoerced);
@@ -809,4 +836,5 @@ WDS_ModelSpec_ArtificialsScored(
 
 }
 
-}
+
+//}

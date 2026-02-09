@@ -1,15 +1,15 @@
 #pragma once
 
-// The WDS::Comp::MatrixXLL class extends WDS::Comp::Matrix with a few xll12 methods.
+// The WDS::Comp::MatrixXLL class extends WDS::Comp::Matrix with a few xll## methods.
 // See WDS::Comp::Matrix for further details.
 
 
-// This class is specific to windows Excel XLLs using xll12.
+// This class is specific to windows Excel XLLs using xll##.
 //
 #include "WDS\Comp\Matrix.h"
 
 #include "windows.h"
-#include "AddIn-xll12.h"
+#include "AddIn-xll.h"
 #include "xlcall.h"
 
 namespace WDS::Comp::Matrix {
