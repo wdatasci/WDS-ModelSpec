@@ -42,6 +42,7 @@ inline int lFreeIfNecessary(LPXLOPER12& target, bool& bWasCoercedFlag) {
 		}
 	}
 	catch (std::exception& e) {
+		e;
 	}
 	return rc;
 }
@@ -68,6 +69,7 @@ inline int lCoerceToMultiIfNecessary(LPXLOPER12& arg, LPXLOPER12& target, bool& 
 		}
 	}
 	catch (std::exception& e) {
+		e;
 		lFreeIfNecessary(target, bWasTargetNew);
 	}
 	return rc;
@@ -84,7 +86,7 @@ inline std::wstring LPOPER_to_wstring(LPXLOPER12 arg0, size_t r, size_t c) { ret
 double LPOPER_to_double(LPXLOPER12 arg0, size_t r, size_t c);
 long LPOPER_to_long(LPXLOPER12 arg0, size_t r, size_t c);
 
-WDS::Comp::Matrix::dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv, bool bLimitRows, long RowLimit, bool bLimitColumns, long ColumnLimit);
+WDS::Comp::Matrix::dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, double defv, bool bLimitRows, long RowLimit, bool bLimitColumns, long ColumnLimit);
 WDS::Comp::Matrix::dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, double defv);
 WDS::Comp::Matrix::iMatrix iMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv, bool bLimitRows, long RowLimit, bool bLimitColumns, long ColumnLimit);
 WDS::Comp::Matrix::iMatrix iMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv);

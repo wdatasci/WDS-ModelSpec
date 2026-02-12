@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src-ExcelSDK\FRAMEWRK.C">
-      <Filter>src-ExcelSDK</Filter>
-    </ClCompile>
     <ClCompile Include="src-ExcelSDK\MemoryManager.cpp">
       <Filter>src-ExcelSDK</Filter>
     </ClCompile>
@@ -56,6 +53,9 @@
     </ClCompile>
     <ClCompile Include="src\XLM.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src-ExcelSDK\FRAMEWRK.C">
+      <Filter>src-ExcelSDK</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

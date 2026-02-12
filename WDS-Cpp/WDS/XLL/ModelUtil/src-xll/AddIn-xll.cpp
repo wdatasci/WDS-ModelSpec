@@ -1,6 +1,7 @@
 // original starts with the DllMain call as in dllmain.cpp example from the xll12-master distribution
-//#define NOMINMAX //defined in ensure.h for _WIN32
-#include <Windows.h>
+#pragma once
+
+#include "AddIn-xll.h"
 #include "ensure.h"
 #define VC_EXTRALEAN
 #include "XLCALL.H"

@@ -9,20 +9,20 @@ using namespace xll;
 #include "WDS\Comp\Matrix.h"
 using namespace WDS::Comp::Matrix;
 
-static AddIn XLL_WDS_Test_Matrix_Inv(
-	Function(XLL_LPOPER, "WDS_Test_Matrix_Inv", "WDS.Test.Matrix.Inv")
+AddIn XLL_WDS_Test_Matrix_Inv(
+	Function(XLL_LPOPER, L"WDS_Test_Matrix_Inv", L"WDS.Test.Matrix.Inv")
 	.Arguments({
-		Arg(XLL_LPXLOPER, "Arg0", "is a LPOPER")
+		Arg(XLL_LPXLOPER, L"Arg0", L"is a LPOPER")
 		})
-	.Category("WDS.Test")
-	.FunctionHelp("Huh?")
+	.Category(L"WDS.Test")
+	.FunctionHelp(L"Huh?")
 );
 LPOPER  WINAPI
 WDS_Test_Matrix_Inv(LPXLOPER12 Arg0)
 {
 #pragma XLLEXPORT
 
-	int i, j, nrows, ncols;
+	int i, nrows, ncols;
 
 	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(Arg0);
@@ -77,25 +77,26 @@ WDS_Test_Matrix_Inv(LPXLOPER12 Arg0)
 
 	lFreeIfNecessary(cmArg0, bWasArg0Coerced);
 
-	if (result != NULL) (*result).xltype = (*result).xltype | xlbitXLFree;
+	//if (result != NULL) (*result).xltype = (*result).xltype | xlbitXLFree;
 
 	return result;
 
 
 }
 
+
 //extern "C" __declspec(dllexport) LPOPER  WINAPI
 AddIn XLL_WDS_Test_Type(
-	Function(XLL_LPOPER, "WDS_Test_Type", "WDS.Test.Type")
+	Function(XLL_LPOPER, L"WDS_Test_Type", L"WDS.Test.Type")
 	.Arguments({
-		Arg(XLL_WORD, "arg0", "is a WORD")
-		,Arg(XLL_LPXLOPER, "other", "is a LPXLOPER12")
+		Arg(XLL_LPOPER, L"arg0", L"is a LPOPER")
+		,Arg(XLL_LPXLOPER, L"other", L"is a LPXLOPER12")
 		})
-	.Category("WDS.Test")
-	.FunctionHelp("Huh?")
+	.Category(L"WDS.Test")
+	.FunctionHelp(L"Huh?")
 );
 LPOPER WINAPI
-WDS_Test_Type(WORD arg0, LPXLOPER12 arg1)
+WDS_Test_Type(LPOPER arg0, LPXLOPER12 arg1)
 {
 #pragma XLLEXPORT
 
@@ -150,7 +151,7 @@ WDS_Test_Type(WORD arg0, LPXLOPER12 arg1)
 
 	LPOPER result = new OPER(rv);
 
-	if (result != NULL) (*result).xltype = (*result).xltype | xlbitXLFree;
+	//if (result != NULL) (*result).xltype = (*result).xltype | xlbitXLFree;
 
 	return result;
 }

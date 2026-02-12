@@ -272,7 +272,6 @@ std::wstring LPOPER_to_wstring(LPXLOPER12 arg0, size_t r, size_t c, std::wstring
 	std::wstring rv = L"";
 	bool bThrowError = false;
 	LPXLOPER12 varg1 = nullptr;
-	size_t nrows, ncols;
 	int rc;
 	if (arg0 != nullptr) {
 		try {
@@ -347,7 +346,6 @@ double LPOPER_to_double(LPXLOPER12 arg0, size_t r, size_t c)
 	double rv = 0.0;
 	bool bThrowError = false;
 	LPXLOPER12 varg1 = nullptr;
-	size_t nrows, ncols;
 	int rc;
 	if (arg0 != nullptr) {
 		try {
@@ -416,7 +414,6 @@ long LPOPER_to_long(LPXLOPER12 arg0, size_t r, size_t c)
 	long rv = 0;
 	bool bThrowError = false;
 	LPXLOPER12 varg1 = nullptr;
-	size_t nrows, ncols;
 	int rc;
 	if (arg0 != nullptr) {
 		try {
@@ -484,7 +481,6 @@ long LPOPER_to_bool(LPXLOPER12 arg0, size_t r, size_t c)
 	bool rv = false;
 	bool bThrowError = false;
 	LPXLOPER12 varg1 = nullptr;
-	size_t nrows, ncols;
 	const wchar_t* TRUEWORDS[] = { L"TRUE",L"T",L"1",L"true",L"t",L"YES",L"Y",L"yes",L"y" };
 	wstring tmpstring;
 	int rc;
@@ -564,6 +560,7 @@ iMatrix iMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv, bool bLimit
 		return result;
 	}
 	catch (exception& e) {
+		e;
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
 		throw std::exception("iMatrixFromLPXLOPER Error"); 
 	}
@@ -577,7 +574,7 @@ iMatrix iMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv) {
 }
 
 
-dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv, bool bLimitRows, long RowLimit, bool bLimitColumns, long ColumnLimit) {
+dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, double defv, bool bLimitRows, long RowLimit, bool bLimitColumns, long ColumnLimit) {
 	LPXLOPER12 cmArg = nullptr;
 	bool bWasArgCoerced = false;
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess)
@@ -597,6 +594,7 @@ dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv, bool bLimit
 		return result;
 	}
 	catch (exception& e) {
+		e;
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
 		throw std::exception("dMatrixFromLPXLOPER Error"); 
 	}
@@ -605,7 +603,7 @@ dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv, bool bLimit
 
 
 dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, double defv) {
-	return dMatrixFromLPXLOPER(Arg, bStrict, defv, false, 0, false, 0);
+	return dMatrixFromLPXLOPER(Arg, bStrict, (long)defv, false, 0, false, 0);
 }
 
 
@@ -636,7 +634,6 @@ WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=
 	bool bWasArg0Coerced = false;
 	LPXLOPER12 cmOpts = nullptr;
 	bool bWasOptsCoerced = false;
-	int rc;
 
 	try {
 
@@ -708,6 +705,7 @@ WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=
 
 	}
 	catch (exception& e) {
+		e;
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sub matrix");
 	}
@@ -715,7 +713,7 @@ WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=
 	lFreeIfNecessary(cmArg0, bWasArg0Coerced);
 	lFreeIfNecessary(cmOpts, bWasOptsCoerced);
 
-	result->xltype = result->xltype | xlbitXLFree;
+	//result->xltype = result->xltype | xlbitXLFree;
 
 	return result;
 
@@ -754,17 +752,17 @@ WDS_Comp_Matrix_SubMatrix(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 
 			iMatrix lOpts = iMatrixFromLPXLOPER(Opts, true, 0);
 			if (lOpts.n_elem == 1) {
-				endi = lOpts.at(0);
+				endi = (long)lOpts.at(0);
 			}
 			else if (lOpts.n_elem == 2) {
-				beginrow = lOpts.at(0);
-				endi = lOpts.at(1);
+				beginrow = (long)lOpts.at(0);
+				endi = (long)lOpts.at(1);
 			}
 			else if (lOpts.n_elem == 4) {
-				beginrow = lOpts.at(0);
-				endi = lOpts.at(1);
-				beginj = lOpts.at(2);
-				endj = lOpts.at(3);
+				beginrow = (long)lOpts.at(0);
+				endi = (long)lOpts.at(1);
+				beginj = (long)lOpts.at(2);
+				endj = (long)lOpts.at(3);
 			}
 		}
 
@@ -772,9 +770,10 @@ WDS_Comp_Matrix_SubMatrix(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
+		e;
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across");
-		result->xltype = result->xltype | xlbitXLFree;
+		//result->xltype = result->xltype | xlbitXLFree;
 	}
 
 	return result;
@@ -811,27 +810,27 @@ WDS_Comp_Matrix_Rows(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 
 			iMatrix lInd = iMatrixFromLPXLOPER(Ind, true, 0);
 			if (lInd.n_elem == 1) {
-				beginrow = lInd.at(0);
-				endrow = lInd.at(0);
+				beginrow = (long)lInd.at(0);
+				endrow = (long)lInd.at(0);
 			}
 			else if (lInd.n_elem == 2) {
-				beginrow = lInd.at(0);
-				endrow = lInd.at(1);
+				beginrow = (long)lInd.at(0);
+				endrow = (long)lInd.at(1);
 			}
 			else if (lInd.n_elem == 4) {
-				beginrow = lInd.at(0);
-				endrow = lInd.at(1);
-				begincol = lInd.at(2);
-				endcol = lInd.at(3);
+				beginrow = (long)lInd.at(0);
+				endrow = (long)lInd.at(1);
+				begincol = (long)lInd.at(2);
+				endcol = (long)lInd.at(3);
 			}
 		}
 
 		if (!useless_LPXLOPER(Opts)) {
 			iMatrix lOpts = iMatrixFromLPXLOPER(Opts, true, 0);
-			long tmp = lOpts(0, 0);
+			long tmp = (long)lOpts(0, 0);
 			if (tmp == 0) {
 				result = new OPER();
-				result->xltype = result->xltype | xlbitXLFree;
+				//result->xltype = result->xltype | xlbitXLFree;
 				return result;
 			}
 			if (begincol == LONG_MAX) {
@@ -845,9 +844,10 @@ WDS_Comp_Matrix_Rows(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
+		e;
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across rows");
-		result->xltype = result->xltype | xlbitXLFree;
+		//result->xltype = result->xltype | xlbitXLFree;
 	}
 
 	return result;
@@ -883,27 +883,27 @@ WDS_Comp_Matrix_Columns(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 		if (!useless_LPXLOPER(Ind)) {
 			iMatrix lInd = iMatrixFromLPXLOPER(Ind, true, 0);
 			if (lInd.n_elem == 1) {
-				begincol = lInd.at(0);
-				endcol = lInd.at(0);
+				begincol = (long)lInd.at(0);
+				endcol = (long)lInd.at(0);
 			}
 			else if (lInd.n_elem == 2) {
-				begincol = lInd.at(0);
-				endcol = lInd.at(1);
+				begincol = (long)lInd.at(0);
+				endcol = (long)lInd.at(1);
 			}
 			else if (lInd.n_elem == 4) {
-				beginrow = lInd.at(0);
-				endrow = lInd.at(1);
-				begincol = lInd.at(2);
-				endcol = lInd.at(3);
+				beginrow = (long)lInd.at(0);
+				endrow = (long)lInd.at(1);
+				begincol = (long)lInd.at(2);
+				endcol = (long)lInd.at(3);
 			}
 		}
 
 		if (!useless_LPXLOPER(Opts)) {
 			iMatrix lOpts = iMatrixFromLPXLOPER(Opts, true, 0);
-			long tmp = lOpts(0, 0);
+			long tmp = (long)lOpts(0, 0);
 			if (tmp == 0) {
 				result = new OPER();
-				result->xltype = result->xltype | xlbitXLFree;
+				//result->xltype = result->xltype | xlbitXLFree;
 				return result;
 			}
 			if (beginrow == LONG_MAX) {
@@ -917,9 +917,10 @@ WDS_Comp_Matrix_Columns(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
+		e;
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across rows");
-		result->xltype = result->xltype | xlbitXLFree;
+		//result->xltype = result->xltype | xlbitXLFree;
 	}
 
 	return result;
@@ -970,10 +971,10 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 
 		if (!useless_LPXLOPER(Opts)) {
 			iMatrix lOpts = iMatrixFromLPXLOPER(Opts, true, 0);
-			long tmp = lOpts(0, 0);
+			long tmp = (long)lOpts(0, 0);
 			if (tmp == 0) {
 				result = new OPER();
-				result->xltype = result->xltype | xlbitXLFree;
+				//result->xltype = result->xltype | xlbitXLFree;
 				return result;
 			}
 			if (endrow > tmp) 
@@ -983,14 +984,14 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 
 		iMatrix lColumnSet = iMatrixFromLPXLOPER(ColumnSet, true, 0);
 
-		int rNCols = lColumnSet.n_elem;
+		int rNCols = (int)lColumnSet.n_elem;
 
 		beginrow -=1;
 
 		result = new OPER(endrow - beginrow, rNCols);
 		int i, j, ri, rj, ij;
 		for (rj = 0; rj < rNCols; rj++) {
-			j = lColumnSet.at(rj);
+			j = (int)lColumnSet.at(rj);
 			if (j >= 1 && j <= ncols) {
 				j -= 1;
 				for (ri = 0, i = beginrow; i < endrow; ri++, i++) {
@@ -1027,6 +1028,7 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 
 	}
 	catch (exception& e) {
+		e;
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sub matrix");
 	}
@@ -1034,7 +1036,7 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 	lFreeIfNecessary(cmArg0, bWasArg0Coerced);
 	lFreeIfNecessary(cmOpts, bWasOptsCoerced);
 
-	result->xltype = result->xltype | xlbitXLFree;
+	//result->xltype = result->xltype | xlbitXLFree;
 
 	return result;
 
@@ -1126,6 +1128,7 @@ WDS_Comp_zzzInternal_SumAcross(LPXLOPER12 Arg0, long direction, long startrow, l
 
 	}
 	catch (exception& e) {
+		e;
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across columns");
 	}
@@ -1133,7 +1136,7 @@ WDS_Comp_zzzInternal_SumAcross(LPXLOPER12 Arg0, long direction, long startrow, l
 	lFreeIfNecessary(cmArg0, bWasArg0Coerced);
 	lFreeIfNecessary(cmOpts, bWasOptsCoerced);
 
-	result->xltype = result->xltype | xlbitXLFree;
+	//result->xltype = result->xltype | xlbitXLFree;
 
 	return result;
 
@@ -1191,9 +1194,10 @@ WDS_Comp_Matrix_SumAcross(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
+		e;
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across");
-		result->xltype = result->xltype | xlbitXLFree;
+		//result->xltype = result->xltype | xlbitXLFree;
 	}
 
 	return result;
@@ -1250,9 +1254,10 @@ WDS_Comp_Matrix_SumAcrossRows(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
+		e;
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across rows");
-		result->xltype = result->xltype | xlbitXLFree;
+		//result->xltype = result->xltype | xlbitXLFree;
 	}
 
 	return result;
@@ -1309,8 +1314,9 @@ WDS_Comp_Matrix_SumAcrossColumns(LPXLOPER12 Arg0, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
+		e;
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result->xltype = result->xltype | xlbitXLFree;
+		//result->xltype = result->xltype | xlbitXLFree;
 		result = new OPER(L"Error, in coercion or sum across columns");
 	}
 
@@ -1336,7 +1342,7 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 
 	using namespace WDS::Comp::Matrix;
 
-	int i, j, nrows, ncols;
+	int nrows, ncols;
 
 	LPOPER result=nullptr;
 	require_usual_suspect_LPXLOPER(Arg);
@@ -1349,7 +1355,7 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
 		result = new OPER(L"Error, in coercion in Matrix.RowNormed");
-		if (result!=nullptr) result->xltype = result->xltype | xlbitXLFree;
+		//if (result!=nullptr) result->xltype = result->xltype | xlbitXLFree;
 	return result;
 	}
 	bool lbStrict = true;
@@ -1388,13 +1394,14 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 
 		}
 	catch (exception& e) {
+		e;
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or row-normalization");
 	}
 
 	lFreeIfNecessary(cmArg, bWasArgCoerced);
 
-	if (result!=nullptr) result->xltype = result->xltype | xlbitXLFree;
+	//if (result!=nullptr) result->xltype = result->xltype | xlbitXLFree;
 
 	return result;
 
@@ -1458,7 +1465,7 @@ WDS_Comp_Matrix_NormedBaseOdds(long Offset, LPXLOPER12 BaseOdds, LPXLOPER12 Topo
 	lFreeIfNecessary(cmBaseOdds, bWasBaseOddsCoerced);
 	lFreeIfNecessary(cmTopology, bWasTopologyCoerced);
 
-	oResult->xltype = oResult->xltype | xlbitXLFree;
+	//oResult->xltype = oResult->xltype | xlbitXLFree;
 
 	return oResult;
 }
@@ -1549,11 +1556,11 @@ WDS_Comp_Matrix_ScoredAndNormedBaseOdds(long Index
 			ensure(cmTailFactor->val.array.columns == n && cmTailFactor->val.array.rows == n);
 		}
 
-		iMatrix lOffset = iMatrixFromLPXLOPER(Offset,false,0.0,true,nrows,true,1);
+		iMatrix lOffset = iMatrixFromLPXLOPER(Offset,false,0,true,nrows,true,1);
 		dMatrix lBaseOdds = dMatrixFromLPXLOPER(BaseOdds,false,0.0);
 		dMatrix lTopology = dMatrixFromLPXLOPER(Topology,false,0.0);
 		iMatrix lIJs = (bUseVs) ? iMatrixFromLPXLOPER(IJs,false,0) : iMatrix(1, 1);
-		dMatrix lVs = (bUseVs) ? dMatrixFromLPXLOPER(Vs,false,0.0,true,nrows,false,0) : dMatrix(1, 1);
+		dMatrix lVs = (bUseVs) ? dMatrixFromLPXLOPER(Vs,false,0,true,nrows,false,0) : dMatrix(1, 1);
 		dMatrix lTailFactor = (bUseTailFactorFlag) ? dMatrixFromLPXLOPER(TailFactor,false,0.0) : dMatrix(1, 1);
 		
 		dMatrix mResult = ScoredAndNormedBaseOdds((int) Index, n, m, 0, lOffset, lBaseOdds, lTopology, bUseVs, lIJs, lVs
@@ -1566,13 +1573,13 @@ WDS_Comp_Matrix_ScoredAndNormedBaseOdds(long Index
 			for (i = 0, mi = 0; i < n; i++, mi++)
 				(*oResult)(i, j) = mResult[mi, mj];
 
-	oResult->xltype = oResult->xltype | xlbitXLFree;
+	//oResult->xltype = oResult->xltype | xlbitXLFree;
 	}
 	catch (exception& e) {
 		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
 		oResult = new OPER(L"Error, in ScoredAndNormedBaseOdds: "+std::wstring(ew.begin(), ew.end()));
-	oResult->xltype = oResult->xltype | xlbitXLFree;
+	//oResult->xltype = oResult->xltype | xlbitXLFree;
 	}
 	lFreeIfNecessary(cmOffset, bWasOffsetCoerced);
 	lFreeIfNecessary(cmBaseOdds, bWasBaseOddsCoerced);
@@ -1619,19 +1626,19 @@ WDS_Comp_Matrix_Mult(LPXLOPER12 A, LPXLOPER12 B) {
 
 		size_t nrows = (size_t) mResult.nrows();
 		size_t ncols = (size_t) mResult.ncols();
-		LPOPER oResult = new OPER(nrows,ncols);
+		LPOPER oResult = new OPER((int)nrows,(int)ncols);
 		mIndex mi = 0, mj = 0;
 		size_t i = 0, j = 0;
 		for (j = 0, mj = 0; j < ncols; j++, mj++)
 			for (i = 0, mi = 0; i < nrows; i++, mi++)
-				(*oResult)(i, j) = mResult[mi, mj];
-		oResult->xltype = oResult->xltype | xlbitXLFree;
+				(*oResult)((int)i, (int)j) = mResult[mi, mj];
+		//oResult->xltype = oResult->xltype | xlbitXLFree;
 	}
 	catch (exception& e) {
 		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
 		oResult = new OPER(L"Error, in Matrix.Mult: "+std::wstring(ew.begin(), ew.end()));
-		oResult->xltype = oResult->xltype | xlbitXLFree;
+		//oResult->xltype = oResult->xltype | xlbitXLFree;
 	}
 	lFreeIfNecessary(cmA, bWasACoerced);
 	lFreeIfNecessary(cmB, bWasBCoerced);
@@ -1762,7 +1769,7 @@ WDS_Comp_RFScheduled(
 		}
 
 
-		int i, j, iM1;
+		int i, iM1;
 		if (bReturnCumulatives)
 			oResult = new OPER(nrows, 7);
 		else
@@ -1775,9 +1782,11 @@ WDS_Comp_RFScheduled(
 		double intratepct = 0.0;
 		double pmt = 0.0;
 		int last_panelindex = 0;
+		long loanage = 0;
 		int rc = 0;
 		for (i = 0, iM1=-1; i < nrows; i++, iM1++) {
 			templong = xltypeMulti_to_long(cmPanelInd, i, 0, false, 0);
+			loanage = xltypeMulti_to_long(cmLoanAgeMos, i, 0, false, 0);
 			if (i == 0 || templong != 0) {
 				last_panelindex = i;
 				prinbal = xltypeMulti_to_double(cmPrinBal, i, 0, false, 0);
@@ -1802,10 +1811,12 @@ WDS_Comp_RFScheduled(
 						pmt = 0.0;
 					}
 				}
-				if (bReturnCumulatives) {
+				(*oResult)(i, 3) = pmt;
+				if (bReturnCumulatives && (loanage>0)) {
 					if (prinbal > 1e-8 && pmt < -1e-8) {
-						(*oResult)(i, 4) = pmt + intratepct / (1.0 + intratepct) * (prinbal - pmt);
-						(*oResult)(i, 5) = -intratepct / (1.0 + intratepct) * (prinbal - pmt);
+						double tmpd = intratepct / (1.0 + intratepct) * prinbal;
+						(*oResult)(i, 4) = pmt + tmpd;
+						(*oResult)(i, 5) = -tmpd;
 						(*oResult)(i, 6) = pmt;
 					}
 				}
@@ -1822,7 +1833,7 @@ WDS_Comp_RFScheduled(
 					prinbal += tempdouble2;
 					(*oResult)(i, 0) = prinbal;
 					if (bReturnCumulatives) {
-						if (i > last_panelindex + 1) {
+						if (i > last_panelindex) {
 							(*oResult)(i, 4) = (double)(*oResult)(iM1, 4).val.num + tempdouble2;
 							(*oResult)(i, 5) = (double)(*oResult)(iM1, 5).val.num + tempdouble;
 							(*oResult)(i, 6) = (double)(*oResult)(iM1, 6).val.num + tempdouble + tempdouble2;
@@ -1835,24 +1846,24 @@ WDS_Comp_RFScheduled(
 					}
 				}
 				else if (prinbal > 0) {
-					(*oResult)(i, 1) = 0.0;
-					(*oResult)(i, 2) = -prinbal;
+					(*oResult)(i, 0) = 0.0;
+					(*oResult)(i, 1) = -prinbal;
+					(*oResult)(i, 2) = 0.0;
 					(*oResult)(i, 3) = -prinbal;
-					prinbal = 0.0;
-					(*oResult)(i, 0) = prinbal;
 					if (bReturnCumulatives) {
 						if (i > last_panelindex + 1) {
-							(*oResult)(i, 4) = (double)(*oResult)(iM1, 4).val.num + tempdouble2;
-							(*oResult)(i, 5) = (double)(*oResult)(iM1, 5).val.num + tempdouble;
-							(*oResult)(i, 6) = (double)(*oResult)(iM1, 6).val.num + tempdouble - tempdouble2;
+							(*oResult)(i, 4) = (double)(*oResult)(iM1, 4).val.num -prinbal;
+							(*oResult)(i, 5) = (double)(*oResult)(iM1, 5).val.num ;
+							(*oResult)(i, 6) = (double)(*oResult)(iM1, 6).val.num -prinbal;
 						}
 						else {
-							(*oResult)(i, 4) = 0.0;
-							(*oResult)(i, 5) = -prinbal;
+							(*oResult)(i, 4) = -prinbal;
+							(*oResult)(i, 5) = 0.0;
 							(*oResult)(i, 6) = -prinbal;
 
 						}
 					}
+					prinbal = 0.0;
 				}
 				else {
 					if (bReturnCumulatives) {
@@ -1880,7 +1891,7 @@ WDS_Comp_RFScheduled(
 	lFreeIfNecessary(cmTermMos, bWasTermMosCoerced);
 	lFreeIfNecessary(cmPmtAmt, bWasPmtAmtCoerced);
 
-	oResult->xltype = oResult->xltype | xlbitXLFree;
+	//oResult->xltype = oResult->xltype | xlbitXLFree;
 	return oResult;
 }
 
@@ -2033,7 +2044,7 @@ WDS_Comp_RollIt(
 	int row=0, rowM1=-1, rowP1=1;
 	int NStates = 0;
 	int i, j, k;
-	int ii, jj, kk;
+	int jj;
 	mIndex mi=0, mj=0;
 
 
@@ -2102,7 +2113,7 @@ WDS_Comp_RollIt(
 		}
 		iMatrix lPreRollInjection_IJs = (bUsePreRollInjection_Vs) ? iMatrixFromLPXLOPER(cmPreRollInjection_IJs,false,0) : iMatrix(1, 1);
 		if (bUsePreRollInjection_Vs) lPreRollInjection_IJs-=1;
-		dMatrix lPreRollInjection_Vs = (bUsePreRollInjection_Vs) ? dMatrixFromLPXLOPER(cmPreRollInjection_Vs,false,0.0,true,nrows,false,0) : dMatrix(1, 1);
+		dMatrix lPreRollInjection_Vs = (bUsePreRollInjection_Vs) ? dMatrixFromLPXLOPER(cmPreRollInjection_Vs,false,0,true,nrows,false,0) : dMatrix(1, 1);
 
 		if (IJs->xltype == xltypeMulti || IJs->xltype == xltypeSRef || IJs->xltype == xltypeRef) {
 			bUseVs = true;
@@ -2115,7 +2126,7 @@ WDS_Comp_RollIt(
 		}
 		iMatrix lIJs = (bUseVs) ? iMatrixFromLPXLOPER(cmIJs,false,0) : iMatrix(1, 1);
 		if (bUseVs) lIJs-=1;
-		dMatrix lVs = (bUseVs) ? dMatrixFromLPXLOPER(cmVs,false,0.0,true,nrows,false,0) : dMatrix(1, 1);
+		dMatrix lVs = (bUseVs) ? dMatrixFromLPXLOPER(cmVs,false,0,true,nrows,false,0) : dMatrix(1, 1);
 
 		//if (PostNormFactor_IJs->xltype == xltypeMulti || PostNormFactor_IJs->xltype == xltypeSRef || PostNormFactor_IJs->xltype == xltypeRef) {
 		//	bUsePostNormFactor_Vs = true;
@@ -2153,7 +2164,7 @@ WDS_Comp_RollIt(
 			lDbgIndex = LPOPER_to_long(cmDbgIndex, 0, 0);
 		}
 
-		iMatrix lOffset = iMatrixFromLPXLOPER(cmOffset,false,0.0,true,nrows,false,0);
+		iMatrix lOffset = iMatrixFromLPXLOPER(cmOffset,false,0,true,nrows,false,0);
 		dMatrix lBaseOdds = dMatrixFromLPXLOPER(cmBaseOdds,false,0.0);
 		dMatrix lTopology = dMatrixFromLPXLOPER(cmTopology,false,0.0);
 		dMatrix lDelqDelta = dMatrixFromLPXLOPER(cmDelqDelta,false,0.0);
@@ -2211,14 +2222,14 @@ WDS_Comp_RollIt(
 		bool bIsRowLastRowForPanel=false;
 		bool bDbgStop = false;
 
-				dMatrix MPmtPrinAmtI = dMatrix(1, NStates, fill::zeros);
-				dMatrix MPmtPrinAmtJ = dMatrix(1, NStates, fill::zeros);
-				dMatrix MPmtPrinAmt = dMatrix(NStates, NStates, fill::zeros);
-				dMatrix MPmtIntAmtI = dMatrix(1, NStates, fill::zeros);
-				dMatrix MPmtIntAmtJ = dMatrix(1, NStates, fill::zeros);
-				dMatrix MPmtIntAmt = dMatrix(NStates, NStates, fill::zeros);
-				dMatrix lMPmtPrinAmtBackPatch = dMatrix(24, 1, fill::zeros);
-				dMatrix lMPmtIntAmtBackPatch = dMatrix(24, 1, fill::zeros);
+		dMatrix MPmtPrinAmtI = dMatrix(1, NStates, fill::zeros);
+		dMatrix MPmtPrinAmtJ = dMatrix(1, NStates, fill::zeros);
+		dMatrix MPmtPrinAmt = dMatrix(NStates, NStates, fill::zeros);
+		dMatrix MPmtIntAmtI = dMatrix(1, NStates, fill::zeros);
+		dMatrix MPmtIntAmtJ = dMatrix(1, NStates, fill::zeros);
+		dMatrix MPmtIntAmt = dMatrix(NStates, NStates, fill::zeros);
+		dMatrix lMPmtPrinAmtBackPatch = dMatrix(24, 1, fill::zeros);
+		dMatrix lMPmtIntAmtBackPatch = dMatrix(24, 1, fill::zeros);
 
 		if (nrows==1) 
 			templong2 = xltypeMulti_to_long(cmPanelInd, 0, 0, false, 0);
@@ -2236,6 +2247,7 @@ WDS_Comp_RollIt(
 				bIsRowLastRowForPanel = (templong2 != 0);
 			}
 			mtm = xltypeMulti_to_long(cmWAM, row, 0, false, 0);
+			loanage = xltypeMulti_to_long(cmLoanAgeMos, row, 0, false, 0);
 
 			//Copy over rows, first rows for panel
 			if (row == 0 || templong != 0) {
@@ -2253,28 +2265,57 @@ WDS_Comp_RollIt(
 				}
 				if (bUsePreRollInjection_Vs) {
 					for (j = 0, jj=nPreRollInjection_IJs; j < nPreRollInjection_IJs; j++, jj++) {
-						k = lPreRollInjection_IJs.at(0, j);
+						k = (int)lPreRollInjection_IJs.at(0, j);
 						tempdouble = xltypeMulti_to_double(cmPreRollInjection_Vs, row, j, false, 0);
 						mNDist.at(row, j) += tempdouble;
 						tempdouble = xltypeMulti_to_double(cmPreRollInjection_Vs, row, jj, false, 0);
 						mPrinBalDist.at(row, j) += tempdouble;
 					}
 				}
+
 				memset(lMPmtPrinAmtBackPatch.memptr(), 0, 24 * sizeof(double));
 				memset(lMPmtIntAmtBackPatch.memptr(), 0, 24 * sizeof(double));
-				double lprinbal = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 0, false, 0.0);   //PrinBal
-				double lpmtamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 6, false, 0.0); // last PmtAmt
-				double lpmtprinamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 4, false, 0.0); // last PmtAmt
-				double lpmtintamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 5, false, 0.0); // last PmtAmt
+
+				double lprinbal = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 0, false, 0.0);
+
+				double lpmtprinamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 1, false, 0.0); 
+				if (lpmtprinamt < 1e-2) {
+					lpmtprinamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 4, false, 0.0); 
+				}
+				double lpmtintamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 2, false, 0.0); 
+				if (lpmtintamt < 1e-2) {
+					lpmtintamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 5, false, 0.0); 
+				}
+				double lpmtamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 3, false, 0.0); 
+				if (lpmtamt < 1e-2) {
+					lpmtamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 6, false, 0.0); 
+				}
+
+				double lcpmtprinamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 4, false, 0.0); 
+				double lcpmtintamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 5, false, 0.0); 
+				double lcpmtamt = xltypeMulti_to_double(cmRFSched, firstrow_forpanel, 6, false, 0.0); 
+
+				lMPmtPrinAmtBackPatch[0] = lcpmtprinamt;
+				lMPmtIntAmtBackPatch[0] = lcpmtintamt;
+
 				double lirfactor = 0.0;
 				if (lprinbal>lpmtprinamt) lirfactor=- lpmtintamt / (lprinbal - lpmtprinamt);
 				lirfactor /= (1.0 + lirfactor);
+
+				long lloanage = loanage;
 				for (k = 1; k < 24 && k < NStates; k++) {
-					lMPmtPrinAmtBackPatch[k] = lMPmtPrinAmtBackPatch[k - 1] - lpmtprinamt;
-					lMPmtIntAmtBackPatch[k] = lMPmtIntAmtBackPatch[k - 1] - lpmtintamt;
-					lprinbal -= lpmtprinamt;
-					lpmtintamt = -lirfactor * lprinbal;
-					lpmtprinamt = lpmtamt - lpmtintamt;
+					lloanage -= 1;
+					//if (lloanage > 0) {
+						lpmtintamt = lirfactor * lprinbal;
+						lpmtprinamt = lpmtamt - lpmtintamt;
+						lprinbal += lpmtprinamt;
+						lMPmtPrinAmtBackPatch[k] = lMPmtPrinAmtBackPatch[k - 1] - lpmtprinamt;
+						lMPmtIntAmtBackPatch[k] = lMPmtIntAmtBackPatch[k - 1] - lpmtintamt;
+					//}
+					//else {
+						//lMPmtPrinAmtBackPatch[k] = 0.0;
+						//lMPmtIntAmtBackPatch[k] = 0.0;
+					//}
 				}
 
 			}
@@ -2307,7 +2348,7 @@ WDS_Comp_RollIt(
 						MPmtPrinAmtJ[mj] = xltypeMulti_to_double(cmRFSched, j, 4, false, 0.0);
 						MPmtIntAmtJ[mj] = xltypeMulti_to_double(cmRFSched, j, 5, false, 0.0);
 					}
-					else if (j < firstrow_forpanel && j>firstrow_forpanel - 24) {
+					else if (j <= firstrow_forpanel && j>firstrow_forpanel - 24) {
 						MPmtPrinAmtJ[mj] = lMPmtPrinAmtBackPatch[firstrow_forpanel - j];
 						MPmtIntAmtJ[mj] = lMPmtIntAmtBackPatch[firstrow_forpanel - j];
 					}
@@ -2315,7 +2356,7 @@ WDS_Comp_RollIt(
 						MPmtPrinAmtI[mj] = xltypeMulti_to_double(cmRFSched, i, 4, false, 0.0);
 						MPmtIntAmtI[mj] = xltypeMulti_to_double(cmRFSched, i, 5, false, 0.0);
 					}
-					else if (i < firstrow_forpanel && i>firstrow_forpanel - 24) {
+					else if (i <= firstrow_forpanel && i>firstrow_forpanel - 24) {
 						MPmtPrinAmtI[mj] = lMPmtPrinAmtBackPatch[firstrow_forpanel - i];
 						MPmtIntAmtI[mj] = lMPmtIntAmtBackPatch[firstrow_forpanel - i];
 					}
@@ -2375,7 +2416,7 @@ WDS_Comp_RollIt(
 				dMatrix rollPrinBalLag1;
 				if (bUsePreRollInjection_Vs) {
 					for (j = 0, jj = nPreRollInjection_IJs; j < nPreRollInjection_IJs; j++, jj++) {
-						k = lPreRollInjection_IJs.at(0, j);
+						k = (int)lPreRollInjection_IJs.at(0, j);
 						tempdouble = xltypeMulti_to_double(cmPreRollInjection_Vs, row, j, false, 0);
 						mNDistrowM1.at(0, j) += tempdouble;
 						tempdouble = xltypeMulti_to_double(cmPreRollInjection_Vs, row, jj, false, 0);
@@ -2495,7 +2536,7 @@ WDS_Comp_RollIt(
 	lFreeIfNecessary(cmDbgOption, bWasDbgOptionCoerced);
 	lFreeIfNecessary(cmDbgIndex, bWasDbgIndexCoerced);
 
-	oResult->xltype = oResult->xltype | xlbitXLFree;
+	//oResult->xltype = oResult->xltype | xlbitXLFree;
 
 	return oResult;
 }
@@ -2522,7 +2563,7 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 
 	using namespace WDS::Comp::Matrix;
 
-	int i, iM1, j, nrows, ncols;
+	int i, iM1, j, nrows;
 
 	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg);
@@ -2535,7 +2576,7 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
 		result = new OPER(L"Error, in coercion in Util.SimpleFirsts");
-		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+		//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
 
@@ -2633,12 +2674,14 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 	}
 	catch (exception& e) {
 		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER(L"Error, in coercion or SimpeFirsts");
+		string m = "Error, in coercion or SimpleFirsts, ";
+		m.append(e.what());
+		result = new OPER(m);
 	}
 
 	lFreeIfNecessary(cmArg, bWasArgCoerced);
 
-	if (result!=nullptr) result->xltype = result->xltype | xlbitXLFree;
+	//if (result!=nullptr) result->xltype = result->xltype | xlbitXLFree;
 
 	return result;
 
@@ -2672,8 +2715,8 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 
 	using namespace WDS::Comp::Matrix;
 
-	int i, iM1, j, k, kP1, nrows, ncols, lOp;
-	int firsti, lasti, comp1, comp2;
+	int i, j, nrows, ncols, lOp;
+	
 	double ldefv = 0.0;
 	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER_or_exit(Arg1);
@@ -2689,14 +2732,14 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 	if (lCoerceToMultiIfNecessary(Arg1, cmArg1, bWasArg1Coerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 		result = new OPER(L"Error, in coercion of Arg1 in Util.dNComp");
-		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+		//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
 
 	if (cmArg1->val.array.rows < 1) {
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 		result = new OPER(L"Error, Arg1 must not be empty");
-		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+		//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
 
@@ -2707,7 +2750,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 		lFreeIfNecessary(cmArg2, bWasArg2Coerced);
 		result = new OPER(L"Error, in coercion of Arg2 in Util.dNComp");
-		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+		//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
 
@@ -2715,7 +2758,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 		lFreeIfNecessary(cmArg2, bWasArg2Coerced);
 		result = new OPER(L"Error, Arg2 must not be empty");
-		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+		//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
 
@@ -2729,7 +2772,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 		lFreeIfNecessary(cmArg2, bWasArg2Coerced);
 		result = new OPER(L"Error, Arg2 must be a single value or larger than Arg1 in Util.dNComp");
-		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+		//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
 
@@ -2739,7 +2782,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 		int tempint = (int)LPOPER_to_long(Op, 0, 0);
 		if (tempint < 0 || tempint>1) {
 			result = new OPER(L"Error, Op can only be an integer [0,1]");
-			if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+			//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 			return result;
 		}
 		lOp = tempint;
@@ -2862,7 +2905,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 	lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 	lFreeIfNecessary(cmArg2, bWasArg2Coerced);
 
-	if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+//	if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 
 	return result;
 
@@ -2893,8 +2936,8 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 
 	using namespace WDS::Comp::Matrix;
 
-	int i, iM1, j, k, kP1, nrows, ncols, lOp;
-	int firsti, lasti, comp1, comp2;
+	int i, j, nrows, ncols, lOp;
+	
 	double ldefv = 0.0;
 	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg);
@@ -2909,7 +2952,7 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
 		result = new OPER(L"Error, in coercion in Util.dNElse");
-		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+		//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
 
@@ -2923,7 +2966,7 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 		int tempint = (int)LPOPER_to_long(Op, 0, 0);
 		if (tempint < 0 || tempint>9) {
 			result = new OPER(L"Error, Op can only be an integer [0,9]");
-			if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+			//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 			return result;
 		}
 		lOp = tempint;
@@ -3043,7 +3086,7 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 
 	lFreeIfNecessary(cmArg, bWasArgCoerced);
 
-	if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+	//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 
 	return result;
 
@@ -3079,7 +3122,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 	using namespace WDS::Comp::Matrix;
 
 	int i, iM1, j, k, kP1, nrows, ncols;
-	int firsti, lasti, comp1, comp2;
+	int firsti, lasti, comp1;
 	LPOPER result = nullptr;
 	require_usual_suspect_LPXLOPER(Arg);
 	allow_missings_only_LPXLOPER_or_exit(inputrowlimit);
@@ -3093,7 +3136,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
 		result = new OPER(L"Error, in coercion in Util.SimpleSort");
-		if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+		//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 		return result;
 	}
 
@@ -3201,7 +3244,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 			}
 			else {
 				k = firsti;
-				kP1 = ind(k, 2);
+				kP1 = (int)ind(k, 2);
 				bool found = false;
 				comp1 = wWords[k].compare(wWords[i]);
 				if (lbReturnJustUnique && comp1 == 0) {
@@ -3218,7 +3261,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 					}
 					else {
 						k = kP1;
-						kP1 = ind(k, 2);
+						kP1 = (int)ind(k, 2);
 						for (j = 0; (k >= 0) && !found && j < i; j++) { //only have to check against all existing elements
 							comp1 = wWords[k].compare(wWords[i]);
 							if (lbReturnJustUnique && comp1 == 0) {
@@ -3238,7 +3281,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 								}
 								else {
 									k = kP1;
-									if (k >= 0) kP1 = ind(k, 2);
+									if (k >= 0) kP1 = (int)ind(k, 2);
 								}
 								if (k < 0) break;
 							}
@@ -3260,7 +3303,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 		if (lbReturnJustIndices) {
 			for (i = 0; i < outcount; i++) {
 				(*result)(i, 0) = k + 1;
-				k = ind(k, 2);
+				k = (int)ind(k, 2);
 			}
 		}
 		else {
@@ -3285,7 +3328,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 				default:
 					break;
 				}
-				k = ind(k, 2);
+				k = (int)ind(k, 2);
 			}
 		}
 
@@ -3298,7 +3341,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 
 	lFreeIfNecessary(cmArg, bWasArgCoerced);
 
-	if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+	//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 
 	return result;
 

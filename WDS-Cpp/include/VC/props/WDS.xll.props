@@ -3,10 +3,10 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
     <xll_ROOT>$(CppLocalExternalPackages)\xll24</xll_ROOT>
-    <Excel2013XLLSDK_ROOT>$(CppLocalExternalPackages)\Excel2013XLLSDK</Excel2013XLLSDK_ROOT>
     <xll_LIBDIR>$(xll_ROOT)</xll_LIBDIR>
-    <Excel2013XLLSDK_LIBDIR>$(Excel2013XLLSDK_ROOT)\LIB\x64</Excel2013XLLSDK_LIBDIR>
     <xll_INCLUDE>$(xll_ROOT)\include</xll_INCLUDE>
+    <Excel2013XLLSDK_ROOT>$(CppLocalExternalPackages)\Excel2013XLLSDK</Excel2013XLLSDK_ROOT>
+    <Excel2013XLLSDK_LIBDIR>$(Excel2013XLLSDK_ROOT)\LIB\x64</Excel2013XLLSDK_LIBDIR>
     <Excel2013XLLSDK_INCLUDE>$(Excel2013XLLSDK_ROOT)\INCLUDE</Excel2013XLLSDK_INCLUDE>
   </PropertyGroup>
   <PropertyGroup>

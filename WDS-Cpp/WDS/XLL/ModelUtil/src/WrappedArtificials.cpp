@@ -57,7 +57,7 @@ WDS_ModelSpec_CleanTreatment(LPOPER arg0)
 	std::wstring tempstring;
 	tempstring = eTreatmentLabel(Treatment);
 	result = new OPER(tempstring);
-	if (result != nullptr) (*result).xltype = (*result).xltype | xlbitXLFree;
+	//if (result != nullptr) (*result).xltype = (*result).xltype | xlbitXLFree;
 	return result;
 }
 
@@ -96,7 +96,7 @@ WDS_ModelSpec_nArtificialCount(LPXLOPER12 _nCriticalValues, LPXLOPER12 _Treatmen
 
 	lFreeIfNecessary(__nCriticalValues, bWas_nCriticalValuesCoerced);
 
-	if (result != nullptr) (*result).xltype = (*result).xltype | xlbitXLFree;
+	//if (result != nullptr) (*result).xltype = (*result).xltype | xlbitXLFree;
 	return result;
 }
 
@@ -148,7 +148,7 @@ WDS_ModelSpec_ArtificialLabels(LPXLOPER12 _nCriticalValues, LPXLOPER12 _Treatmen
 
 	lFreeIfNecessary(__nCriticalValues, bWas_nCriticalValuesCoerced);
 
-	if (result != nullptr) (*result).xltype = (*result).xltype | xlbitXLFree;
+	//if (result != nullptr) (*result).xltype = (*result).xltype | xlbitXLFree;
 	return result;
 }
 
@@ -197,7 +197,7 @@ WDS_ModelSpec_ScoreLabels(LPXLOPER12 _nScores, LPXLOPER12 _LabelBase, LPXLOPER12
 
 	lFreeIfNecessary(__nScores, bWas_nScoresCoerced);
 
-	if (result != nullptr) (*result).xltype = (*result).xltype | xlbitXLFree;
+	//if (result != nullptr) (*result).xltype = (*result).xltype | xlbitXLFree;
 	return result;
 }
 
@@ -251,8 +251,8 @@ WDS_ModelSpec_Artificials(
 		ensure(cmXInput->val.array.columns == 1);
 
 		int nrows, ncols;
-		size_t i, j, ij;
-		size_t nArts, nArts_first, nArts_last;
+		int i, j, ij;
+		int nArts, nArts_first, nArts_last;
 
 		nrows = cmXInput->val.array.rows;
 		ncols = 1;
@@ -263,7 +263,7 @@ WDS_ModelSpec_Artificials(
 		if (lCoerceToMultiIfNecessary(CriticalValues, cmCriticalValues, bWasCriticalValuesCoerced)!=0)
 			throw std::exception("Coerce error for CriticalValues in Artificials.");
 
-		size_t nCrit_nrows, nCrit_ncols, nCLs, nCL_nrows, nCL_ncols;
+		int nCrit_nrows, nCrit_ncols;
 		nCrit_nrows = cmCriticalValues->val.array.rows;
 		nCrit_ncols = cmCriticalValues->val.array.columns;
 		ensure((int)nCrit_ncols >= 1);
@@ -273,7 +273,7 @@ WDS_ModelSpec_Artificials(
 				tempdouble = LPOPER_to_double(cmCriticalValues, 0, 0);
 				result = new OPER(nrows, ncols);
 				for (i = 0; i < nrows; i++)
-					(*result)(i, 0) = tempdouble;
+					(*result)(i, 0) = (int) tempdouble;
 			}
 			catch (...) {
 				if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
@@ -298,7 +298,7 @@ WDS_ModelSpec_Artificials(
 
 			int* nCrits = nullptr;
 			nCrits = (int*)malloc(sizeof(int)*(nCrit_ncols + 1));
-			nCrits[0] = nCrit_ncols;
+			nCrits[0] = (int) nCrit_ncols;
 
 			wstring** Crits = nullptr;
 			//Crits = (wstring**)malloc(sizeof(wstring*)*nCrit_ncols);
@@ -369,7 +369,7 @@ WDS_ModelSpec_Artificials(
 			nCrit_ncols = cmCriticalValues->val.array.columns;
 			int* nCrits = nullptr;
 			nCrits = (int*)malloc(sizeof(int)*(nCrit_ncols + 1));
-			nCrits[0] = nCrit_ncols;
+			nCrits[0] = (int) nCrit_ncols;
 
 			double** Crits = nullptr;
 			Crits = (double**)malloc(sizeof(double*)*nCrit_ncols);
@@ -517,7 +517,7 @@ WDS_ModelSpec_Artificials(
 	lFreeIfNecessary(cmCriticalValues, bWasCriticalValuesCoerced);
 	lFreeIfNecessary(cmCleanLimits, bWasCleanLimitsCoerced);
 
-	if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+	//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 	return result;
 
 
@@ -573,9 +573,9 @@ WDS_ModelSpec_ArtificialsScored(
 		ensure(cmXInput->val.array.columns == 1);
 
 		int nrows, ncols;
-		size_t i, j, ij;
-		size_t nArts, nArts_first, nArts_last;
-		size_t nResults, nResults_first, nResults_last;
+		int i, j, ij;
+		int nArts, nArts_first, nArts_last;
+		
 
 		nrows = cmXInput->val.array.rows;
 		ncols = 1;
@@ -585,7 +585,7 @@ WDS_ModelSpec_ArtificialsScored(
 
 		if (lCoerceToMultiIfNecessary(CriticalValues, cmCriticalValues, bWasCriticalValuesCoerced) != 0)
 			throw exception("Coerce error for CriticalValues in ArtificialsScored.");
-		size_t nCrit_nrows, nCrit_ncols, nCLs, nCL_nrows, nCL_ncols;
+		int nCrit_nrows, nCrit_ncols;
 		nCrit_nrows = cmCriticalValues->val.array.rows;
 		nCrit_ncols = cmCriticalValues->val.array.columns;
 		ensure(nCrit_ncols >= 1);
@@ -593,9 +593,9 @@ WDS_ModelSpec_ArtificialsScored(
 		if (lCoerceToMultiIfNecessary(Coefficients, cmCoefficients, bWasCoefficientsCoerced) != 0)
 			throw exception("Coerce error for Coefficients in ArtificialsScored.");
 		dMatrix Coeffs = dMatrixFromLPXLOPER(cmCoefficients, false, 0.0);
-		size_t nCoef_nrows, nCoef_ncols;
-		nCoef_nrows = Coeffs.nrows();
-		nCoef_ncols = Coeffs.ncols();
+		int nCoef_nrows, nCoef_ncols;
+		nCoef_nrows = (int) Coeffs.nrows();
+		nCoef_ncols = (int) Coeffs.ncols();
 
 		nArts = nArtificialCount(nCrit_ncols, Treatment);
 		nArts_first = nArtificialIndex_First(nCrit_ncols, Treatment);
@@ -620,7 +620,7 @@ WDS_ModelSpec_ArtificialsScored(
 
 			int* nCrits = nullptr;
 			nCrits = (int*)malloc(sizeof(int) * (nCrit_ncols + 1));
-			nCrits[0] = nCrit_ncols;
+			nCrits[0] = (int) nCrit_ncols;
 
 			wstring** Crits = nullptr;
 			//Crits = (wstring**)malloc(sizeof(wstring*)*nCrit_ncols);
@@ -831,7 +831,7 @@ WDS_ModelSpec_ArtificialsScored(
 	lFreeIfNecessary(cmCleanLimits, bWasCleanLimitsCoerced);
 	lFreeIfNecessary(cmCoefficients, bWasCoefficientsCoerced);
 
-	if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
+	//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 	return result;
 
 }

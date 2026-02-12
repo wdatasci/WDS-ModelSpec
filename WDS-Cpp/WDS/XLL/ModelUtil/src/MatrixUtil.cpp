@@ -8,7 +8,7 @@ namespace WDS::Comp::Matrix {
 		size_t ncols = arg.ncols();
 		mIndex mi = 0;
 		mIndex mj = 0;
-		double s, t;
+		double s;
 		for (mi = 0; mi < nrows; mi++) {
 			s = 0.0;
 			for (mj = 0; mj < ncols; mj++) {
@@ -42,7 +42,7 @@ namespace WDS::Comp::Matrix {
 		, dMatrix& BaseOdds
 		, dMatrix& Topology
 	) {
-		int _Offset = Offset.at(rowindex, 0);
+		int _Offset = (int)Offset.at(rowindex, 0);
 		dMatrix result = BaseOdds(arma::span(_Offset * n, (_Offset + 1) * n - 1), arma::span(nbase * n, (nbase + 1) * n - 1));
 		result %= Topology;
 		return result;

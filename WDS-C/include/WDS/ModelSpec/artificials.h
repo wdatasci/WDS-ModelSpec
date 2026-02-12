@@ -262,7 +262,12 @@ eTreatment eTreatmentClean(wchar_t* data, int n) {
     return e_Unknown;
 }
 
-#define compTag5 nArtificialCount start
+#if defined(__cplusplus)
+eTreatment eTreatmentClean(wchar_t* data, size_t n) { return eTreatmentClean(data, (int)n); }
+#endif
+
+
+#define compTag52 nArtificialCount start
 
 int nArtificialCount(int nCritVals, eTreatment Treatment) {
 
@@ -305,6 +310,11 @@ int nArtificialCount(int nCritVals, eTreatment Treatment) {
     return  0;
 }
 
+#if defined(__cplusplus)
+int nArtificialCount(size_t nCritVals, eTreatment Treatment) { return nArtificialCount((int)nCritVals, Treatment); }
+#endif
+
+
 #define compTag6 nArtificialIndex_First start
 
 int nArtificialIndex_First(int nCritVals, eTreatment Treatment) {
@@ -333,8 +343,11 @@ int nArtificialIndex_First(int nCritVals, eTreatment Treatment) {
 
     return 0;
 }
+#if defined(__cplusplus)
+int nArtificialIndex_First(size_t nCritVals, eTreatment Treatment) { return nArtificialIndex_First((int)nCritVals, Treatment); }
+#endif
 
-#define compTag6 nArtificialIndex_Last start
+#define compTag62 nArtificialIndex_Last start
 
 int nArtificialIndex_Last(int nCritVals, eTreatment Treatment) {
 
@@ -364,6 +377,9 @@ int nArtificialIndex_Last(int nCritVals, eTreatment Treatment) {
 
     return tmp - 1;
 }
+#if defined(__cplusplus)
+int nArtificialIndex_Last(size_t nCritVals, eTreatment Treatment) { return nArtificialIndex_Last((int)nCritVals, Treatment); }
+#endif
 
 #define compTag6 __fArtificials_temp1 start
 
