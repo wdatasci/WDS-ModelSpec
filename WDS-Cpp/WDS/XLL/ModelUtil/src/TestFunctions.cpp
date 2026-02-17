@@ -66,12 +66,12 @@ WDS_Test_Matrix_Inv(LPXLOPER12 Arg0)
 
 		}
 		else {
-			if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+			if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 			result = new OPER(L"Error, in coerce in Matrix.Inv");
 		}
 	}
 	catch (...) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coerce or matrix inversion.");
 	}
 

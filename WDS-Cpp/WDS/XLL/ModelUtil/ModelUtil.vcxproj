@@ -28,17 +28,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
+    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseIntelMKL>Sequential</UseIntelMKL>
-    <UseIntelDAAL>Parallel_Dynamic</UseIntelDAAL>
-    <!--
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <UseMpiLibrary1A>MSMPI</UseMpiLibrary1A>
-    -->
-    <UseDynamicDebugging>true</UseDynamicDebugging>
-    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -61,89 +54,55 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)Build\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)Build\$(Platform)\$(Configuration)\</IntDir>
-    <!--
-    <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
-    <LinkIncremental>true</LinkIncremental>
-    <IgnoreImportLibrary>true</IgnoreImportLibrary>
-    -->
     <TargetName>WDS-$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)Build\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDIr)Build\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>WDS-$(ProjectName)</TargetName>
-    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;MODELUTILCPP_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
-      <ExceptionHandling>Async</ExceptionHandling>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <FloatingPointExceptions>true</FloatingPointExceptions>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>WDS_Matrix_Static-dbg.lib;mkl_core.lib;mkl_sequential.lib;mkl_intel_lp64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <!--
-      <AssemblyDebug>true</AssemblyDebug>
-      <AdditionalDependencies>WDS_Matrix_Static-dbg.lib;mkl_core.lib;mkl_sequential.lib;mkl_intel_lp64.lib;libiomp5md.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
-      <LinkStatus>true</LinkStatus>
-      -->
+      <EnableUAC>false</EnableUAC>
     </Link>
-    <ProjectReference />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <!--
-      <Optimization>MaxSpeed</Optimization>
-      -->
+      <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;MODELUTILCPP_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>false</ConformanceMode>
-      <!--
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <FloatingPointExceptions>true</FloatingPointExceptions>
-      -->
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <!--
-      <ExceptionHandling>Async</ExceptionHandling>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      -->
-      <SDLCheck>false</SDLCheck>
-      <ShowIncludes>false</ShowIncludes>
-      <DebugInformationFormat>OldStyle</DebugInformationFormat>
-      <ProgramDataBaseFileName>Build\$(Platform)\$(Configuration)\vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>WDS_Matrix_Static.lib;mkl_core.lib;mkl_sequential.lib;mkl_intel_lp64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <!--
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>WDS_Matrix_Static.lib;mkl_core.lib;mkl_sequential.lib;mkl_intel_lp64.lib;libiomp5md.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkStatus>true</LinkStatus>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
-      -->
-      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <EnableCOMDATFolding>false</EnableCOMDATFolding>
-      <UseDynamicDebugging>false</UseDynamicDebugging>
     </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src-ExcelSDK\FRAMEWRK.cpp" />
+    <ClCompile Include="src-ExcelSDK\FrameWorkPieces.cpp" />
     <ClCompile Include="src-ExcelSDK\MemoryManager.cpp" />
     <ClCompile Include="src-ExcelSDK\MemoryPool.cpp" />
     <ClCompile Include="src-xll\AddIn-xll.cpp" />

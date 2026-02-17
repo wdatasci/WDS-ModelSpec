@@ -89,7 +89,7 @@ WDS_ModelSpec_nArtificialCount(LPXLOPER12 _nCriticalValues, LPXLOPER12 _Treatmen
 		result = new OPER(rv);
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
 		result = new OPER(L"Error, in nArtificialsCount: " + std::wstring(ew.begin(), ew.end()));
 	}
@@ -141,7 +141,7 @@ WDS_ModelSpec_ArtificialLabels(LPXLOPER12 _nCriticalValues, LPXLOPER12 _Treatmen
 		}
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
 		result = new OPER(L"Error, in ArtificialLabels: " + std::wstring(ew.begin(), ew.end()));
 	}
@@ -190,7 +190,7 @@ WDS_ModelSpec_ScoreLabels(LPXLOPER12 _nScores, LPXLOPER12 _LabelBase, LPXLOPER12
 		}
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
 		result = new OPER(L"Error, in ScoreLabels: " + std::wstring(ew.begin(), ew.end()));
 	}
@@ -276,7 +276,7 @@ WDS_ModelSpec_Artificials(
 					(*result)(i, 0) = (int) tempdouble;
 			}
 			catch (...) {
-				if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+				if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 				result = new OPER(L"Error, in coercion product first element of CriticalValues");
 			}
 
@@ -508,7 +508,7 @@ WDS_ModelSpec_Artificials(
 
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
 		result = new OPER(L"Error, in Artificials: "+std::wstring(ew.begin(), ew.end()));
 	}
@@ -821,7 +821,7 @@ WDS_ModelSpec_ArtificialsScored(
 
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
 		result = new OPER(L"Error, in ArtificialsScored: " + std::wstring(ew.begin(), ew.end()));
 	}

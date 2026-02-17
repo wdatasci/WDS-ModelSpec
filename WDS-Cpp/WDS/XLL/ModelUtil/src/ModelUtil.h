@@ -4,6 +4,7 @@
 #include "AddIn-xll.h"
 #include <string>
 #include "XLCALL.H"
+#include "oper.h"
 #include "WDS/Comp/Matrix.h"
 
 //#pragma comment(linker, "/include:" XLL_DECORATE("hey", 4))
@@ -36,7 +37,7 @@ inline int lFreeIfNecessary(LPXLOPER12& target, bool& bWasCoercedFlag) {
 	int rc = -1;
 	try {
 		if (bWasCoercedFlag && target != nullptr) {
-			rc = Excel12f(xlFree, 0, 1, (LPXLOPER12)target);
+			rc = Excel12(xlFree, 0, 1, (LPXLOPER12)target);
 			if (rc != xlretSuccess) throw std::exception("xlFree error");
 			target = nullptr;
 		}
@@ -58,7 +59,7 @@ inline int lCoerceToMultiIfNecessary(LPXLOPER12& arg, LPXLOPER12& target, bool& 
 		if (arg->xltype != xltypeMulti) {
 			target = new XLOPER12();
 			bWasTargetNew = true;
-			rc = Excel12f(xlCoerce, target, 2, arg, TempInt12(xltypeMulti));
+			rc = Excel12(xlCoerce, target, 2, arg, xll::OPER(xltypeMulti));
 			if (useless_LPXLOPER(target)) { rc = -2;  throw std::exception("xlCoerce Error"); }
 			bWasCoercedFlag = true;
 		}

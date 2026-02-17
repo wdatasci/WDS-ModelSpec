@@ -26,8 +26,6 @@ SOFTWARE.
 #include "ModelUtil.h"
 #include "MatrixUtil.h"
 #include <string>
-#include "XLCALL.H"
-#include "oper.h"
 #include <cmath>
 
 using namespace xll;
@@ -78,6 +76,7 @@ std::wstring xltypeMulti_to_wstring(LPXLOPER12 arg0, size_t r, size_t c)
 					case xltypeMissing:
 						rv = L"";
 						break;
+					case xltypeBool:
 					case xltypeInt:
 					case xltypeNum:
 						try {
@@ -97,7 +96,7 @@ std::wstring xltypeMulti_to_wstring(LPXLOPER12 arg0, size_t r, size_t c)
 						break;
 					default:
 						varg1 = new XLOPER12();
-						rc = Excel12f(xlCoerce, varg1, 2, arg0, TempInt12(xltypeStr));
+						rc = Excel12(xlCoerce, varg1, 2, arg0->val.array.lparray[r*ncols+c], OPER(xltypeStr));
 						if (rc == xlretSuccess) {
 							try {
 								rv = pascal_string_to_wstring((wchar_t*)(varg1->val.str));
@@ -106,7 +105,7 @@ std::wstring xltypeMulti_to_wstring(LPXLOPER12 arg0, size_t r, size_t c)
 								bThrowError = true;
 							}
 						}
-						Excel12f(xlFree, 0, 1, (LPXLOPER12)varg1);
+						Excel12(xlFree, 0, 1, (LPXLOPER12)varg1);
 						break;
 					}
 				}
@@ -168,7 +167,7 @@ double xltypeMulti_to_double(LPXLOPER12 arg0, size_t r, size_t c, bool bStrict, 
 						break;
 					default:
 						varg1 = new XLOPER12();
-						rc = Excel12f(xlCoerce, varg1, 2, arg0, TempInt12(xltypeNum));
+						rc = Excel12(xlCoerce, varg1, 2, arg0, OPER(xltypeNum));
 						if (rc == xlretSuccess) {
 							try {
 								rv = (double)(varg1->val.num);
@@ -177,7 +176,7 @@ double xltypeMulti_to_double(LPXLOPER12 arg0, size_t r, size_t c, bool bStrict, 
 								bThrowError = true;
 							}
 						}
-						Excel12f(xlFree, 0, 1, (LPXLOPER12)varg1);
+						Excel12(xlFree, 0, 1, (LPXLOPER12)varg1);
 						break;
 					}
 				}
@@ -240,7 +239,7 @@ long xltypeMulti_to_long(LPXLOPER12 arg0, size_t r, size_t c, bool bStrict, long
 						break;
 					default:
 						varg1 = new XLOPER12();
-						rc = Excel12f(xlCoerce, varg1, 2, arg0, TempInt12(xltypeNum));
+						rc = Excel12(xlCoerce, varg1, 2, arg0, OPER(xltypeNum));
 						if (rc == xlretSuccess) {
 							try {
 								rv = (long)(varg1->val.num);
@@ -249,7 +248,7 @@ long xltypeMulti_to_long(LPXLOPER12 arg0, size_t r, size_t c, bool bStrict, long
 								bThrowError = true;
 							}
 						}
-						Excel12f(xlFree, 0, 1, (LPXLOPER12)varg1);
+						Excel12(xlFree, 0, 1, (LPXLOPER12)varg1);
 						break;
 					}
 				}
@@ -271,7 +270,6 @@ std::wstring LPOPER_to_wstring(LPXLOPER12 arg0, size_t r, size_t c, std::wstring
 {
 	std::wstring rv = L"";
 	bool bThrowError = false;
-	LPXLOPER12 varg1 = nullptr;
 	int rc;
 	if (arg0 != nullptr) {
 		try {
@@ -304,17 +302,21 @@ std::wstring LPOPER_to_wstring(LPXLOPER12 arg0, size_t r, size_t c, std::wstring
 			case xltypeSRef:
 			case xltypeRef:
 				try {
-					varg1 = new XLOPER12();
-					rc = Excel12f(xlCoerce, varg1, 2, arg0, TempInt12(xltypeMulti));
-					if (rc == xlretSuccess) {
+					OPER varg1;
+					rc = Excel12(xlCoerce, &varg1, 2, arg0, OPER(xltypeMulti));
+					if (rc == xlretSuccess && varg1.xltype == xltypeMulti) {
 						try {
-							rv = xltypeMulti_to_wstring(varg1, r, c);
+							rv = xltypeMulti_to_wstring(&varg1, r, c);
 						}
 						catch (...) {
 							bThrowError = true;
 						}
 					}
-					Excel12f(xlFree, 0, 1, (LPXLOPER12)varg1);
+					else if (rc == xlretSuccess && varg1.xltype > 0 && varg1.xltype <= xltypeErr)
+						rv=LPOPER_to_wstring(&varg1, r, c);
+					else
+						bThrowError = true;
+					Excel12(xlFree, 0, 1, &varg1);
 				}
 				catch (...) {
 					bThrowError = true;
@@ -345,7 +347,6 @@ double LPOPER_to_double(LPXLOPER12 arg0, size_t r, size_t c)
 {
 	double rv = 0.0;
 	bool bThrowError = false;
-	LPXLOPER12 varg1 = nullptr;
 	int rc;
 	if (arg0 != nullptr) {
 		try {
@@ -377,17 +378,21 @@ double LPOPER_to_double(LPXLOPER12 arg0, size_t r, size_t c)
 			case xltypeSRef:
 			case xltypeRef:
 				try {
-					varg1 = new XLOPER12();
-					rc = Excel12f(xlCoerce, varg1, 2, arg0, TempInt12(xltypeMulti));
-					if (rc == xlretSuccess) {
+					OPER varg1;
+					rc = Excel12(xlCoerce, &varg1, 2, arg0, OPER(xltypeMulti));
+					if (rc == xlretSuccess && varg1.xltype == xltypeMulti) {
 						try {
-							rv = xltypeMulti_to_double(varg1, r, c,false,nan(""));
+							rv = xltypeMulti_to_double(&varg1, r, c,false,nan(""));
 						}
 						catch (...) {
 							bThrowError = true;
 						}
 					}
-					Excel12f(xlFree, 0, 1, (LPXLOPER12)varg1);
+					else if (rc == xlretSuccess && varg1.xltype > 0 && varg1.xltype <= xltypeErr)
+						rv = LPOPER_to_double(&varg1, r, c);
+					else
+						bThrowError = true;
+					Excel12(xlFree, 0, 1, &varg1);
 				}
 				catch (...) {
 					bThrowError = true;
@@ -413,7 +418,6 @@ long LPOPER_to_long(LPXLOPER12 arg0, size_t r, size_t c)
 {
 	long rv = 0;
 	bool bThrowError = false;
-	LPXLOPER12 varg1 = nullptr;
 	int rc;
 	if (arg0 != nullptr) {
 		try {
@@ -441,20 +445,25 @@ long LPOPER_to_long(LPXLOPER12 arg0, size_t r, size_t c)
 				break;
 			case xltypeMulti:
 				rv = xltypeMulti_to_long(arg0, r, c,false,LONG_MAX);
+				break;
 			case xltypeSRef:
 			case xltypeRef:
 				try {
-					varg1 = new XLOPER12();
-					rc = Excel12f(xlCoerce, varg1, 2, arg0, TempInt12(xltypeMulti));
-					if (rc == xlretSuccess) {
+					OPER varg1;
+					rc = Excel12(xlCoerce, &varg1, 2, arg0, OPER(xltypeMulti));
+					if (rc == xlretSuccess && varg1.xltype == xltypeMulti) {
 						try {
-							rv = xltypeMulti_to_long(varg1, r, c,false,LONG_MAX);
+							rv = xltypeMulti_to_long(&varg1, r, c, false, LONG_MAX);
 						}
 						catch (...) {
 							bThrowError = true;
 						}
 					}
-					Excel12f(xlFree, 0, 1, (LPXLOPER12)varg1);
+					else if (rc == xlretSuccess && varg1.xltype > 0 && varg1.xltype <= xltypeErr)
+						rv = LPOPER_to_long(&varg1, r, c);
+					else
+						bThrowError = true;
+					Excel12(xlFree, 0, 1, &varg1);
 				}
 				catch (...) {
 					bThrowError = true;
@@ -480,7 +489,6 @@ long LPOPER_to_bool(LPXLOPER12 arg0, size_t r, size_t c)
 {
 	bool rv = false;
 	bool bThrowError = false;
-	LPXLOPER12 varg1 = nullptr;
 	const wchar_t* TRUEWORDS[] = { L"TRUE",L"T",L"1",L"true",L"t",L"YES",L"Y",L"yes",L"y" };
 	wstring tmpstring;
 	int rc;
@@ -512,12 +520,16 @@ long LPOPER_to_bool(LPXLOPER12 arg0, size_t r, size_t c)
 			case xltypeSRef:
 			case xltypeRef:
 				try {
-					varg1 = new XLOPER12();
-					rc = Excel12f(xlCoerce, varg1, 2, arg0, TempInt12(xltypeBool));
-					if (rc == xlretSuccess) {
-							rv = varg1->val.xbool;
+					OPER varg1;
+					rc = Excel12(xlCoerce, &varg1, 2, arg0, OPER(xltypeBool));
+					if (rc == xlretSuccess && varg1.xltype == xltypeMulti) {
+						rv = xltypeMulti_to_long(&varg1, r, c, false, LONG_MAX);
 					}
-					Excel12f(xlFree, 0, 1, (LPXLOPER12)varg1);
+					else if (rc == xlretSuccess && varg1.xltype > 0 && varg1.xltype <= xltypeErr)
+						rv = LPOPER_to_long(&varg1, r, c);
+					else
+						bThrowError = true;
+					Excel12(xlFree, 0, 1, &varg1);
 				}
 				catch (...) {
 					bThrowError = true;
@@ -536,6 +548,8 @@ long LPOPER_to_bool(LPXLOPER12 arg0, size_t r, size_t c)
 		bThrowError = true;
 	}
 	if (bThrowError) rv = false;
+	if (rv != 0)
+		rv = 1;
 	return rv;
 }
 
@@ -706,7 +720,7 @@ WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=
 	}
 	catch (exception& e) {
 		e;
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sub matrix");
 	}
 
@@ -771,7 +785,7 @@ WDS_Comp_Matrix_SubMatrix(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		e;
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across");
 		//result->xltype = result->xltype | xlbitXLFree;
 	}
@@ -845,7 +859,7 @@ WDS_Comp_Matrix_Rows(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		e;
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across rows");
 		//result->xltype = result->xltype | xlbitXLFree;
 	}
@@ -918,7 +932,7 @@ WDS_Comp_Matrix_Columns(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		e;
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across rows");
 		//result->xltype = result->xltype | xlbitXLFree;
 	}
@@ -1029,7 +1043,7 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 	}
 	catch (exception& e) {
 		e;
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sub matrix");
 	}
 
@@ -1129,7 +1143,7 @@ WDS_Comp_zzzInternal_SumAcross(LPXLOPER12 Arg0, long direction, long startrow, l
 	}
 	catch (exception& e) {
 		e;
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across columns");
 	}
 
@@ -1195,7 +1209,7 @@ WDS_Comp_Matrix_SumAcross(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		e;
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across");
 		//result->xltype = result->xltype | xlbitXLFree;
 	}
@@ -1255,7 +1269,7 @@ WDS_Comp_Matrix_SumAcrossRows(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		e;
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or sum across rows");
 		//result->xltype = result->xltype | xlbitXLFree;
 	}
@@ -1315,7 +1329,7 @@ WDS_Comp_Matrix_SumAcrossColumns(LPXLOPER12 Arg0, LPXLOPER12 Opts)
 	}
 	catch (exception& e) {
 		e;
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		//result->xltype = result->xltype | xlbitXLFree;
 		result = new OPER(L"Error, in coercion or sum across columns");
 	}
@@ -1395,7 +1409,7 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 		}
 	catch (exception& e) {
 		e;
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or row-normalization");
 	}
 
@@ -1458,7 +1472,7 @@ WDS_Comp_Matrix_NormedBaseOdds(long Offset, LPXLOPER12 BaseOdds, LPXLOPER12 Topo
 
 	}
 	catch (exception& e) {
-		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
+		if (oResult != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
 		oResult = new OPER(L"Error, in NormedBaseOdds: "+std::wstring(ew.begin(), ew.end()));
 	}
@@ -1576,7 +1590,7 @@ WDS_Comp_Matrix_ScoredAndNormedBaseOdds(long Index
 	//oResult->xltype = oResult->xltype | xlbitXLFree;
 	}
 	catch (exception& e) {
-		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
+		if (oResult != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
 		oResult = new OPER(L"Error, in ScoredAndNormedBaseOdds: "+std::wstring(ew.begin(), ew.end()));
 	//oResult->xltype = oResult->xltype | xlbitXLFree;
@@ -1635,7 +1649,7 @@ WDS_Comp_Matrix_Mult(LPXLOPER12 A, LPXLOPER12 B) {
 		//oResult->xltype = oResult->xltype | xlbitXLFree;
 	}
 	catch (exception& e) {
-		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
+		if (oResult != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
 		oResult = new OPER(L"Error, in Matrix.Mult: "+std::wstring(ew.begin(), ew.end()));
 		//oResult->xltype = oResult->xltype | xlbitXLFree;
@@ -1803,7 +1817,7 @@ WDS_Comp_RFScheduled(
 					pmt = xltypeMulti_to_double(cmPmtAmt, i, 0, false, 0);
 				else {
 					if (tempXLOPER == nullptr) tempXLOPER = new XLOPER12();
-					rc = Excel12(xlfPmt, tempXLOPER, 4, TempNum12(intratepct), TempInt12(term), TempNum12(prinbal), TempNum12(0.0));
+					rc = Excel12(xlfPmt, tempXLOPER, 4, OPER(intratepct), OPER(term), OPER(prinbal), OPER(0.0));
 					if (rc == xlretSuccess) {
 						pmt = (double) tempXLOPER->val.num;
 					}
@@ -1879,11 +1893,11 @@ WDS_Comp_RFScheduled(
 
 	}
 	catch (exception& e) {
-		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
+		if (oResult != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
 		oResult = new OPER(L"Error, in RFScheduled: "+std::wstring(ew.begin(), ew.end()));
 	}
-	if (tempXLOPER != nullptr) Excel12f(xlFree, 0, 1, tempXLOPER);
+	if (tempXLOPER != nullptr) Excel12(xlFree, 0, 1, tempXLOPER);
 	lFreeIfNecessary(cmPanelInd, bWasPanelIndCoerced);
 	lFreeIfNecessary(cmLoanAgeMos, bWasLoanAgeMosCoerced);
 	lFreeIfNecessary(cmPrinBal, bWasPrinBalCoerced);
@@ -2511,7 +2525,7 @@ WDS_Comp_RollIt(
 		}
 	}
 	catch (exception& e) {
-		if (oResult != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)oResult);
+		if (oResult != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)oResult);
 		std::string ew = e.what();
 		oResult = new OPER(L"Error, in RollIt: "+std::wstring(ew.begin(), ew.end()));
 	}
@@ -2659,7 +2673,8 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 				break;
 			case xltypeErr:
 				j++;
-				(*result)(j, 0) = thisrow->val.err; // TempErr12(thisrow->val.err);
+				//(*result)(j, 0) = thisrow->val.err; // TempErr12(thisrow->val.err);
+				(*result)(j, 0) = OPER(thisrow->val.err);
 				break;
 			case xltypeMissing:
 			case xltypeMulti:
@@ -2673,7 +2688,7 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 		}
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		string m = "Error, in coercion or SimpleFirsts, ";
 		m.append(e.what());
 		result = new OPER(m);
@@ -2897,7 +2912,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
 		result = new OPER(L"Error, in dNComp: " + std::wstring(ew.begin(), ew.end()));
 	}
@@ -3079,7 +3094,7 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
 		result = new OPER(L"Error, in dNElse: " + std::wstring(ew.begin(), ew.end()));
 	}
@@ -3334,7 +3349,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		std::string ew = e.what();
 		result = new OPER(L"Error, in SimpleSort: " + std::wstring(ew.begin(), ew.end()));
 	}

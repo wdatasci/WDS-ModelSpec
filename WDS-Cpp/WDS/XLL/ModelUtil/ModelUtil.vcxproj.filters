@@ -54,7 +54,7 @@
     <ClCompile Include="src\XLM.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src-ExcelSDK\FRAMEWRK.C">
+    <ClCompile Include="src-ExcelSDK\FrameWorkPieces.cpp">
       <Filter>src-ExcelSDK</Filter>
     </ClCompile>
   </ItemGroup>

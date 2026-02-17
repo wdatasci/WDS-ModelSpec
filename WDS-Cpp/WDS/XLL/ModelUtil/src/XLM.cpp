@@ -38,13 +38,13 @@ WDS_XLM_GET_WORKSPACE(LPOPER type_num)
 	LPOPER result = nullptr;
 	try {
 		result = new OPER();
-		if (Excel12f(xlfGetWorkspace, result, 1, *type_num) != 0) {
-			Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (Excel12(xlfGetWorkspace, result, 1, *type_num) != 0) {
+			Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 			result = new OPER(L"Error, in Get.Workspace");
 		}
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or Get.Workspace");
 	}
 	//result->xltype = result->xltype | xlbitXLFree;
@@ -65,13 +65,13 @@ WDS_XLM_GET_XLL_NAME()
 	LPOPER result = nullptr;
 	try {
 		result = new OPER();
-		if (Excel12f(xlGetName, result, 0) != 0) {
-			Excel12f(xlFree, 0, 1, result);
+		if (Excel12(xlGetName, result, 0) != 0) {
+			Excel12(xlFree, 0, 1, result);
 			result = new OPER(L"Error, in Get.XLL_Name");
 		}
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, result);
 		result = new OPER(L"Error, Get.XLL_Name");
 	}
 	//result->xltype = result->xltype | xlbitXLFree;
@@ -80,11 +80,10 @@ WDS_XLM_GET_XLL_NAME()
 }
 
 
-/*
-static AddIn XLLAddIn_WDS_XLM_UNREGISTER_XLL(
-	Macro(L"WDS_XLM_UNREGISTER_XLL", L"WDS.XLM.UNREGISTER.XLL")
+AddIn XLLAddIn_WDS_XLM_UNREGISTER_XLL(
+	Macro("WDS_XLM_UNREGISTER_XLL", "WDS.XLM.UNREGISTER.XLL")
 );
-extern "C" __declspec(dllexport) int WINAPI
+int WINAPI
 WDS_XLM_UNREGISTER_XLL()
 {
 #pragma XLLEXPORT
@@ -92,25 +91,20 @@ WDS_XLM_UNREGISTER_XLL()
 	LPOPER result = nullptr;
 	try {
 		name = new OPER();
-		if (Excel12f(xlGetName, name, 0) != 0) {
-			Excel12f(xlFree, 0, 1, (LPXLOPER12)name);
+		if (Excel12(xlGetName, name, 0) != 0) {
+			Excel12(xlFree, 0, 1, (LPXLOPER12)name);
 		}
 		else {
 			result = new OPER();
-			Excel12f(xlfUnregister, result, 1, name);
-			//Excel12f(xlFree, 0, 1, (LPXLOPER12)name);
-			//Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+			Excel12(xlfUnregister, result, 1, name);
 		}
 	}
 	catch (exception& e) {
 		return 1;
-		//if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)name);
-		//if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
 	}
 
 	return 0;
 }
-*/
 
 AddIn XLLAddIn_WDS_XLM_GET_WORKBOOK(
 	Function(XLL_LPOPER, "WDS_XLM_GET_WORKBOOK", "WDS.XLM.GET.WORKBOOK")
@@ -132,21 +126,21 @@ WDS_XLM_GET_WORKBOOK(LPOPER type_num, LPOPER name_text)
 		result = new OPER();
 		wstring tmpstring = LPOPER_to_wstring(name_text,0,0);
 		if (useless_LPXLOPER(name_text) || tmpstring.length()==0 ) {
-			if (Excel12f(xlfGetDocument, result, 1, *type_num) != 0) {
-				Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+			if (Excel12(xlfGetDocument, result, 1, *type_num) != 0) {
+				Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 				result = new OPER(L"Error, in Get.Workbook");
 			}
 		}
 		else {
-			//if (Excel12f(xlfGetDocument, result, 2, *type_num, OPER(tmpstring)) != 0) {
-			if (Excel12f(xlfGetDocument, result, 2, *type_num, name_text) != 0) {
-				Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+			//if (Excel12(xlfGetDocument, result, 2, *type_num, OPER(tmpstring)) != 0) {
+			if (Excel12(xlfGetDocument, result, 2, *type_num, name_text) != 0) {
+				Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 				result = new OPER(L"Error, in Get.Workbook, (check if name is an open workbook)");
 			}
 		}
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or Get.Document");
 	}
 	//result->xltype = result->xltype | xlbitXLFree;
@@ -174,20 +168,20 @@ WDS_XLM_GET_DOCUMENT(LPOPER type_num, LPOPER name_text)
 		result = new OPER();
 		wstring tmpstring = LPOPER_to_wstring(name_text,0,0);
 		if (useless_LPXLOPER(name_text) || tmpstring.length()==0 ) {
-			if (Excel12f(xlfGetDocument, result, 1, *type_num) != 0) {
-				Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+			if (Excel12(xlfGetDocument, result, 1, *type_num) != 0) {
+				Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 				result = new OPER(L"Error, in Get.Document");
 			}
 		}
 		else {
-			if (Excel12f(xlfGetDocument, result, 2, *type_num, OPER(tmpstring)) != 0) {
-				Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+			if (Excel12(xlfGetDocument, result, 2, *type_num, OPER(tmpstring)) != 0) {
+				Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 				result = new OPER(L"Error, in Get.Document, (check if name is an open workbook)");
 			}
 		}
 	}
 	catch (exception& e) {
-		if (result != nullptr) Excel12f(xlFree, 0, 1, (LPXLOPER12)result);
+		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
 		result = new OPER(L"Error, in coercion or Get.Document");
 	}
 	//result->xltype = result->xltype | xlbitXLFree;
