@@ -86,6 +86,9 @@
     <ClInclude Include="..\..\..\..\WDS-C\include\WDS\ModelSpec\artificials.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\WDS\Comp\Matrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src-ExcelSDK\README.md">

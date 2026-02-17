@@ -2659,7 +2659,7 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 				break;
 			case xltypeErr:
 				j++;
-				(*result)(j, 0) = TempErr12(thisrow->val.err);
+				(*result)(j, 0) = thisrow->val.err; // TempErr12(thisrow->val.err);
 				break;
 			case xltypeMissing:
 			case xltypeMulti:

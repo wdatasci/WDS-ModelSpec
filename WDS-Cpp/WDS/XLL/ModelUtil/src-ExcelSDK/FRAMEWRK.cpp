@@ -78,6 +78,9 @@
 #include "MemoryManager.h"
 #include <stdarg.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef _DEBUG
 
@@ -1587,256 +1590,257 @@ BOOL ConvertXLRef12ToXLRef(LPXLREF12 pxref12, LPXLREF pxref)
 //
 ///***************************************************************************
 
-BOOL XLOper12ToXLOper(LPXLOPER12 pxloper12, LPXLOPER pxloper)
-{
-	BOOL fRet;
-	BOOL fClean;
-	DWORD xltype;
-	WORD cref;
-	int cxloper12;
-	RW crw;
-	COL ccol;
-	long cbyte;
-	XCHAR *st;
-	char *ast;
-	int cch;
-	char cach;
-	BYTE *pbyte;
-	LPXLMREF pmref;
-	LPXLREF12 pref12;
-	LPXLREF rgref;
-	LPXLREF pref;
-	LPXLOPER rgxloperConv;
-	LPXLOPER pxloperConv;
-	LPXLOPER12 pxloper12Conv;
-
-	fClean = FALSE;
-	fRet = TRUE;
-	xltype = pxloper12->xltype;
-
-	switch (xltype)
-	{
-	case xltypeNum:
-		pxloper->val.num = pxloper12->val.num;
-		break;
-	case xltypeBool:
-#ifdef __cplusplus
-		pxloper->val.xbool = pxloper12->val.xbool;
-#else		
-		pxloper->val.bool = pxloper12->val.xbool;
-#endif
-		break;
-	case xltypeErr:
-		if (pxloper12->val.err > MAXWORD)
-		{
-			fRet = FALSE;
-			// problem... overflow
-		}
-		else
-		{
-			pxloper->val.err = (WORD)pxloper12->val.err;
-		}
-		break;
-	case xltypeMissing:
-	case xltypeNil:
-		break;
-	case xltypeInt:
-		if ((pxloper12->val.w + MAXSHORTINT + 1) >> 16)
-		{
-			pxloper->val.num = (float)pxloper12->val.w;
-			xltype = xltypeNum;
-		}
-		else
-		{
-			pxloper->val.w = (short int)pxloper12->val.w;
-		}
-		break;
-	case xltypeStr:
-		st = pxloper12->val.str;
-		cch = st[0];
-		cach = (BYTE)cch;
-
-		if (cch > cchMaxStz || cch < 0)
-		{
-			fRet = FALSE;
-		}
-		else
-		{
-			ast = malloc((cach + 2) * sizeof(char));
-			if (ast == NULL)
-			{
-				fRet = FALSE;
-			}
-			else
-			{
-				WideCharToMultiByte(CP_ACP, 0, st + 1, cch, ast + 1, cach, NULL, NULL);
-				ast[0] = cach;
-				ast[cach + 1] = '\0';
-				pxloper->val.str = ast;
-			}
-		}
-		break;
-	case xltypeFlow:
-		if (pxloper12->val.flow.rw > rwMaxO8 || pxloper12->val.flow.col > colMaxO8)
-		{
-			fRet = FALSE;
-		}
-		else
-		{
-			pxloper->val.flow.rw = (WORD)pxloper12->val.flow.rw;
-			pxloper->val.flow.col = (BYTE)pxloper12->val.flow.col;
-			pxloper->val.flow.xlflow = pxloper12->val.flow.xlflow;
-			pxloper->val.flow.valflow.idSheet = pxloper12->val.flow.valflow.idSheet;
-		}
-		break;
-	case xltypeRef:
-		if (pxloper12->val.mref.lpmref && pxloper12->val.mref.lpmref->count > 0)
-		{
-			pref12 = pxloper12->val.mref.lpmref->reftbl;
-			cref = pxloper12->val.mref.lpmref->count;
-
-			pmref = (LPXLMREF) malloc(sizeof(XLMREF) + sizeof(XLREF)*(cref-1));
-			if (pmref == NULL)
-			{
-				fRet = FALSE;
-			}
-			else
-			{
-				pmref->count = cref;
-				rgref = pmref->reftbl;
-				pref = rgref;
-				while (cref > 0 && !fClean)
-				{
-					if (!ConvertXLRef12ToXLRef(pref12, pref))
-					{
-						fClean = TRUE;
-						cref = 0;
-					}
-					else
-					{
-						pref++;
-						pref12++;
-						cref--;
-					}
-				}
-				if (fClean)
-				{
-					free(pmref);
-					fRet = FALSE;
-				}
-				else
-				{
-					pxloper->val.mref.lpmref = pmref;
-					pxloper->val.mref.idSheet = pxloper12->val.mref.idSheet;
-				}
-			}
-		}
-		else
-		{
-			xltype = xltypeMissing;
-		}
-		break;
-	case xltypeSRef:
-		if (pxloper12->val.sref.count != 1)
-		{
-			fRet = FALSE;
-		}
-		else if (ConvertXLRef12ToXLRef(&pxloper12->val.sref.ref, &pxloper->val.sref.ref))
-		{
-			pxloper->val.sref.count = 1;
-		}
-		else
-		{
-			fRet = FALSE;
-		}
-		break;
-	case xltypeMulti:
-		crw = pxloper12->val.array.rows;
-		ccol = pxloper12->val.array.columns;
-		if (crw > rwMaxO8 || ccol > colMaxO8)
-		{
-			fRet = FALSE;
-		}
-		else
-		{
-			cxloper12 = crw * ccol;
-			if (cxloper12 == 0)
-			{
-				xltype = xltypeMissing;
-			}
-			else
-			{
-				rgxloperConv = malloc(cxloper12 * sizeof(XLOPER));
-				if (rgxloperConv == NULL)
-				{
-					fRet = FALSE;
-				}
-				else
-				{
-					pxloperConv = rgxloperConv;
-					pxloper12Conv = pxloper12->val.array.lparray;
-					while (cxloper12 > 0 && !fClean)
-					{
-						if (!XLOper12ToXLOper(pxloper12Conv, pxloperConv))
-						{
-							fClean = TRUE;
-							cxloper12 = 0;
-						}
-						else
-						{
-							pxloperConv++;
-							pxloper12Conv++;
-							cxloper12--;
-						}
-					}
-					if (fClean)
-					{
-						fRet = FALSE;
-						while (pxloperConv > rgxloperConv)
-						{
-							FreeXLOperT(pxloperConv);
-							pxloperConv--;
-						}
-						free(rgxloperConv);
-					}
-					else
-					{
-						pxloper->val.array.lparray = rgxloperConv;
-						pxloper->val.array.rows = crw;
-						pxloper->val.array.columns = ccol;
-					}
-				}
-			}
-		}
-		break;
-	case xltypeBigData:
-		cbyte = pxloper12->val.bigdata.cbData;
-		if (pxloper12->val.bigdata.h.lpbData != NULL && cbyte > 0)
-		{
-			pbyte = (BYTE *)malloc(cbyte);
-			if (pbyte != NULL)
-			{
-				memcpy_s(pbyte, cbyte, pxloper12->val.bigdata.h.lpbData, cbyte);
-				pxloper->val.bigdata.h.lpbData = pbyte;
-				pxloper->val.bigdata.cbData = cbyte;
-			}
-			else
-			{
-				fRet = FALSE;
-			}
-		}
-		else
-		{
-			fRet = FALSE;
-		}
-		break;
-	}
-	if (fRet)
-	{
-		pxloper->xltype = (WORD)xltype;
-	}
-	return fRet;
-}
+//CJW Testing removal
+//BOOL XLOper12ToXLOper(LPXLOPER12 pxloper12, LPXLOPER pxloper)
+//{
+//	BOOL fRet;
+//	BOOL fClean;
+//	DWORD xltype;
+//	WORD cref;
+//	int cxloper12;
+//	RW crw;
+//	COL ccol;
+//	long cbyte;
+//	XCHAR *st;
+//	char *ast;
+//	int cch;
+//	char cach;
+//	BYTE *pbyte;
+//	LPXLMREF pmref;
+//	LPXLREF12 pref12;
+//	LPXLREF rgref;
+//	LPXLREF pref;
+//	LPXLOPER rgxloperConv;
+//	LPXLOPER pxloperConv;
+//	LPXLOPER12 pxloper12Conv;
+//
+//	fClean = FALSE;
+//	fRet = TRUE;
+//	xltype = pxloper12->xltype;
+//
+//	switch (xltype)
+//	{
+//	case xltypeNum:
+//		pxloper->val.num = pxloper12->val.num;
+//		break;
+//	case xltypeBool:
+//#ifdef __cplusplus
+//		pxloper->val.xbool = pxloper12->val.xbool;
+//#else		
+//		pxloper->val.bool = pxloper12->val.xbool;
+//#endif
+//		break;
+//	case xltypeErr:
+//		if (pxloper12->val.err > MAXWORD)
+//		{
+//			fRet = FALSE;
+//			// problem... overflow
+//		}
+//		else
+//		{
+//			pxloper->val.err = (WORD)pxloper12->val.err;
+//		}
+//		break;
+//	case xltypeMissing:
+//	case xltypeNil:
+//		break;
+//	case xltypeInt:
+//		if ((pxloper12->val.w + MAXSHORTINT + 1) >> 16)
+//		{
+//			pxloper->val.num = (float)pxloper12->val.w;
+//			xltype = xltypeNum;
+//		}
+//		else
+//		{
+//			pxloper->val.w = (short int)pxloper12->val.w;
+//		}
+//		break;
+//	case xltypeStr:
+//		st = pxloper12->val.str;
+//		cch = st[0];
+//		cach = (BYTE)cch;
+//
+//		if (cch > cchMaxStz || cch < 0)
+//		{
+//			fRet = FALSE;
+//		}
+//		else
+//		{
+//			ast = malloc((cach + 2) * sizeof(char));
+//			if (ast == NULL)
+//			{
+//				fRet = FALSE;
+//			}
+//			else
+//			{
+//				WideCharToMultiByte(CP_ACP, 0, st + 1, cch, ast + 1, cach, NULL, NULL);
+//				ast[0] = cach;
+//				ast[cach + 1] = '\0';
+//				pxloper->val.str = ast;
+//			}
+//		}
+//		break;
+//	case xltypeFlow:
+//		if (pxloper12->val.flow.rw > rwMaxO8 || pxloper12->val.flow.col > colMaxO8)
+//		{
+//			fRet = FALSE;
+//		}
+//		else
+//		{
+//			pxloper->val.flow.rw = (WORD)pxloper12->val.flow.rw;
+//			pxloper->val.flow.col = (BYTE)pxloper12->val.flow.col;
+//			pxloper->val.flow.xlflow = pxloper12->val.flow.xlflow;
+//			pxloper->val.flow.valflow.idSheet = pxloper12->val.flow.valflow.idSheet;
+//		}
+//		break;
+//	case xltypeRef:
+//		if (pxloper12->val.mref.lpmref && pxloper12->val.mref.lpmref->count > 0)
+//		{
+//			pref12 = pxloper12->val.mref.lpmref->reftbl;
+//			cref = pxloper12->val.mref.lpmref->count;
+//
+//			pmref = (LPXLMREF) malloc(sizeof(XLMREF) + sizeof(XLREF)*(cref-1));
+//			if (pmref == NULL)
+//			{
+//				fRet = FALSE;
+//			}
+//			else
+//			{
+//				pmref->count = cref;
+//				rgref = pmref->reftbl;
+//				pref = rgref;
+//				while (cref > 0 && !fClean)
+//				{
+//					if (!ConvertXLRef12ToXLRef(pref12, pref))
+//					{
+//						fClean = TRUE;
+//						cref = 0;
+//					}
+//					else
+//					{
+//						pref++;
+//						pref12++;
+//						cref--;
+//					}
+//				}
+//				if (fClean)
+//				{
+//					free(pmref);
+//					fRet = FALSE;
+//				}
+//				else
+//				{
+//					pxloper->val.mref.lpmref = pmref;
+//					pxloper->val.mref.idSheet = pxloper12->val.mref.idSheet;
+//				}
+//			}
+//		}
+//		else
+//		{
+//			xltype = xltypeMissing;
+//		}
+//		break;
+//	case xltypeSRef:
+//		if (pxloper12->val.sref.count != 1)
+//		{
+//			fRet = FALSE;
+//		}
+//		else if (ConvertXLRef12ToXLRef(&pxloper12->val.sref.ref, &pxloper->val.sref.ref))
+//		{
+//			pxloper->val.sref.count = 1;
+//		}
+//		else
+//		{
+//			fRet = FALSE;
+//		}
+//		break;
+//	case xltypeMulti:
+//		crw = pxloper12->val.array.rows;
+//		ccol = pxloper12->val.array.columns;
+//		if (crw > rwMaxO8 || ccol > colMaxO8)
+//		{
+//			fRet = FALSE;
+//		}
+//		else
+//		{
+//			cxloper12 = crw * ccol;
+//			if (cxloper12 == 0)
+//			{
+//				xltype = xltypeMissing;
+//			}
+//			else
+//			{
+//				rgxloperConv = malloc(cxloper12 * sizeof(XLOPER));
+//				if (rgxloperConv == NULL)
+//				{
+//					fRet = FALSE;
+//				}
+//				else
+//				{
+//					pxloperConv = rgxloperConv;
+//					pxloper12Conv = pxloper12->val.array.lparray;
+//					while (cxloper12 > 0 && !fClean)
+//					{
+//						if (!XLOper12ToXLOper(pxloper12Conv, pxloperConv))
+//						{
+//							fClean = TRUE;
+//							cxloper12 = 0;
+//						}
+//						else
+//						{
+//							pxloperConv++;
+//							pxloper12Conv++;
+//							cxloper12--;
+//						}
+//					}
+//					if (fClean)
+//					{
+//						fRet = FALSE;
+//						while (pxloperConv > rgxloperConv)
+//						{
+//							FreeXLOperT(pxloperConv);
+//							pxloperConv--;
+//						}
+//						free(rgxloperConv);
+//					}
+//					else
+//					{
+//						pxloper->val.array.lparray = rgxloperConv;
+//						pxloper->val.array.rows = crw;
+//						pxloper->val.array.columns = ccol;
+//					}
+//				}
+//			}
+//		}
+//		break;
+//	case xltypeBigData:
+//		cbyte = pxloper12->val.bigdata.cbData;
+//		if (pxloper12->val.bigdata.h.lpbData != NULL && cbyte > 0)
+//		{
+//			pbyte = (BYTE *)malloc(cbyte);
+//			if (pbyte != NULL)
+//			{
+//				memcpy_s(pbyte, cbyte, pxloper12->val.bigdata.h.lpbData, cbyte);
+//				pxloper->val.bigdata.h.lpbData = pbyte;
+//				pxloper->val.bigdata.cbData = cbyte;
+//			}
+//			else
+//			{
+//				fRet = FALSE;
+//			}
+//		}
+//		else
+//		{
+//			fRet = FALSE;
+//		}
+//		break;
+//	}
+//	if (fRet)
+//	{
+//		pxloper->xltype = (WORD)xltype;
+//	}
+//	return fRet;
+//}
 
 
 ///***************************************************************************
@@ -1868,235 +1872,241 @@ BOOL XLOper12ToXLOper(LPXLOPER12 pxloper12, LPXLOPER pxloper)
 ///***************************************************************************
 
 
-BOOL XLOperToXLOper12(LPXLOPER pxloper, LPXLOPER12 pxloper12)
-{
-	BOOL fRet;
-	BOOL fClean;
-	WORD crw;
-	WORD ccol;
-	WORD cxloper;
-	WORD cref12;
-	DWORD xltype;
-	BYTE *pbyte;
-	const char *ast;
-	XCHAR *st;
-	int cach;
-	int cch;
-	long cbyte;
-	LPXLREF pref;
-	LPXLREF12 pref12;
-	LPXLREF12 rgref12;
-	LPXLMREF12 pmref12;
-	LPXLOPER pxloperConv;
-	LPXLOPER12 rgxloper12Conv;
-	LPXLOPER12 pxloper12Conv;
+//CJW: testing removal
+//BOOL XLOperToXLOper12(LPXLOPER pxloper, LPXLOPER12 pxloper12)
+//{
+//	BOOL fRet;
+//	BOOL fClean;
+//	WORD crw;
+//	WORD ccol;
+//	WORD cxloper;
+//	WORD cref12;
+//	DWORD xltype;
+//	BYTE *pbyte;
+//	const char *ast;
+//	XCHAR *st;
+//	int cach;
+//	int cch;
+//	long cbyte;
+//	LPXLREF pref;
+//	LPXLREF12 pref12;
+//	LPXLREF12 rgref12;
+//	LPXLMREF12 pmref12;
+//	LPXLOPER pxloperConv;
+//	LPXLOPER12 rgxloper12Conv;
+//	LPXLOPER12 pxloper12Conv;
+//
+//	fClean = FALSE;
+//	fRet = TRUE;
+//	xltype = pxloper->xltype;
+//
+//	switch (xltype)
+//	{
+//	case xltypeNum:
+//		pxloper12->val.num = pxloper->val.num;
+//		break;
+//	case xltypeBool:
+//#ifdef __cplusplus
+//		pxloper12->val.xbool = pxloper->val.xbool;
+//#else		
+//		pxloper12->val.xbool = pxloper->val.bool;
+//#endif
+//		break;
+//	case xltypeErr:
+//		pxloper12->val.err = (int)pxloper->val.err;
+//		break;
+//	case xltypeMissing:
+//	case xltypeNil:
+//		break;
+//	case xltypeInt:
+//		pxloper12->val.w = pxloper->val.w;
+//	case xltypeStr:
+//		ast = pxloper->val.str;
+//		if (ast == NULL)
+//		{
+//			fRet = FALSE;
+//		}
+//		else
+//		{
+//			cach = ast[0];
+//			cch = cach;
+//			if (cach > cchMaxStz || cach < 0)
+//			{
+//				fRet = FALSE;
+//			}
+//			else
+//			{
+//				st = (XCHAR*) malloc((cch + 2) * sizeof(XCHAR));
+//				if (st == NULL)
+//				{
+//					fRet = FALSE;
+//				}
+//				else
+//				{
+//					MultiByteToWideChar(CP_ACP, 0, ast + 1, cach, st + 1, cch);
+//					st[0] = (XCHAR) cch;
+//					st[cch + 1] = '\0';
+//					pxloper12->val.str = st;
+//				}
+//			}
+//		}
+//		break;
+//	case xltypeFlow:
+//		pxloper12->val.flow.rw = pxloper->val.flow.rw;
+//		pxloper12->val.flow.col = pxloper->val.flow.col;
+//		pxloper12->val.flow.xlflow = pxloper->val.flow.xlflow;
+//		break;
+//	case xltypeRef:
+//		if (pxloper->val.mref.lpmref && pxloper->val.mref.lpmref->count > 0)
+//		{
+//			pref = pxloper->val.mref.lpmref->reftbl;
+//			cref12 = pxloper->val.mref.lpmref->count;
+//
+//			pmref12 = (LPXLMREF12) malloc(sizeof(XLMREF12) + sizeof(XLREF12)*(cref12-1));
+//			if (pmref12 == NULL)
+//			{
+//				fRet = FALSE;
+//			}
+//			else
+//			{
+//				pmref12->count = cref12;
+//				rgref12 = pmref12->reftbl;
+//				pref12 = rgref12;
+//				while (cref12 > 0 && !fClean)
+//				{
+//					if (!ConvertXLRefToXLRef12(pref, pref12))
+//					{
+//						fClean = TRUE;
+//						cref12 = 0;
+//					}
+//					else
+//					{
+//						pref++;
+//						pref12++;
+//						cref12--;
+//					}
+//				}
+//				if (fClean)
+//				{
+//					free(pmref12);
+//					fRet = FALSE;
+//				}
+//				else
+//				{
+//					pxloper12->val.mref.lpmref = pmref12;
+//					pxloper12->val.mref.idSheet = pxloper->val.mref.idSheet;
+//				}
+//			}
+//		}
+//		else
+//		{
+//			xltype = xltypeMissing;
+//		}
+//		break;
+//	case xltypeSRef:
+//		if (pxloper->val.sref.count != 1)
+//		{
+//			fRet = FALSE;
+//		}
+//		else if (ConvertXLRefToXLRef12(&pxloper->val.sref.ref, &pxloper12->val.sref.ref))
+//		{
+//			pxloper12->val.sref.count = 1;
+//		}
+//		else
+//		{
+//			fRet = FALSE;
+//		}
+//		break;
+//	case xltypeMulti:
+//		crw = pxloper->val.array.rows;
+//		ccol = pxloper->val.array.columns;
+//		if (crw > rwMaxO8 || ccol > colMaxO8)
+//		{
+//			fRet = FALSE;
+//		}
+//		else
+//		{
+//			cxloper = crw * ccol;
+//			if (cxloper == 0)
+//			{
+//				xltype = xltypeMissing;
+//			}
+//			else
+//			{
+//				rgxloper12Conv = malloc(cxloper * sizeof(XLOPER12));
+//				if (rgxloper12Conv == NULL)
+//				{
+//					fRet = FALSE;
+//				}
+//				else
+//				{
+//					pxloper12Conv = rgxloper12Conv;
+//					pxloperConv = pxloper->val.array.lparray;
+//					while (cxloper > 0 && !fClean)
+//					{
+//						if (!XLOperToXLOper12(pxloperConv, pxloper12Conv))
+//						{
+//							fClean = TRUE;
+//							cxloper = 0;
+//						}
+//						else
+//						{
+//							pxloperConv++;
+//							pxloper12Conv++;
+//							cxloper--;
+//						}
+//					}
+//					if (fClean)
+//					{
+//						fRet = FALSE;
+//						while (pxloper12Conv > rgxloper12Conv)
+//						{
+//							FreeXLOperT(pxloperConv);
+//							pxloperConv--;
+//						}
+//						free(rgxloper12Conv);
+//					}
+//					else
+//					{
+//						pxloper12->val.array.lparray = rgxloper12Conv;
+//						pxloper12->val.array.rows = crw;
+//						pxloper12->val.array.columns = ccol;
+//					}
+//				}
+//			}
+//		}
+//		break;
+//	case xltypeBigData:
+//		cbyte = pxloper->val.bigdata.cbData;
+//		if (pxloper->val.bigdata.h.lpbData != NULL && cbyte > 0)
+//		{
+//			pbyte = (BYTE *)malloc(cbyte);
+//			if (pbyte != NULL)
+//			{
+//				memcpy_s(pbyte, cbyte, pxloper->val.bigdata.h.lpbData, cbyte);
+//				pxloper12->val.bigdata.h.lpbData = pbyte;
+//				pxloper12->val.bigdata.cbData = cbyte;
+//			}
+//			else
+//			{
+//				fRet = FALSE;
+//			}
+//		}
+//		else
+//		{
+//			fRet = FALSE;
+//		}
+//		break;
+//	}
+//
+//	if (fRet)
+//	{
+//		pxloper12->xltype = xltype;
+//	}
+//	return fRet;
+//}
 
-	fClean = FALSE;
-	fRet = TRUE;
-	xltype = pxloper->xltype;
-
-	switch (xltype)
-	{
-	case xltypeNum:
-		pxloper12->val.num = pxloper->val.num;
-		break;
-	case xltypeBool:
 #ifdef __cplusplus
-		pxloper12->val.xbool = pxloper->val.xbool;
-#else		
-		pxloper12->val.xbool = pxloper->val.bool;
-#endif
-		break;
-	case xltypeErr:
-		pxloper12->val.err = (int)pxloper->val.err;
-		break;
-	case xltypeMissing:
-	case xltypeNil:
-		break;
-	case xltypeInt:
-		pxloper12->val.w = pxloper->val.w;
-	case xltypeStr:
-		ast = pxloper->val.str;
-		if (ast == NULL)
-		{
-			fRet = FALSE;
-		}
-		else
-		{
-			cach = ast[0];
-			cch = cach;
-			if (cach > cchMaxStz || cach < 0)
-			{
-				fRet = FALSE;
-			}
-			else
-			{
-				st = (XCHAR*) malloc((cch + 2) * sizeof(XCHAR));
-				if (st == NULL)
-				{
-					fRet = FALSE;
-				}
-				else
-				{
-					MultiByteToWideChar(CP_ACP, 0, ast + 1, cach, st + 1, cch);
-					st[0] = (XCHAR) cch;
-					st[cch + 1] = '\0';
-					pxloper12->val.str = st;
-				}
-			}
-		}
-		break;
-	case xltypeFlow:
-		pxloper12->val.flow.rw = pxloper->val.flow.rw;
-		pxloper12->val.flow.col = pxloper->val.flow.col;
-		pxloper12->val.flow.xlflow = pxloper->val.flow.xlflow;
-		break;
-	case xltypeRef:
-		if (pxloper->val.mref.lpmref && pxloper->val.mref.lpmref->count > 0)
-		{
-			pref = pxloper->val.mref.lpmref->reftbl;
-			cref12 = pxloper->val.mref.lpmref->count;
-
-			pmref12 = (LPXLMREF12) malloc(sizeof(XLMREF12) + sizeof(XLREF12)*(cref12-1));
-			if (pmref12 == NULL)
-			{
-				fRet = FALSE;
-			}
-			else
-			{
-				pmref12->count = cref12;
-				rgref12 = pmref12->reftbl;
-				pref12 = rgref12;
-				while (cref12 > 0 && !fClean)
-				{
-					if (!ConvertXLRefToXLRef12(pref, pref12))
-					{
-						fClean = TRUE;
-						cref12 = 0;
-					}
-					else
-					{
-						pref++;
-						pref12++;
-						cref12--;
-					}
-				}
-				if (fClean)
-				{
-					free(pmref12);
-					fRet = FALSE;
-				}
-				else
-				{
-					pxloper12->val.mref.lpmref = pmref12;
-					pxloper12->val.mref.idSheet = pxloper->val.mref.idSheet;
-				}
-			}
-		}
-		else
-		{
-			xltype = xltypeMissing;
-		}
-		break;
-	case xltypeSRef:
-		if (pxloper->val.sref.count != 1)
-		{
-			fRet = FALSE;
-		}
-		else if (ConvertXLRefToXLRef12(&pxloper->val.sref.ref, &pxloper12->val.sref.ref))
-		{
-			pxloper12->val.sref.count = 1;
-		}
-		else
-		{
-			fRet = FALSE;
-		}
-		break;
-	case xltypeMulti:
-		crw = pxloper->val.array.rows;
-		ccol = pxloper->val.array.columns;
-		if (crw > rwMaxO8 || ccol > colMaxO8)
-		{
-			fRet = FALSE;
-		}
-		else
-		{
-			cxloper = crw * ccol;
-			if (cxloper == 0)
-			{
-				xltype = xltypeMissing;
-			}
-			else
-			{
-				rgxloper12Conv = malloc(cxloper * sizeof(XLOPER12));
-				if (rgxloper12Conv == NULL)
-				{
-					fRet = FALSE;
-				}
-				else
-				{
-					pxloper12Conv = rgxloper12Conv;
-					pxloperConv = pxloper->val.array.lparray;
-					while (cxloper > 0 && !fClean)
-					{
-						if (!XLOperToXLOper12(pxloperConv, pxloper12Conv))
-						{
-							fClean = TRUE;
-							cxloper = 0;
-						}
-						else
-						{
-							pxloperConv++;
-							pxloper12Conv++;
-							cxloper--;
-						}
-					}
-					if (fClean)
-					{
-						fRet = FALSE;
-						while (pxloper12Conv > rgxloper12Conv)
-						{
-							FreeXLOperT(pxloperConv);
-							pxloperConv--;
-						}
-						free(rgxloper12Conv);
-					}
-					else
-					{
-						pxloper12->val.array.lparray = rgxloper12Conv;
-						pxloper12->val.array.rows = crw;
-						pxloper12->val.array.columns = ccol;
-					}
-				}
-			}
-		}
-		break;
-	case xltypeBigData:
-		cbyte = pxloper->val.bigdata.cbData;
-		if (pxloper->val.bigdata.h.lpbData != NULL && cbyte > 0)
-		{
-			pbyte = (BYTE *)malloc(cbyte);
-			if (pbyte != NULL)
-			{
-				memcpy_s(pbyte, cbyte, pxloper->val.bigdata.h.lpbData, cbyte);
-				pxloper12->val.bigdata.h.lpbData = pbyte;
-				pxloper12->val.bigdata.cbData = cbyte;
-			}
-			else
-			{
-				fRet = FALSE;
-			}
-		}
-		else
-		{
-			fRet = FALSE;
-		}
-		break;
-	}
-
-	if (fRet)
-	{
-		pxloper12->xltype = xltype;
-	}
-	return fRet;
 }
+#endif
+

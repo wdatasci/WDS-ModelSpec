@@ -9,6 +9,10 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using ExcelDna.Integration;
 
+using Microsoft.ClearScript.V8;
+using Microsoft.ClearScript.JavaScript;
+using Microsoft.ClearScript;
+using Microsoft.ClearScript.Windows;
 
 namespace WDS_ExcelAddIn_Common
 {
@@ -491,7 +495,7 @@ namespace WDS_ExcelAddIn_Common
                 Object returned_value= lScriptEngine.Invoke(functionname, functionparamsValues);
                 if (lIsAtomic(ref returned_value)) return returned_value;
 
-                int cnt = 0;
+                int cnt = 0, ndim = 0, nelem = 0, nrows = 0, ncols = 0;
                 foreach (PropertyDescriptor prop in TypeDescriptor.GetProperties(returned_value))
                 {
                     if (prop.Name == "Count")
@@ -499,6 +503,14 @@ namespace WDS_ExcelAddIn_Common
                         cnt = (int)prop.GetValue(returned_value);
                         break;
                     }
+                }
+                if (cnt == 0) {
+                    lDimensions(ref ndim, ref nelem, ref nrows, ref ncols, returned_value);
+                    cnt = nelem;
+                }
+                if (returned_value.GetType().Name == "V8Array")
+                {
+                    cnt = returned_value.ToEnumerable().Count();
                 }
                 if (cnt == 0) return new object();
 
@@ -524,6 +536,10 @@ namespace WDS_ExcelAddIn_Common
                                 rccnt[i] = (int)prop.GetValue(dreturned_value[i]);
                                 break;
                             }
+                        }
+                        if (rccnt[i]==0)
+                        {
+                            rccnt[i] = dreturned_value[i].length;
                         }
                         if (rccnt[i] > ccnt) ccnt = rccnt[i];
                     }
