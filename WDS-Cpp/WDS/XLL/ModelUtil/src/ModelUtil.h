@@ -42,8 +42,8 @@ inline int lFreeIfNecessary(LPXLOPER12& target, bool& bWasCoercedFlag) {
 			target = nullptr;
 		}
 	}
-	catch (std::exception& e) {
-		e;
+	catch (...) {
+		rc = -1;
 	}
 	return rc;
 }
@@ -69,9 +69,9 @@ inline int lCoerceToMultiIfNecessary(LPXLOPER12& arg, LPXLOPER12& target, bool& 
 			rc = 0;
 		}
 	}
-	catch (std::exception& e) {
-		e;
+	catch (...) {
 		lFreeIfNecessary(target, bWasTargetNew);
+		rc = -1;
 	}
 	return rc;
 }
@@ -86,11 +86,15 @@ std::wstring LPOPER_to_wstring(LPXLOPER12 arg0, size_t r, size_t c, std::wstring
 inline std::wstring LPOPER_to_wstring(LPXLOPER12 arg0, size_t r, size_t c) { return LPOPER_to_wstring(arg0, r, c, L""); };
 double LPOPER_to_double(LPXLOPER12 arg0, size_t r, size_t c);
 long LPOPER_to_long(LPXLOPER12 arg0, size_t r, size_t c);
+long LPOPER_to_bool(LPXLOPER12 arg0, size_t r, size_t c, bool defv);
 
 WDS::Comp::Matrix::dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, double defv, bool bLimitRows, long RowLimit, bool bLimitColumns, long ColumnLimit);
 WDS::Comp::Matrix::dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, double defv);
 WDS::Comp::Matrix::iMatrix iMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv, bool bLimitRows, long RowLimit, bool bLimitColumns, long ColumnLimit);
 WDS::Comp::Matrix::iMatrix iMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv);
+
+LPOPER dMatrixToLPOPER(WDS::Comp::Matrix::dMatrix Arg);
+LPOPER iMatrixToLPOPER(WDS::Comp::Matrix::iMatrix Arg);
 
 
 

@@ -485,7 +485,7 @@ long LPOPER_to_long(LPXLOPER12 arg0, size_t r, size_t c)
 	return rv;
 }
 
-long LPOPER_to_bool(LPXLOPER12 arg0, size_t r, size_t c)
+long LPOPER_to_bool(LPXLOPER12 arg0, size_t r, size_t c, bool defv)
 {
 	bool rv = false;
 	bool bThrowError = false;
@@ -514,6 +514,8 @@ long LPOPER_to_bool(LPXLOPER12 arg0, size_t r, size_t c)
 			case xltypeMissing:
 			case xltypeErr:
 			case xltypeNil:
+				if (defv) rv = 1;
+				else rv = 0;
 				break;
 			case xltypeMulti:
 				rv = xltypeMulti_to_long(arg0, r, c,false,LONG_MAX);
@@ -547,7 +549,10 @@ long LPOPER_to_bool(LPXLOPER12 arg0, size_t r, size_t c)
 	else {
 		bThrowError = true;
 	}
-	if (bThrowError) rv = false;
+	if (bThrowError) {
+		if (defv) rv = 1;
+		else rv = 0;
+	}
 	if (rv != 0)
 		rv = 1;
 	return rv;
@@ -574,9 +579,8 @@ iMatrix iMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv, bool bLimit
 		return result;
 	}
 	catch (exception& e) {
-		e;
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
-		throw std::exception("iMatrixFromLPXLOPER Error"); 
+		throw e;
 	}
 	lFreeIfNecessary(cmArg, bWasArgCoerced);
 	return iMatrix(1, 1);
@@ -585,6 +589,17 @@ iMatrix iMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv, bool bLimit
 
 iMatrix iMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, long defv) {
 	return iMatrixFromLPXLOPER(Arg, bStrict, defv, false, 0, false, 0);
+}
+
+
+LPOPER iMatrixToLPOPER(iMatrix Arg) {
+	LPOPER result = new OPER(Arg.nrows(), Arg.ncols());
+	for (int i = 0; i < Arg.nrows(); i++) {
+		for (int j = 0; j < Arg.ncols(); j++) {
+			(*result)(i, j) = (double)Arg(i, j);
+		}
+	}
+	return result;
 }
 
 
@@ -608,24 +623,32 @@ dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, double defv, bool bLim
 		return result;
 	}
 	catch (exception& e) {
-		e;
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
-		throw std::exception("dMatrixFromLPXLOPER Error"); 
+		throw e;
 	}
 	return dMatrix(1, 1);
 }
 
 
 dMatrix dMatrixFromLPXLOPER(LPXLOPER12 Arg, bool bStrict, double defv) {
-	return dMatrixFromLPXLOPER(Arg, bStrict, (long)defv, false, 0, false, 0);
+	return dMatrixFromLPXLOPER(Arg, bStrict, defv, false, 0, false, 0);
 }
 
 
+LPOPER dMatrixToLPOPER(dMatrix Arg) {
+	LPOPER result = new OPER(Arg.nrows(), Arg.ncols());
+	for (int i = 0; i < Arg.nrows(); i++) {
+		for (int j = 0; j < Arg.ncols(); j++) {
+			(*result)(i, j) = Arg(i, j);
+		}
+	}
+	return result;
+}
 
 //AddIn XLL_WDS_Comp_zzzInternal_SubMatrix(
-//	Function(XLL_LPOPER, "WDS_Comp_zzzInternal_SubMatrix", "WDS.Comp.zzzInternal.SubMatrix")
-//	.Arguments({
-//		Arg(XLL_LPXLOPER, "Arg0", "is a LPXLOPER12")
+// // //	Function(XLL_LPOPER, "WDS_Comp_zzzInternal_SubMatrix", "WDS.Comp.zzzInternal.SubMatrix")
+// // //	.Arguments({
+// //		Arg(XLL_LPXLOPER, "Arg0", "is a LPXLOPER12")
 //		,Arg(XLL_LONG, "direction", "is a 0/1 indicator for 0-Across Rows (vertical) or 1-Across Columns (horizontal)","0")
 //		,Arg(XLL_LONG, "startrow", "is the 1-Based beginrowng row (outside of limits defaults to input size).","1")
 //		,Arg(XLL_LONG, "endrow", "is the 1-Based ending row (outside of limits defaults to input size).","1")
@@ -719,9 +742,9 @@ WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=
 
 	}
 	catch (exception& e) {
-		e;
 		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER(L"Error, in coercion or sub matrix");
+		std::string ew = e.what();
+		result = new OPER(L"Error, in coercion or internal sub matrix: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(cmArg0, bWasArg0Coerced);
@@ -784,10 +807,9 @@ WDS_Comp_Matrix_SubMatrix(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
-		e;
 		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER(L"Error, in coercion or sum across");
-		//result->xltype = result->xltype | xlbitXLFree;
+		std::string ew = e.what();
+		result = new OPER(L"Error, in coercion or sub matrix: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	return result;
@@ -858,10 +880,9 @@ WDS_Comp_Matrix_Rows(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
-		e;
 		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER(L"Error, in coercion or sum across rows");
-		//result->xltype = result->xltype | xlbitXLFree;
+		std::string ew = e.what();
+		result = new OPER(L"Error, in Matrix.Rows: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	return result;
@@ -931,10 +952,9 @@ WDS_Comp_Matrix_Columns(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
-		e;
 		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER(L"Error, in coercion or sum across rows");
-		//result->xltype = result->xltype | xlbitXLFree;
+		std::string ew = e.what();
+		result = new OPER(L"Error, in Matrix.Columns: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	return result;
@@ -1042,9 +1062,9 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 
 	}
 	catch (exception& e) {
-		e;
 		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER(L"Error, in coercion or sub matrix");
+		std::string ew = e.what();
+		result = new OPER(L"Error, in coercion or column set: " + std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(cmArg0, bWasArg0Coerced);
@@ -1142,9 +1162,9 @@ WDS_Comp_zzzInternal_SumAcross(LPXLOPER12 Arg0, long direction, long startrow, l
 
 	}
 	catch (exception& e) {
-		e;
+		std::string ew = e.what();
 		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER(L"Error, in coercion or sum across columns");
+		result = new OPER(L"Error, in coercion or sum across columns: "+std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(cmArg0, bWasArg0Coerced);
@@ -1208,10 +1228,9 @@ WDS_Comp_Matrix_SumAcross(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
-		e;
+		std::string ew = e.what();
 		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER(L"Error, in coercion or sum across");
-		//result->xltype = result->xltype | xlbitXLFree;
+		result = new OPER(L"Error, in coercion or sum across: "+std::wstring(ew.begin(), ew.end()));
 	}
 
 	return result;
@@ -1268,10 +1287,9 @@ WDS_Comp_Matrix_SumAcrossRows(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
-		e;
+		std::string ew = e.what();
 		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER(L"Error, in coercion or sum across rows");
-		//result->xltype = result->xltype | xlbitXLFree;
+		result = new OPER(L"Error, in coercion or sum across rows: "+std::wstring(ew.begin(), ew.end()));
 	}
 
 	return result;
@@ -1328,10 +1346,9 @@ WDS_Comp_Matrix_SumAcrossColumns(LPXLOPER12 Arg0, LPXLOPER12 Opts)
 
 	}
 	catch (exception& e) {
-		e;
+		std::string ew = e.what();
 		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
-		//result->xltype = result->xltype | xlbitXLFree;
-		result = new OPER(L"Error, in coercion or sum across columns");
+		result = new OPER(L"Error, in coercion or sum across columns: "+std::wstring(ew.begin(), ew.end()));
 	}
 
 	return result;
@@ -1375,10 +1392,7 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 	bool lbStrict = true;
 	double ldefv = 0.0;
 
-	if (useless_LPXLOPER(bStrict) ) {
-		lbStrict = true;
-	}
-	else lbStrict = LPOPER_to_bool(bStrict,0,0);
+	lbStrict = LPOPER_to_bool(bStrict,0,0,true);
 
 	if (useless_LPXLOPER(defv)) {
 		ldefv = nan("");
@@ -1408,9 +1422,9 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 
 		}
 	catch (exception& e) {
-		e;
+		std::string ew = e.what();
 		if (result != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)result);
-		result = new OPER(L"Error, in coercion or row-normalization");
+		result = new OPER(L"Error, in coercion or row-normalization: "+std::wstring(ew.begin(), ew.end()));
 	}
 
 	lFreeIfNecessary(cmArg, bWasArgCoerced);
@@ -3172,20 +3186,11 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 
 	try {
 
-		bool lbReturnJustIndices = false;
-		if (!useless_LPXLOPER(bReturnJustIndices)) {
-			lbReturnJustIndices = LPOPER_to_bool(bReturnJustIndices, 0, 0);
-		}
+		bool lbReturnJustIndices = LPOPER_to_bool(bReturnJustIndices, 0, 0, false);
 
-		bool lbReturnJustUnique = false;
-		if (!useless_LPXLOPER(bReturnJustUnique)) {
-			lbReturnJustUnique = LPOPER_to_bool(bReturnJustUnique, 0, 0);
-		}
+		bool lbReturnJustUnique = LPOPER_to_bool(bReturnJustUnique, 0, 0, false);
 
-		bool lbReverseOrder = false;
-		if (!useless_LPXLOPER(bReverseOrder)) {
-			lbReverseOrder = LPOPER_to_bool(bReverseOrder, 0, 0);
-		}
+		bool lbReverseOrder = LPOPER_to_bool(bReverseOrder, 0, 0, false);
 
 
 		int xcol = 0;
@@ -3359,6 +3364,178 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 	//if (result != nullptr) result->xltype = result->xltype | xlbitXLFree;
 
 	return result;
+
+}
+
+
+AddIn XLL_WDS_Util_SimpleConvolve(
+	Function(XLL_LPXLOPER, "WDS_Util_SimpleConvolve", "WDS.Util.SimpleConvolve")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg1", "is an vector")
+		,Arg(XLL_LPXLOPER, "Arg2", "is an vector or matrix (set of vectors)")
+		,Arg(XLL_LPXLOPER, "bUsingColumns", "using columns (TRUE) or rows (FALSE), defaults to columns")
+		})
+	.Category("WDS.Util")
+	.FunctionHelp("This function takes a distribution and applies it to another vector (or set), returning multiples of the second offset and weighted by the distribution.")
+);
+LPOPER  WINAPI
+WDS_Util_SimpleConvolve(LPXLOPER12 Arg1
+	, LPXLOPER12 Arg2
+	, LPXLOPER12 bUsingColumns
+) {
+#pragma XLLEXPORT
+
+	using namespace WDS::Comp::Matrix;
+
+	int i, iM1, j, k, kP1, nrows, ncols;
+	int firsti, lasti, comp1;
+	double tempdouble;
+	LPOPER result = nullptr;
+	require_usual_suspect_LPXLOPER(Arg1);
+	require_usual_suspect_LPXLOPER(Arg2);
+	allow_missings_only_LPXLOPER_or_exit(bUsingColumns);
+	bool lbUsingColumns = LPOPER_to_bool(bUsingColumns, 0, 0, true);
+
+	dMatrix dmResult;
+	LPOPER oResult = nullptr;
+
+	try {
+
+		dMatrix dmArg1 = dMatrixFromLPXLOPER(Arg1, true, 0, false, 0, false, 0);
+		dMatrix dmArg2 = dMatrixFromLPXLOPER(Arg2, true, 0, false, 0, false, 0);
+		mIndex mi(0), mj(0), mk(0);
+
+		if ((lbUsingColumns && dmArg1.n_cols != 1) || (!lbUsingColumns && dmArg1.n_rows != 1)) {
+			throw(std::exception("Error in SimpleConvolve, input distribution has more than one vector"));
+		}
+
+		int ndistlength = (int)((lbUsingColumns) ? dmArg1.n_rows : dmArg1.n_cols);
+		int nvectorlength = (int)((lbUsingColumns) ? dmArg2.n_rows : dmArg2.n_cols);
+		int nvectors = (int)((lbUsingColumns) ? dmArg2.n_cols : dmArg2.n_rows);
+		nrows = (lbUsingColumns) ? (ndistlength + nvectorlength) : nvectors;
+		ncols = (lbUsingColumns) ? nvectors : (ndistlength + nvectorlength);
+		dmResult.set_size(nrows, ncols);
+		dmResult.fill(0.0);
+
+		if (lbUsingColumns) {
+			for (mj = 0; mj < nvectorlength; mj++)
+				for (mk = 0; mk < nvectors; mk++)
+					for (mi = 0; mi < ndistlength; mi++) {
+						i = mi + mj;
+						dmResult[i, mk] += dmArg1[mi] * dmArg2[mj, mk];
+					}
+		}
+		else {
+			for (mj = 0; mj < nvectorlength; mj++)
+				for (mk = 0; mk < nvectors; mk++)
+					for (mi = 0; mi < ndistlength; mi++) {
+						i = mi + mj;
+						dmResult[mk, i] += dmArg1[0,mi] * dmArg2[mk, mj];
+					}
+		}
+
+		oResult = dMatrixToLPOPER(dmResult);
+
+	}
+	catch (exception& e) {
+		if (oResult != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)oResult);
+		std::string ew = e.what();
+		oResult = new OPER(L"Error, in SimpleConvolve: " + std::wstring(ew.begin(), ew.end()));
+	}
+
+
+
+	return oResult;
+
+}
+
+
+AddIn XLL_WDS_Util_FlipSumProduct(
+	Function(XLL_LPXLOPER, "WDS_Util_FlipSumProduct", "WDS.Util.FlipSumProduct")
+	.Arguments({
+		Arg(XLL_LPXLOPER, "Arg1", "is an vector")
+		,Arg(XLL_LPXLOPER, "Arg2", "is an vector or matrix (set of vectors)")
+		})
+	.Category("WDS.Util")
+	.FunctionHelp("This function takes a distribution and applies it to another vector (or set), returning multiples of the second offset and weighted by the distribution.")
+);
+LPOPER  WINAPI
+WDS_Util_FlipSumProduct(LPXLOPER12 Arg1
+	, LPXLOPER12 Arg2
+) {
+#pragma XLLEXPORT
+
+	using namespace WDS::Comp::Matrix;
+
+	int i, iM1, j, k, kP1, nrows, ncols;
+	int firsti, lasti, comp1;
+	double tempdouble;
+	LPOPER result = nullptr;
+	require_usual_suspect_LPXLOPER(Arg1);
+	require_usual_suspect_LPXLOPER(Arg2);
+	bool lbUsingColumns = true;
+
+	dMatrix dmResult;
+	LPOPER oResult = nullptr;
+
+	try {
+
+		dMatrix dmArg1 = dMatrixFromLPXLOPER(Arg1, true, 0, false, 0, false, 0);
+		dMatrix dmArg2 = dMatrixFromLPXLOPER(Arg2, true, 0, false, 0, false, 0);
+		mIndex mi(0), mj(0), mk(0);
+
+		if (dmArg1.n_cols == 1) {
+			if (dmArg1.n_rows == 1) {
+				if (dmArg2.n_cols > 1) lbUsingColumns = true;
+				else lbUsingColumns = false;
+			}
+			else lbUsingColumns = true;
+		}
+		else {
+			if (dmArg1.n_rows > 1) {
+				throw(std::exception("Error in FlipSumProduct, input distribution must be a vector"));
+			}
+			else {
+				lbUsingColumns = false;
+			}
+		}
+
+		int ndistlength = (int)((lbUsingColumns) ? dmArg1.n_rows : dmArg1.n_cols);
+		int nvectorlength = (int)((lbUsingColumns) ? dmArg2.n_rows : dmArg2.n_cols);
+		int nvectors = (int)((lbUsingColumns) ? dmArg2.n_cols : dmArg2.n_rows);
+		nrows = (lbUsingColumns) ? 1 : nvectors;
+		ncols = (lbUsingColumns) ? nvectors : 1;
+		dmResult.set_size(nrows, ncols);
+		dmResult.fill(0.0);
+
+		int nrows_used = ndistlength;
+		if (nrows_used > nvectorlength) nrows_used = nvectorlength;
+
+		if (lbUsingColumns) {
+				for (mk = 0; mk < nvectors; mk++)
+					for (mi = 0, j=nvectorlength-1; mi < nrows_used && j>=0; mi++, j--) {
+						dmResult[0, mk] += dmArg1[mi] * dmArg2[j, mk];
+					}
+		}
+		else {
+				for (mk = 0; mk < nvectors; mk++)
+					for (mi = 0, j=nvectorlength-1; mi < nrows_used && j>=0; mi++, j--) {
+						dmResult[mk, 0] += dmArg1[0,mi] * dmArg2[mk, j];
+					}
+		}
+
+		oResult = dMatrixToLPOPER(dmResult);
+
+	}
+	catch (exception& e) {
+		if (oResult != nullptr) Excel12(xlFree, 0, 1, (LPXLOPER12)oResult);
+		std::string ew = e.what();
+		oResult = new OPER(L"Error, in FlipSumProduct: " + std::wstring(ew.begin(), ew.end()));
+	}
+
+
+
+	return oResult;
 
 }
 

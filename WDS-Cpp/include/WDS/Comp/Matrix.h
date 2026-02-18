@@ -31,6 +31,12 @@ namespace WDS::Comp::Matrix {
 		mIndex operator=(int arg0) { value = (_mI)arg0; return *this; }
 		mIndex operator=(long arg0) { value = (_mI) arg0; return *this; }
 
+		_mI operator+=(mIndex& arg0) { value += arg0.value; this->value; }
+		mIndex operator+=(_mI& arg0) { value += arg0; return *this; }
+		mIndex operator+=(size_t arg0) { value += (_mI)arg0; return *this; }
+		mIndex operator+=(int arg0) { value += (_mI)arg0; return *this; }
+		mIndex operator+=(long arg0) { value += (_mI) arg0; return *this; }
+
 		bool operator<(size_t arg0) { return (value < (_mI)arg0); }
 		bool operator<=(size_t arg0) { return (value <= (_mI)arg0); }
 		bool operator>(size_t arg0) { return (value > (_mI)arg0); }
@@ -61,8 +67,17 @@ namespace WDS::Comp::Matrix {
 
 		//prefix
 		_mI &operator++() { this->value++; return this->value; }
+		//int &operator+(int b) { return b + (int)this->value; }
+		//size_t &operator+(size_t b) { return b + (size_t)this->value; }
+		//long &operator+(long b) { return b + (long)this->value; }
 		//postfix
 		_mI operator++(int value) { _mI rv = value; this->value++; return rv; }
+		int operator+(_mI b) { return (int)b + (int)this->value; }
+		int operator+(mIndex b) { return (int)b.value + (int)this->value; }
+		int operator+(int b) { return b + (int)this->value; }
+		size_t operator+(size_t b) { return b + (size_t)this->value; }
+		long operator+(long b) { return b + (long)this->value; }
+
 
 		~mIndex() {};
 	};
