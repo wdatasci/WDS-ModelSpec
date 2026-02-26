@@ -14,92 +14,16 @@ using Microsoft.ClearScript.JavaScript;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.Windows;
 
-namespace WDS_ExcelAddIn_Common
+using static WDS.Util;
+using WDS.Wrangler;
+
+namespace WDS
 {
-    public partial class AddIn : IExcelAddIn
+    public partial class XLL : IExcelAddIn
     {
-
-        private static bool lIsAtomic(ref Object arg)
-        {
-            if (arg is double) return true;
-            if (arg is Double) return true;
-            if (arg is string) return true;
-            if (arg is String) return true;
-            if (arg is int) return true;
-            if (arg is Int16) return true;
-            if (arg is UInt16) return true;
-            if (arg is Int32) return true;
-            if (arg is UInt32) return true;
-            if (arg is Int64) return true;
-            if (arg is UInt64) return true;
-            return false;
-        }
-        private static void lDimensions(ref int ndim, ref int nelem, ref int nrows, ref int ncols, object arg1)
-        {
-            try
-            {
-                if (arg1 is object[])
-                {
-                    ndim = 1;
-                    nelem = (arg1 as object[]).Length;
-                    nrows = nelem;
-                    ncols = 1;
-                    return;
-                }
-                if (arg1 is object[,])
-                {
-                    try
-                    {
-                        object[,] arg12 = (object[,])arg1;
-                        ndim = arg12.Rank;
-                        if (ndim == 1)
-                        {
-                            nelem = arg12.GetLength(0);
-                            nrows = nelem;
-                            ncols = 1;
-                        }
-                        else if (ndim == 2)
-                        {
-                            nrows = arg12.GetLength(0);
-                            ncols = arg12.GetLength(1);
-                            nelem = nrows * ncols;
-                        }
-                    }
-                    catch (SystemException)
-                    {
-                        ndim = 0;
-                        nelem = 0;
-                        nrows = 0;
-                        ncols = 0;
-                    }
-                    return;
-                }
-                if (arg1 is ExcelMissing)
-                {
-                    ndim = 0;
-                    nelem = 0;
-                    nrows = 0;
-                    ncols = 0;
-                    return;
-                }
-                ndim = -1;
-                nelem = 1;
-                nrows = 1;
-                ncols = 1;
-                return;
-            }
-            catch (SystemException)
-            {
-                ndim = 0;
-                nelem = 0;
-                nrows = 0;
-                ncols = 0;
-            }
-        }
-
-
-        [ExcelFunction(Name = "ClearScriptTest"
-        , Category = "WDS.Core"
+        
+        [ExcelFunction(Name = "WDS.MSClearScript.ClearScriptTest"
+        , Category = "WDS.MSClearScript"
         , Description = "Well, what did you think?"
         , IsThreadSafe = true
         , IsVolatile = false
@@ -392,7 +316,7 @@ namespace WDS_ExcelAddIn_Common
 
         [ExcelFunction(Name = "WDS.MSClearScript.SimpleFunctionEvaluator"
         , Category = "WDS.MSClearScript"
-        , Description = "Executes MS ClearScript V8 function (previously defined with FunctionEvaluator) on a set of parameters, use with an atomic valued function"
+        , Description = "NOTE: Use with an atomic valued function.  Executes MS ClearScript V8 function (previously defined with FunctionConstructor) on a set of parameters."
         , IsThreadSafe = true
         , IsVolatile = false
         //, ExplicitRegistration = true
@@ -450,7 +374,7 @@ namespace WDS_ExcelAddIn_Common
 
         [ExcelFunction(Name = "WDS.MSClearScript.FunctionEvaluator"
         , Category = "WDS.MSClearScript"
-        , Description = "Executes MS ClearScript V8 function (previously defined with FunctionEvaluator) on a set of parameters, can be used with non-atomic valued function"
+        , Description = "Executes MS ClearScript V8 function (previously defined with FunctionConstructor) on a set of parameters, can be used with non-atomic valued function"
         , IsThreadSafe = true
         , IsVolatile = false
         //, ExplicitRegistration = true

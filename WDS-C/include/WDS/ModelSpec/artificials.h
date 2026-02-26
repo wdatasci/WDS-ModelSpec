@@ -593,7 +593,7 @@ int fArtificials_Numeric(double* SourceValue  // possibly a vector
 
             default:
 
-                bIsMissing = !(isfinite(tempval));
+                bIsMissing = !(isfinite(tempval)) || isnan(tempval);
                 bIsMissing = bIsMissing || ((!bIsMissing) && (bUsingCleanLimitLeft && (tempval < CleanLimitLeftVal)));
                 bIsMissing = bIsMissing || ((!bIsMissing) && (bUsingCleanLimitRight && (tempval > CleanLimitRightVal)));
 
@@ -1081,7 +1081,7 @@ int fArtificialsScored_Numeric(double* SourceValue  // possibly a vector
             case e_BSplineOrder2:
             case e_BSplineOrder3:
 
-                bIsMissing = !(isfinite(tempval));
+                bIsMissing = !(isfinite(tempval)) || isnan(tempval);
                 bIsMissing = bIsMissing || ((!bIsMissing) && (bUsingCleanLimitLeft && (tempval < CleanLimitLeftVal)));
                 bIsMissing = bIsMissing || ((!bIsMissing) && (bUsingCleanLimitRight && (tempval > CleanLimitRightVal)));
 

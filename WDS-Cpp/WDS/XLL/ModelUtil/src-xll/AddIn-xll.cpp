@@ -233,4 +233,18 @@ xlAddInManagerInfo12(LPXLOPER12 pxAction)
 }
 
 
+AddIn XLL_WDS_ModelUtil_Comp_bXLLIsLoaded(
+	Function(XLL_LPXLOPER, "WDS_ModelUtil_Comp_bXLLIsLoaded", "WDS.ModelUtil.Comp.bXLLIsLoaded")
+	.Category("WDS.Util")
+	.FunctionHelp("Returns either a valid number check or common transformation.")
+);
+LPOPER  WINAPI
+WDS_ModelUtil_Comp_bXLLIsLoaded(
+) {
+#pragma XLLEXPORT
+
+	LPOPER rv = new OPER(true);
+	return rv;
+}
+
 

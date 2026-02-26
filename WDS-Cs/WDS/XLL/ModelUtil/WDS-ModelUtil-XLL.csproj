@@ -10,7 +10,7 @@
     <ProjectGuid>{54D69699-EADD-4BC4-98BC-741A9A1C9317}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WDS_ModelUtil</RootNamespace>
+    <RootNamespace>WDS</RootNamespace>
     <AssemblyName>WDS-ModelUtil-XLL-Cs</AssemblyName>
     <BaseIntermediateOutputPath>..\Build\obj\$(AssemblyName)\</BaseIntermediateOutputPath>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
@@ -32,10 +32,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>..\Build\bin\Debug\</OutputPath>
     <BaseIntermediateOutputPath>..\Build\obj\$(AssemblyName)\Debug\</BaseIntermediateOutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COMPILE_WITH_JNI, COMPILE_WITH_HDF5</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -50,7 +50,7 @@
     <ErrorReport>prompt</ErrorReport>
     <BaseIntermediateOutputPath>..\Build\obj\$(AssemblyName)\Release\</BaseIntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>7.3</LangVersion>
@@ -71,6 +71,9 @@
     <Reference Include="ClearScript.Windows.Core, Version=7.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.ClearScript.Windows.Core.7.5.0\lib\net462\ClearScript.Windows.Core.dll</HintPath>
     </Reference>
+    <Reference Include="CsvHelper, Version=33.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
+      <HintPath>..\packages\CsvHelper.33.1.0\lib\net48\CsvHelper.dll</HintPath>
+    </Reference>
     <Reference Include="ExcelDna.Integration, Version=1.1.0.0, Culture=neutral, PublicKeyToken=f225e9659857edbe, processorArchitecture=MSIL">
       <HintPath>..\packages\ExcelDna.Integration.1.9.0\lib\net462\ExcelDna.Integration.dll</HintPath>
     </Reference>
@@ -80,11 +83,29 @@
     <Reference Include="ExcelDna.Utilities, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ExcelDna.Utilities.0.3.0\lib\netstandard2.0\ExcelDna.Utilities.dll</HintPath>
     </Reference>
+    <Reference Include="HDF.PInvoke, Version=1.10.11.0, Culture=neutral, PublicKeyToken=18793c1fcffe58a3, processorArchitecture=MSIL">
+      <HintPath>..\packages\HDF.PInvoke.1.10.11\lib\HDF.PInvoke.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.3, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.10.0.3\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.6.0.0\lib\net462\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExcelDna.Interop.15.0.1\lib\net452\Microsoft.Office.Interop.Excel.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.Vbe.Interop, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExcelDna.Interop.15.0.1\lib\net452\Microsoft.Vbe.Interop.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExcelDna.Interop.15.0.1\lib\net452\Office.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="System">
       <Private>False</Private>
@@ -99,6 +120,7 @@
     <Reference Include="System.Core">
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.IO, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.IO.4.3.0\lib\net462\System.IO.dll</HintPath>
       <Private>True</Private>
@@ -168,6 +190,8 @@
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Threading.Tasks.Extensions.4.6.3\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
+    <Reference Include="System.ValueTuple" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq">
       <Private>False</Private>
     </Reference>
@@ -186,18 +210,80 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\AddIn.cs" />
-    <Compile Include="src\WDS-Excel-Test-Functions.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="src-JniPMML\AddInCmds.HDF5.cs" />
+    <Compile Include="src-JniPMML\AddInCmds.JniPMML.cs" />
+    <Compile Include="src-JniPMML\AddInFunctions.JniPMML.cs" />
+    <Compile Include="src-JNI\DBB.cs" />
+    <Compile Include="src-JniPMML\Default.cs" />
+    <Compile Include="src-ModelSpec\FieldBaseMD.cs" />
+    <Compile Include="src-ModelSpec\FieldMD.cs" />
+    <Compile Include="src-ModelSpec\FieldMDEnums.cs" />
+    <Compile Include="src-ModelSpec\FieldMDIKey.cs" />
+    <Compile Include="src-JniPMML\JniPMML.cs" />
+    <Compile Include="src-JniPMML\JniPMMLItem.cs" />
+    <Compile Include="src-JniPMML\ProjectXJava.cs" />
+    <Compile Include="src-ModelSpec\RecordSet.cs" />
+    <Compile Include="src-ModelSpec\RecordSetMD.cs" />
+    <Compile Include="src-ModelSpec\RecordSetMDEnums.cs" />
+    <Compile Include="src\WranglerDBB.cs" />
+    <Compile Include="src\WranglerFlatFile.cs" />
+    <Compile Include="src\WranglerHDF5.cs" />
+    <Compile Include="src\WranglerXSD.cs" />
+    <Compile Include="src-JNI\JavaNativeInterface.cs" />
+    <Compile Include="src-JNI\JavaVM.cs" />
+    <Compile Include="src-JNI\JNIDefinitions.cs" />
+    <Compile Include="src-JNI\JNIEnv.cs" />
+    <Compile Include="src-JNI\JNINativeMethod.cs" />
+    <Compile Include="src\AddInCmds.FlatFile.cs" />
+    <Compile Include="src\AddIn_ModelUtil.cs" />
+    <Compile Include="src\AddInRibbon_ModelUtil.cs" />
+    <Compile Include="src\Default.cs" />
+    <Compile Include="src-ModelSpec\FieldName.cs" />
+    <Compile Include="src-JniPMML\Util.cs" />
+    <Compile Include="src\WDSClearScriptWrappers.cs" />
+    <Compile Include="src\AddInAbout_ModelUtil.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\AddInAbout_ModelUtil.Designer.cs">
+      <DependentUpon>AddInAbout_ModelUtil.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\WDSUtil.cs" />
+    <Compile Include="src\WDSCommon.cs" />
+    <Compile Include="src\WDSException.cs" />
+    <Compile Include="src\WDSJavaXCs.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="Properties\ExcelDna.Build.props" />
+    <None Include="src\WDSJavaXCs.md" />
     <None Include="WDS-ModelUtil-XLL.dna" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ReadMe.txt" />
+    <Content Include="Resources\CustomUI.xml" />
+    <Content Include="Resources\WDataSci-Mark1-300x240.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\WDataSci-Mark1-50x50.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\AddInAbout_ModelUtil.resx">
+      <DependentUpon>AddInAbout_ModelUtil.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <!--
@@ -210,10 +296,14 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\ExcelDna.AddIn.1.9.0\build\ExcelDna.AddIn.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ExcelDna.AddIn.1.9.0\build\ExcelDna.AddIn.props'))" />
     <Error Condition="!Exists('..\packages\ExcelDna.AddIn.1.9.0\build\ExcelDna.AddIn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ExcelDna.AddIn.1.9.0\build\ExcelDna.AddIn.targets'))" />
-    <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.ClearScript.V8.Native.win-x64.7.5.0\build\Microsoft.ClearScript.V8.Native.win-x64.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ClearScript.V8.Native.win-x64.7.5.0\build\Microsoft.ClearScript.V8.Native.win-x64.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.ClearScript.V8.Native.win-x86.7.5.0\build\Microsoft.ClearScript.V8.Native.win-x86.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ClearScript.V8.Native.win-x86.7.5.0\build\Microsoft.ClearScript.V8.Native.win-x86.props'))" />
+    <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets'))" />
+    <Error Condition="!Exists('..\packages\ExcelDna.Interop.15.0.1\build\ExcelDna.Interop.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ExcelDna.Interop.15.0.1\build\ExcelDna.Interop.targets'))" />
+    <Error Condition="!Exists('..\packages\HDF.PInvoke.1.10.11\build\HDF.PInvoke.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\HDF.PInvoke.1.10.11\build\HDF.PInvoke.targets'))" />
   </Target>
   <Import Project="..\packages\ExcelDna.AddIn.1.9.0\build\ExcelDna.AddIn.targets" Condition="Exists('..\packages\ExcelDna.AddIn.1.9.0\build\ExcelDna.AddIn.targets')" />
-  <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
+  <Import Project="..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />
+  <Import Project="..\packages\ExcelDna.Interop.15.0.1\build\ExcelDna.Interop.targets" Condition="Exists('..\packages\ExcelDna.Interop.15.0.1\build\ExcelDna.Interop.targets')" />
+  <Import Project="..\packages\HDF.PInvoke.1.10.11\build\HDF.PInvoke.targets" Condition="Exists('..\packages\HDF.PInvoke.1.10.11\build\HDF.PInvoke.targets')" />
 </Project>

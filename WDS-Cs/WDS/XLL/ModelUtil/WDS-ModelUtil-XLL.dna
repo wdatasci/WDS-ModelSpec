@@ -17,4 +17,14 @@
     <Reference Name="ClearScriptV8.win-x64.dll" LoadFromBytes="true" ExplicitExports="true" Pack="true" />
     <Resource Name="ClearScriptV8.win-x86.dll" LoadFromBytes="false" ExplicitExports="true" Pack="true" />
   -->
+
+  <Reference Path="CsvHelper.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true"/>
+  <Reference Path="System.Memory.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true"/>
+  <Reference Path="System.Runtime.CompilerServices.Unsafe.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true"/>
+  <Reference Path="HDF.PInvoke.dll" LoadFromBytes="false" ExplicitExports="false" Pack="true"/>
+
+  <Image Name="WDataSciMark1300x240" Path="Resources\\WDataSci-Mark1-300x240.png" Pack="true"/>
+  <Image Name="WDataSciMark150x50" Path="Resources\\WDataSci-Mark1-50x50.png" Pack="true"/>
+  <Image Name="CustomUI" Path="Resources\\CustomUI.xml" Pack="true"/>
+
 </DnaLibrary>
