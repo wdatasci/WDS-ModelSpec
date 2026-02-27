@@ -31,7 +31,7 @@ namespace WDS
     /// during the AutoOpen call.</para>
     /// </summary>
 
-    public partial class XLL : IExcelAddIn
+    public partial class AddIn : IExcelAddIn
     {
 
         private static String pWDSHome = null;
@@ -309,15 +309,6 @@ namespace WDS
 
 
 
-        public void Dispose()
-        {
-            this.AutoClose();
-        }
-
-        ~XLL()
-        {
-            this.AutoClose();
-        }
 
         [ExcelFunction(Name = "WDS.ModelUtil.bXLLIsLoaded"
         , Category = "WDS.ModelUtil"

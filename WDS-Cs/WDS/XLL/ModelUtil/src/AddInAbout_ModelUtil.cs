@@ -25,7 +25,7 @@ namespace WDS
         }
 
 
-        #region Assembly Attribute Accessors
+#region Assembly Attribute Accessors
 
         public string AssemblyTitle
         {

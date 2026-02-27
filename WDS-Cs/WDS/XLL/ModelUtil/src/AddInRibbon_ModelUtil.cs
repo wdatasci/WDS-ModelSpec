@@ -1,26 +1,204 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using ExcelDna.Integration;
+﻿using ExcelDna.Integration;
 using ExcelDna.Integration.CustomUI;
+using Microsoft.Vbe.Interop;
+using System;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Net.NetworkInformation;
+using System.Reflection;
+using System.Resources;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+using static WDS.Util;
 using MOIE=Microsoft.Office.Interop.Excel;
 using VBIDE = Microsoft.Vbe.Interop;
-using System.Drawing.Imaging;
-using System.Reflection;
-using System.Windows.Forms;
-using System.IO;
-using Microsoft.Vbe.Interop;
 
-using static WDS.Util;
-
-namespace WDS
+namespace WDS.Ribbon
 {
+
+    /// <summary>
+    /// WDataSci Excel ribbon creation.
+    /// </summary>
     [ComVisible(true)]
     public class RibbonController : ExcelRibbon
     {
 
         public override string GetCustomUI(string uiName)
         {
-            return "hey";
+            int i = 1;
+            return
+            @"<customUI xmlns='http://schemas.microsoft.com/office/2006/01/customui' loadImage='LoadImage'>
+                <ribbon>
+                    <tabs>
+                    <tab id='WDSTab' label='WDS'>
+                        <group id='WDSGroup0' label='About'>
+                        <button id='Button0' 
+                                image='WDataSciMark1300x240' 
+                                size='large' 
+                                onAction='RunTagMacro' 
+                                tag='ShowAboutForm' 
+                                />
+                        </group>
+
+                        <group id='WDSWBH' label='WDS Workbook Helpers'>
+                        <menu id='WDSWBH_mA' label='WDSCore VBA' image='WDataSciMark1300x240'>
+                        <button id='Button_mA_1' 
+                                label='Add VBA Module: WDSCore' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='AddWDSCoreVBAModule' 
+                                />
+                        <button id='Button_mA_2' 
+                                label='Remove VBA Module: WDSCore' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='RemoveWDSCoreVBAModule' 
+                                />
+                        </menu>
+                        <menu id='WDSWBH_mB' label='VBA Project' image='WDataSciMark1300x240'>
+                        <button id='Button_mB_3' 
+                                label='VBA Module Check Sheet' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='VBACheck' 
+                                />
+                        <button id='Button_mB_4' 
+                                label=' -- Refresh VBA Module Check Sheet' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='VBACheckRefresh' 
+                                />
+                        <button id='Button_mB_5' 
+                                label=' -- Import External Selections From Check Sheet' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='VBAImportSelected' 
+                                />
+                        <button id='Button_mB_6' 
+                                label=' -- Export Local Selections From Check Sheet' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='VBAExportSelected' 
+                                />
+                        <button id='Button_mB_7' 
+                                label=' -- Remove Local Selections From Check Sheet' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='VBARemoveSelected' 
+                                />
+                        <button id='Button_mB_8' 
+                                label='Remove VBA Module Check Sheet' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='VBACheckRemove' 
+                                />
+                        </menu>
+                        <menu id='WDSWBH_mC' label='ListObjects' image='WDataSciMark1300x240'>
+                        <button id='Button_mC_1' 
+                                label='Add XmlMap To Selected ListObject' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='JniPMML_XmlMap_Helper' 
+                                />
+                        </menu>
+                        </group>
+
+                        <group id='WDSWranglers' label='WDS Wranglers'>
+                        <menu id='WDSWranglers_mD' label='HDF5' image='WDataSciMark1300x240'>
+                        <button id='Button_mD_1' 
+                                label='Export XMLMapped List To HDF5' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='ExportXMLMappedListToHDF5' 
+                                />
+                        <button id='Button_mD_2' 
+                                label='Import HDF5 CompoundDS Type' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='ImportHDF5CompoundDS'
+                                />
+                        </menu>
+                        <menu id='WDSWranglers_mE' label='FlatFile' image='WDataSciMark1300x240'>
+                        <button id='Button_mE_1' 
+                                label='Export XMLMapped ListObject To CSV' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='ExportXMLMappedListToCSV' 
+                                />
+                        <button id='Button_mE_2' 
+                                label='Import CSV to ListObject' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='ImportCSVToXMLMappedList'
+                                />
+                        </menu>
+                        </group>
+
+                        
+                        <group id='WDSDModelUtil' label='WDS ModelUtil'>
+                            <menu id='WDSModelUtil_mH' label='DNSM' image='WDataSciMark1300x240'>
+                                <button id='Button_mH_1' 
+                                    label='Build new workbook' 
+                                    image='WDataSciMark1300x240' 
+                                    onAction='RunTagMacro' 
+                                    tag='BuildNewDNSMWorkbook' 
+                                    />
+                                <button id='Button_mH_2' 
+                                    label='TBD' 
+                                    image='WDataSciMark1300x240' 
+                                    onAction='RunTagMacro' 
+                                    tag='TBD'
+                                    />
+                            </menu>
+                        </group>
+
+                        <group id='WDSJniPMML' label='WDS JniPMML'>
+                        <menu id='WDSJniPMML_mF' label='JniPMML' image='WDataSciMark1300x240'>
+                        <button id='Button_mF_1' 
+                                label='Add XmlMap To Selected ListObject' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='JniPMML_XmlMap_Helper' 
+                                />
+                        <button id='Button_mF_2' 
+                                label='Evaluate XMLMapped List Via JniPMML' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='JniPMML_Eval_XmlMappedList'
+                                />
+                        <button id='Button_mF_3' 
+                                label='JniPMML Java Cmd Line Call Prep' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='JniPMML_Cmd_Prep'
+                                />
+                        <button id='Button_mF_4' 
+                                label='JniPMML Java Cmd Line Call' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='JniPMML_Cmd'
+                                />
+                        </menu>
+                        <menu id='WDSJniPMML_mG' label='JniPMML VBA' image='WDataSciMark1300x240'>
+                        <button id='Button_mG_1' 
+                                label='Add VBA Module: WDSJniPMML' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='AddWDSJniPMMLVBAModule' 
+                                />
+                        <button id='Button_mG_2' 
+                                label='Remove VBA Module: WDSJniPMML' 
+                                image='WDataSciMark1300x240' 
+                                onAction='RunTagMacro' 
+                                tag='RemoveWDSJniPMMLRemove' 
+                                />
+                        </menu>
+                        </group>
+
+                    </tab>
+                    </tabs>
+                </ribbon>
+                </customUI>";
         }
 
 
@@ -528,7 +706,6 @@ namespace WDS
             tapp.Run("WDSVBAComponentRemove_WDSJniPMML");
             return;
         }
-
 
     }
 

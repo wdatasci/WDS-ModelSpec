@@ -32,10 +32,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>..\Build\bin\Debug\</OutputPath>
     <BaseIntermediateOutputPath>..\Build\obj\$(AssemblyName)\Debug\</BaseIntermediateOutputPath>
-    <DefineConstants>TRACE;DEBUG;COMPILE_WITH_JNI, COMPILE_WITH_HDF5</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COMPILE_WITH_JNI,COMPILE_WITH_HDF5,USE_WINDOWS_FORMS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -49,7 +49,7 @@
     <OutputPath>..\Build\bin\Release\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <BaseIntermediateOutputPath>..\Build\obj\$(AssemblyName)\Release\</BaseIntermediateOutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;COMPILE_WITH_JNI,COMPILE_WITH_HDF5,USE_WINDOWS_FORMS</DefineConstants>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -266,7 +266,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ReadMe.txt" />
-    <Content Include="Resources\CustomUI.xml" />
     <Content Include="Resources\WDataSci-Mark1-300x240.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

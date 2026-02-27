@@ -19,7 +19,7 @@ using WDS.Wrangler;
 
 namespace WDS
 {
-    public partial class XLL : IExcelAddIn
+    public partial class AddIn : IExcelAddIn
     {
         
         [ExcelFunction(Name = "WDS.MSClearScript.ClearScriptTest"

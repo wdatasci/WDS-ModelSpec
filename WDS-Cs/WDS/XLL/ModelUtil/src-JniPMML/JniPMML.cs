@@ -9,7 +9,6 @@ using static WDS.JavaXCs;
 using FieldName = WDS.ModelSpec.FieldName;
 using ExcelDna.Integration;
 using com.WDataSci.JniPMML;
-using static WDS.XLL;
 using JNI;
 
 namespace com.WDataSci.JniPMML

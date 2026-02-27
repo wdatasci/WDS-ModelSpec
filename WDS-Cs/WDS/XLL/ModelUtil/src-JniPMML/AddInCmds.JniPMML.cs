@@ -23,7 +23,7 @@ namespace WDS
     /// <summary>
     /// The AddIn:IExcelAddIn is partialled in AddInCmds.JniPMML.cs, to add calls to the JniPMML wrapper.
     /// </summary>
-    public partial class XLL : IExcelAddIn
+    public partial class AddIn : IExcelAddIn
     {
 
 
@@ -184,9 +184,9 @@ namespace WDS
             {
                 object[] chargs = new object[] { arg1, arg2, arg3 };
                 Object rv = null;
-                lock (XLL.__JniPMML)
+                lock (__JniPMML)
                 {
-                    rv = XLL.__JniPMML.CreateHandle(arg0, chargs, (arg, args) => XLL.UpdateMajorMinor(arg, args),XLL.__JniPMML);
+                    rv = __JniPMML.CreateHandle(arg0, chargs, (arg, args) => UpdateMajorMinor(arg, args),__JniPMML);
                 }
                 chargs = null;
                 return rv;
@@ -213,10 +213,10 @@ namespace WDS
             if (ExcelDnaUtil.IsInFunctionWizard()) return "In Function Wizard, holding calls to Java";
             int h = HandleMajorFrom(arg0);
             JniPMMLItem aJniPMMLItem;
-            if (!XLL.__JniPMML.TryGetObject(h, out aJniPMMLItem))
+            if (!__JniPMML.TryGetObject(h, out aJniPMMLItem))
             {
-                aJniPMMLItem = new JniPMMLItem(h.ToString(), XLL.__JniPMML);
-                XLL.__JniPMML.Add(aJniPMMLItem);
+                aJniPMMLItem = new JniPMMLItem(h.ToString(), __JniPMML);
+                __JniPMML.Add(aJniPMMLItem);
                 aJniPMMLItem = null;
             }
             List<object> cmargs = new List<object> { aJniPMMLItem.__Handle, arg1 };
@@ -241,10 +241,10 @@ namespace WDS
             if (ExcelDnaUtil.IsInFunctionWizard()) return "In Function Wizard, holding calls to Java";
             int h = HandleMajorFrom(arg0);
             JniPMMLItem aJniPMMLItem;
-            if (!XLL.__JniPMML.TryGetObject(h, out aJniPMMLItem))
+            if (!__JniPMML.TryGetObject(h, out aJniPMMLItem))
             {
-                aJniPMMLItem = new JniPMMLItem(h.ToString(), XLL.__JniPMML);
-                XLL.__JniPMML.Add(aJniPMMLItem);
+                aJniPMMLItem = new JniPMMLItem(h.ToString(), __JniPMML);
+                __JniPMML.Add(aJniPMMLItem);
                 aJniPMMLItem = null;
             }
             List<object> cmargs = new List<object> { aJniPMMLItem.__Handle, arg1 };
@@ -360,7 +360,7 @@ namespace WDS
             int h = -1;
             try
             {
-                aJniPMMLItem = XLL.__JniPMML.CreateHandle("JniPMML", aTag, 0, PMMLFile,XLL.__JniPMML);
+                aJniPMMLItem = __JniPMML.CreateHandle("JniPMML", aTag, 0, PMMLFile,__JniPMML);
                 h = aJniPMMLItem.Handle();
                 try
                 {
@@ -432,7 +432,7 @@ namespace WDS
 
             try
             {
-                if (!XLL.__JniPMML.TryGetObject(h, out aJniPMMLItem))
+                if (!__JniPMML.TryGetObject(h, out aJniPMMLItem))
                     throw new WDS.WDSException("Error in JniPMMLEval_CacheHeaders_guts while pulling JniPMMLItem by handle");
 
                 if (!xm.IsExportable)
@@ -605,9 +605,9 @@ namespace WDS
             try
             {
                 int h = HandleMajorFrom(arg0);
-                if ((h < -1 && !XLL.__JniPMML.TryGetObject(arg0.ToString(), out aJniPMMLItem)) || (-2 < h && h < 0))
+                if ((h < -1 && !__JniPMML.TryGetObject(arg0.ToString(), out aJniPMMLItem)) || (-2 < h && h < 0))
                     throw new WDS.WDSException("Error, Invalid Handle");
-                else if (aJniPMMLItem == null && !XLL.__JniPMML.TryGetObject(h, out aJniPMMLItem))
+                else if (aJniPMMLItem == null && !__JniPMML.TryGetObject(h, out aJniPMMLItem))
                     throw new WDS.WDSException("Error, Invalid Handle");
                 if (h < 0)
                     h = aJniPMMLItem.Handle();
@@ -677,7 +677,7 @@ namespace WDS
 
             int h = HandleMajorFrom(arg0);
             JniPMMLItem aJniPMMLItem;
-            if (!XLL.__JniPMML.TryGetObject(h, out aJniPMMLItem))
+            if (!__JniPMML.TryGetObject(h, out aJniPMMLItem))
             {
                 rv = new object[1, 1];
                 rv[0, 0] = "Error, Invalid Handle";
@@ -960,7 +960,7 @@ namespace WDS
 
             int h = HandleMajorFrom(arg0);
             JniPMMLItem aJniPMMLItem;
-            if (!XLL.__JniPMML.TryGetObject(h, out aJniPMMLItem))
+            if (!__JniPMML.TryGetObject(h, out aJniPMMLItem))
             {
                 rv = new object[1, 1];
                 rv[0, 0] = "Error, Invalid Handle";

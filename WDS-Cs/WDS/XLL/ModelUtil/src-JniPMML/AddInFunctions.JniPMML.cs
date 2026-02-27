@@ -9,7 +9,7 @@ using static WDS.Util;
 
 namespace WDS
 {
-    public partial class XLL : IExcelAddIn
+    public partial class AddIn : IExcelAddIn
     {
 
 
