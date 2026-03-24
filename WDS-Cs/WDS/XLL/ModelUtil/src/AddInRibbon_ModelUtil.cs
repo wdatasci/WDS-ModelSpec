@@ -143,12 +143,9 @@ namespace WDS.Ribbon
                                     onAction='RunTagMacro' 
                                     tag='BuildNewDNSMWorkbook' 
                                     />
-                                <button id='Button_mH_2' 
-                                    label='TBD' 
-                                    image='WDataSciMark1300x240' 
-                                    onAction='RunTagMacro' 
-                                    tag='TBD'
-                                    />
+                                <button id='Button_mH_2' label='Starting Configuration: States and Stages' image='WDataSciMark1300x240' onAction='RunTagMacro' tag='DNSMConfigSS' />
+                                <button id='Button_mH_3' label='Starting Configuration: Stocks and Flows' image='WDataSciMark1300x240' onAction='RunTagMacro' tag='DNSMConfigSF' />
+                                <button id='Button_mH_4' label='TBD' image='WDataSciMark1300x240' onAction='RunTagMacro' tag='TBD' />
                             </menu>
                         </group>
 
@@ -190,7 +187,7 @@ namespace WDS.Ribbon
                                 label='Remove VBA Module: WDSJniPMML' 
                                 image='WDataSciMark1300x240' 
                                 onAction='RunTagMacro' 
-                                tag='RemoveWDSJniPMMLRemove' 
+                                tag='RemoveWDSJniPMMLVBAModule' 
                                 />
                         </menu>
                         </group>
@@ -213,7 +210,6 @@ namespace WDS.Ribbon
         }
 
 
-
         [ExcelCommand(Description ="Add WDSCore VBA Module"
             ,ExplicitRegistration = true
             )]
@@ -221,6 +217,10 @@ namespace WDS.Ribbon
         {
             MOIE.Application tapp = (ExcelDnaUtil.Application as MOIE.Application);
             MOIE.Workbook twb = tapp.ActiveWorkbook;
+
+            AddVBAModule(twb, "WDSCore");
+            return;
+
             VBIDE.VBProject tVBProject = twb.VBProject;
 
             bool found = false;
@@ -661,18 +661,6 @@ namespace WDS.Ribbon
 
         }
 
-        [ExcelCommand(Description ="Build New DNSM Workbook"
-            ,ExplicitRegistration =true
-            )]
-        public static void BuildNewDNSMWorkbook()
-        {
-            //MOIE.Application tapp = (ExcelDnaUtil.Application as MOIE.Application);
-            //tapp.Run("WDSVBAModuleReviewRefresh");
-            AddIn_About wf = new AddIn_About();
-            wf.ShowDialog();
-            return;
-        }
-
 
         [ExcelCommand(Description ="TBD"
             ,ExplicitRegistration =true
@@ -692,7 +680,7 @@ namespace WDS.Ribbon
         public static void VBAComponentAdd_WDSJniPMML()
         {
             MOIE.Application tapp = (ExcelDnaUtil.Application as MOIE.Application);
-            tapp.Run("WDSVBAComponentAdd_WDSJniPMML");
+            tapp.Run("AddWDSJniPMMLVBAModule");
             tapp.Run("WDSJniPMML_CallMacroOptions");
             return;
         }
@@ -703,7 +691,7 @@ namespace WDS.Ribbon
         public static void VBAComponentRemove_WDSJniPMML()
         {
             MOIE.Application tapp = (ExcelDnaUtil.Application as MOIE.Application);
-            tapp.Run("WDSVBAComponentRemove_WDSJniPMML");
+            tapp.Run("RemoveWDSJniPMMLVBAModule");
             return;
         }
 

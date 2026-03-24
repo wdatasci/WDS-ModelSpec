@@ -230,6 +230,7 @@
     <Compile Include="src-ModelSpec\RecordSet.cs" />
     <Compile Include="src-ModelSpec\RecordSetMD.cs" />
     <Compile Include="src-ModelSpec\RecordSetMDEnums.cs" />
+    <Compile Include="src\AddInCmds.DNSM.cs" />
     <Compile Include="src\WranglerDBB.cs" />
     <Compile Include="src\WranglerFlatFile.cs" />
     <Compile Include="src\WranglerHDF5.cs" />

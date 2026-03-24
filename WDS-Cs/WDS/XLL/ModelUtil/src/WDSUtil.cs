@@ -36,6 +36,44 @@ namespace WDS {
             }
             return rv;
         }
+        public static void AddVBAModule(MOIE.Workbook twb, params object[] args)
+        {
+            MOIE.Application tapp = (twb.Parent as MOIE.Application);
+            VBIDE.VBProject tVBProject = twb.VBProject;
+            string pWDSHOME = sWDSHOME();
+            if (pWDSHOME == "ERROR")
+            {
+                MessageBox.Show("Either Environment Variable WDSHOME needs to be set or WDS\\lib on PATH");
+                return;
+            }
+            string pWDSCore = "Error, ";
+            pWDSCore = pWDSHOME + "\\lib";
+            DirectoryInfo aDirectoryInfo = new DirectoryInfo(pWDSCore);
+
+            foreach (object o in args)
+            {
+                string s = o as string;
+                bool found = false;
+                foreach (VBIDE.VBComponent aVBComponent in tVBProject.VBComponents)
+                {
+                    if (aVBComponent.Name == s) found = true;
+                }
+                if (!found)
+                {
+                    try
+                    {
+                        FileInfo[] lFileInfo = aDirectoryInfo.GetFiles("VBA\\" + s + ".bas");
+                        pWDSCore = lFileInfo[0].FullName;
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("Cannot find " + s + ".bas in WDSHOME\\lib\\VBA or WDS\\lib\\VBA");
+                    }
+                    tVBProject.VBComponents.Import(pWDSCore);
+                }
+            }
+        }
+
 
 
         [ExcelFunction(

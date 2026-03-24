@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using ExcelDna.Integration;
 using ExcelDna.IntelliSense;
 using MOIE=Microsoft.Office.Interop.Excel;
+using VBIDE = Microsoft.Vbe.Interop;
 //using MOTE = Microsoft.Office.Tools.Excel;
 
 using com.WDataSci.JniPMML;
@@ -2201,6 +2202,155 @@ namespace WDS
             }
             return;
         }
+
+        [ExcelCommand(Description ="Add VBA Module: WDSJniPMML"
+            ,ExplicitRegistration = true
+            )]
+        public static void AddWDSJniPMMLVBAModule()
+        {
+            MOIE.Application tapp = (ExcelDnaUtil.Application as MOIE.Application);
+            MOIE.Workbook twb = tapp.ActiveWorkbook;
+            VBIDE.VBProject tVBProject = twb.VBProject;
+
+            string sWDSJniPMMLModuleName = "WDSJniPMML";
+
+            bool bFoundWDSCore = false;
+            foreach (VBIDE.VBComponent aVBComponent in tVBProject.VBComponents)
+            {
+                if (aVBComponent.Name == sWDSJniPMMLModuleName)
+                {
+                    MessageBox.Show("WDSJniPMML already in VBProject.VBComponents, delete first if you would like to replace");
+                    return;
+                }
+                else if (aVBComponent.Name == "WDSCore")
+                {
+                    bFoundWDSCore = true;
+                }
+            }
+            if (!bFoundWDSCore)
+            {
+                MessageBox.Show("WDSCore also needs to be present and will be added");
+                WDS.Ribbon.RibbonController.AddWDSCoreVBAModule();
+            }
+            VBIDE.CodeModule aCodeModule = tVBProject.VBComponents.Add(VBIDE.vbext_ComponentType.vbext_ct_StdModule).CodeModule;
+            aCodeModule.Name = sWDSJniPMMLModuleName;
+
+            //msmo is for building the intellisense helper at the end
+            string msmo = "";
+            //start with the VBA header, Option Base, and the first function
+            int n = 1;
+            string ms = @"'WDSJniPMML - A few small VBA functions and wraps of JniPMML which Excel can handle in a non-volatile manner
+'
+'CodeDoc - CJW - The jPMML evaluator JNI wrapper AddIn becomes a COM-AddIn and uses ExcelDNA as generic
+'AddIn facilitator.  Normally, in VBA, one might denote an argument ""ByRef arg As Range"" in order to extract
+'information such as the ListObject and XMLMap. This can be done in ExcelDNA C# or VB, however, the function becomes
+'""volatile"", which means large blocks of evaluations might be needlessly recalculated every time there is
+'a minor change anywhere in the workbook.
+'
+Option Base 1
+Const WDSCoreContextID = 40002
+Const WDSVBAModuleName = """ + sWDSJniPMMLModuleName + @"""
+
+Public Function JniPMML_Eval_WithoutCache( _
+    ByVal bToCalcSwitch As Integer _
+    , ByVal PMMLInput As String _
+    , ByVal bInputDataHasHeaderRow As Integer _
+    , ByRef InputTableReference As Range _
+    , Optional nOutputStringMaxLength = 64 _
+    )
+    JniPMML_Eval_WithoutCache = Application.Run(""JniPMML_Eval_Volatile"", bToCalcSwitch, PMMLInput, bInputDataHasHeaderRow, InputTableReference, nOutputStringMaxLength)
+    Application.Volatile (False) ' setting at the top may not kill volatility
+End Function
+
+'Adding the intellisense information for this function
+Private Function JniPMML_Eval_WithoutCache_MacroOptions_Array() As Variant
+    JniPMML_Eval_WithoutCache_MacroOptions_Array = Array(""JniPMML_Eval_WithoutCache"" _
+        , ""A non-volatile self contained call to the JniPMML evaluator (VBA wrap of JniPMML_Eval_Volatile).  The first argument is just to turn it off/on to kill the drag on calculation time."" _
+        , ""http://WDataSci.com"" _
+        , ""WDS.JniPMML"" _
+        , Array(Array(""ToCalcSwitch"", ""0/1, just to kill calculation""), _
+                    Array(""PMMLInput"", ""Path to external PMML filename or entire file as a string (an entire string is determined by the usual XML starting characters)""), _
+                    Array(""InputDataHasHeaderRow"", ""0/1, If input includes header row, output will include header row.""), _
+                    Array(""InputTableReference"", ""An XMLMap'd and exportable ListObject Table, column names are taken from the XMLMap""), _
+                    Array(""OutputStringMaxLength"", ""An optional output maximum string length, defaults to 64"") _
+        ) _
+    )
+End Function
+
+";
+            msmo += @"
+   i = i + 1
+   x(i) = JniPMML_Eval_WithoutCache_MacroOptions_Array()
+";
+
+            //next function to be added
+            n += 1;
+            ms += @"
+Public Function JniPMML_Eval_CacheHeaders( _
+    HandleOrTag _
+    , ByRef XmlMappedListRef As Range _
+    , Optional nOutputStringMaxLength = 64 _
+    )
+    JniPMML_Eval_CacheHeaders = Application.Run(""JniPMML_Eval_CacheHeaders_Volatile"", HandleOrTag, XmlMappedListRef, nOutputStringMaxLength)
+    Application.Volatile (False) ' setting at the top may not kill volatility
+End Function
+Private Function JniPMML_Eval_CacheHeaders_MacroOptions_Array() As Variant
+    JniPMML_Eval_CacheHeaders_MacroOptions_Array = Array(""JniPMML_Eval_CacheHeaders"" _
+        , ""Caches just the input and output headers for Eval, on both the C# and Java sides, subsequent calls to WDS.JniPMML__Headerless can follow.  Set the headerless calls to depend on this Major.Minor output."" _
+        , ""http://WDataSci.com"" _
+        , ""WDS.JniPMML"" _
+        , Array(Array(""HandleOrTag"", ""Use a Major.Minor Handle output from CreateHandle to chain calcuation dependency""), _
+                    Array(""XmlMappedListRef"", ""Point to a reference cell or range of the XmlMap'd list [one that does not change with data, such as the header]""), _
+                    Array(""nOutputStringMaxLength"", ""An optional output maximum string length, defaults to 64"") _
+        ) _
+    )
+End Function
+
+";
+            msmo += @"
+   i = i + 1
+   x(i) = JniPMML_Eval_CacheHeaders_MacroOptions_Array()
+";
+
+
+            //adding the intellisense helper at the end
+
+            ms += @"
+
+Public Sub " + sWDSJniPMMLModuleName + @"_CallMacroOptions()
+    Dim x(1 To " + n.ToString() + @") As Variant
+    Dim i As Integer
+    i = 0
+" + msmo + @"
+    Call WDSCore_SetMacroOptions(x)
+End Sub
+
+";
+
+            aCodeModule.AddFromString(ms);
+
+        }
+
+        [ExcelCommand(Description ="Remove WDSJniPMML VBA Module"
+            ,ExplicitRegistration = true
+            )]
+        public static void RemoveWDSJniPMMLVBAModule()
+        {
+            MOIE.Application tapp = (ExcelDnaUtil.Application as MOIE.Application);
+            MOIE.Workbook twb = tapp.ActiveWorkbook;
+            VBIDE.VBProject tVBProject = twb.VBProject;
+
+            foreach (VBIDE.VBComponent aVBComponent in tVBProject.VBComponents)
+            {
+                //MessageBox.Show(aVBComponent.Name);
+                if (aVBComponent.Name == "WDSJniPMML")
+                {
+                    tVBProject.VBComponents.Remove(aVBComponent);
+                    break;
+                }
+            }
+        }
+
 
     }
 
