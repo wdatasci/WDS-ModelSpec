@@ -27,6 +27,8 @@ SOFTWARE.
 #include "MatrixUtil.h"
 #include <string>
 #include <cmath>
+#include "xlcall.h"
+#include "framewrk.h"
 
 using namespace xll;
 using namespace std;
@@ -645,6 +647,27 @@ LPOPER dMatrixToLPOPER(dMatrix Arg) {
 	return result;
 }
 
+//bing-d
+bool isFunctionWizardRaw() {
+	XLOPER12 xCaller;
+	
+	int rc = Excel12(xlfCaller, &xCaller, 0);
+	if (rc != xlretSuccess) {
+		return false;
+	}
+
+	bool inWizard = false;
+
+	// In wizard mode, xlGetCaller often returns xltypeRef with no sheet context
+	if (xCaller.xltype == xltypeRef && xCaller.val.mref.lpmref->count == 0) {
+		inWizard = true;
+	}
+
+	Excel12(xlFree, 0, 1, &xCaller);
+	return inWizard;
+}
+
+
 //AddIn XLL_WDS_Comp_zzzInternal_SubMatrix(
 // // //	Function(XLL_LPOPER, "WDS_Comp_zzzInternal_SubMatrix", "WDS.Comp.zzzInternal.SubMatrix")
 // // //	.Arguments({
@@ -666,7 +689,7 @@ WDS_Comp_zzzInternal_SubMatrix(LPXLOPER12 Arg0, long direction=0, long startrow=
 	int nrows, ncols;
 
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER_or_exit(Arg0);
+	require_usual_suspect_LPXLOPER(Arg0);
 	LPXLOPER12 cmArg0 = nullptr;
 	bool bWasArg0Coerced = false;
 	LPXLOPER12 cmOpts = nullptr;
@@ -776,7 +799,7 @@ WDS_Comp_Matrix_SubMatrix(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 	long beginrow = 0, endi = -1, beginj = 0, endj = -1;
 
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg0);
+	require_usual_suspect_LPXLOPER_or_exit(Arg0);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
 	try {
@@ -836,8 +859,8 @@ WDS_Comp_Matrix_Rows(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 	long beginrow = LONG_MAX, endrow = LONG_MAX, begincol = LONG_MAX, endcol = LONG_MAX;
 
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg0);
-	require_usual_suspect_LPXLOPER(Ind);
+	require_usual_suspect_LPXLOPER_or_exit(Arg0);
+	require_usual_suspect_LPXLOPER_or_exit(Ind);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
 	try {
@@ -909,8 +932,8 @@ WDS_Comp_Matrix_Columns(LPXLOPER12 Arg0, LPXLOPER12 Ind, LPXLOPER12 Opts)
 	long beginrow = LONG_MAX, endrow = LONG_MAX, begincol = LONG_MAX, endcol = LONG_MAX;
 
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg0);
-	require_usual_suspect_LPXLOPER(Ind);
+	require_usual_suspect_LPXLOPER_or_exit(Arg0);
+	require_usual_suspect_LPXLOPER_or_exit(Ind);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
 	try {
@@ -981,8 +1004,8 @@ WDS_Comp_Matrix_ColumnSet(LPXLOPER12 Arg0, LPXLOPER12 ColumnSet, LPXLOPER12 Opts
 	long beginrow = LONG_MAX, endrow = LONG_MAX, begincol = LONG_MAX, endcol = LONG_MAX;
 
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg0);
-	require_usual_suspect_LPXLOPER(ColumnSet);
+	require_usual_suspect_LPXLOPER_or_exit(Arg0);
+	require_usual_suspect_LPXLOPER_or_exit(ColumnSet);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
 	LPXLOPER12 cmArg0 = nullptr;
@@ -1197,7 +1220,7 @@ WDS_Comp_Matrix_SumAcross(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 	long beginrow = 0, endi = -1, beginj = 0, endj = -1;
 
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg0);
+	require_usual_suspect_LPXLOPER_or_exit(Arg0);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
 	try {
@@ -1256,7 +1279,7 @@ WDS_Comp_Matrix_SumAcrossRows(LPXLOPER12 Arg0, long direction, LPXLOPER12 Opts)
 	long beginrow = 0, endi = -1, beginj = 0, endj = -1;
 
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg0);
+	require_usual_suspect_LPXLOPER_or_exit(Arg0);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
 	try {
@@ -1315,7 +1338,7 @@ WDS_Comp_Matrix_SumAcrossColumns(LPXLOPER12 Arg0, LPXLOPER12 Opts)
 	long beginrow = 0, endi = -1, beginj = 0, endj = -1;
 
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg0);
+	require_usual_suspect_LPXLOPER_or_exit(Arg0);
 	allow_missings_only_LPXLOPER_or_exit(Opts);
 
 	try {
@@ -1376,13 +1399,13 @@ WDS_Comp_Matrix_RowNormed(LPXLOPER12 Arg, LPXLOPER12 bStrict, LPXLOPER12 defv)
 	int nrows, ncols;
 
 	LPOPER result=nullptr;
-	require_usual_suspect_LPXLOPER(Arg);
+	require_usual_suspect_LPXLOPER_or_exit(Arg);
 	allow_missings_only_LPXLOPER_or_exit(bStrict);
 	allow_missings_only_LPXLOPER_or_exit(defv);
 
 	LPXLOPER12 cmArg=nullptr;
 	bool bWasArgCoerced = false;
-	require_usual_suspect_LPXLOPER(Arg);
+	require_usual_suspect_LPXLOPER_or_exit(Arg);
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
 		result = new OPER(L"Error, in coercion in Matrix.RowNormed");
@@ -1455,8 +1478,9 @@ WDS_Comp_Matrix_NormedBaseOdds(long Offset, LPXLOPER12 BaseOdds, LPXLOPER12 Topo
 {
 #pragma XLLEXPORT
 	LPOPER oResult = nullptr;
-	require_usual_suspect_LPXLOPER(BaseOdds);
-	require_usual_suspect_LPXLOPER(Topology);
+	LPOPER result = nullptr;
+	require_usual_suspect_LPXLOPER_or_exit(BaseOdds);
+	require_usual_suspect_LPXLOPER_or_exit(Topology);
 	LPXLOPER12 cmBaseOdds = nullptr;
 	bool bWasBaseOddsCoerced = false;
 	LPXLOPER12 cmTopology = nullptr;
@@ -1533,8 +1557,8 @@ WDS_Comp_Matrix_ScoredAndNormedBaseOdds(long Index
 {
 #pragma XLLEXPORT
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(BaseOdds);
-	require_usual_suspect_LPXLOPER(Topology);
+	require_usual_suspect_LPXLOPER_or_exit(BaseOdds);
+	require_usual_suspect_LPXLOPER_or_exit(Topology);
 	allow_missings_only_LPXLOPER_or_exit(IJs);
 	allow_missings_only_LPXLOPER_or_exit(Vs);
 	allow_missings_only_LPXLOPER_or_exit(TailFactor);
@@ -1634,8 +1658,8 @@ LPOPER  WINAPI
 WDS_Comp_Matrix_Mult(LPXLOPER12 A, LPXLOPER12 B) {
 #pragma XLLEXPORT
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(A);
-	require_usual_suspect_LPXLOPER(B);
+	require_usual_suspect_LPXLOPER_or_exit(A);
+	require_usual_suspect_LPXLOPER_or_exit(B);
 	LPOPER oResult = nullptr;
 	LPXLOPER12 cmA = nullptr;
 	bool bWasACoerced = false;
@@ -2594,13 +2618,13 @@ WDS_Util_SimpleFirsts(LPXLOPER12 Arg
 	int i, iM1, j, nrows;
 
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg);
+	require_usual_suspect_LPXLOPER_or_exit(Arg);
 	allow_missings_only_LPXLOPER_or_exit(inputrowlimit);
 	allow_missings_only_LPXLOPER_or_exit(outputrowlimit);
 
 	LPXLOPER12 cmArg = nullptr;
 	bool bWasArgCoerced = false;
-	require_usual_suspect_LPXLOPER(Arg);
+	require_usual_suspect_LPXLOPER_or_exit(Arg);
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
 		result = new OPER(L"Error, in coercion in Util.SimpleFirsts");
@@ -2757,7 +2781,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 
 	LPXLOPER12 cmArg1 = nullptr;
 	bool bWasArg1Coerced = false;
-	require_usual_suspect_LPXLOPER(Arg1);
+	require_usual_suspect_LPXLOPER_or_exit(Arg1);
 	if (lCoerceToMultiIfNecessary(Arg1, cmArg1, bWasArg1Coerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 		result = new OPER(L"Error, in coercion of Arg1 in Util.dNComp");
@@ -2774,7 +2798,7 @@ WDS_Util_dNComp(LPXLOPER12 Arg1
 
 	LPXLOPER12 cmArg2 = nullptr;
 	bool bWasArg2Coerced = false;
-	require_usual_suspect_LPXLOPER(Arg2);
+	require_usual_suspect_LPXLOPER_or_exit(Arg2);
 	if (lCoerceToMultiIfNecessary(Arg2, cmArg2, bWasArg2Coerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg1, bWasArg1Coerced);
 		lFreeIfNecessary(cmArg2, bWasArg2Coerced);
@@ -2977,7 +3001,7 @@ WDS_Util_dNElse(LPXLOPER12 Arg
 
 	LPXLOPER12 cmArg = nullptr;
 	bool bWasArgCoerced = false;
-	require_usual_suspect_LPXLOPER(Arg);
+	require_usual_suspect_LPXLOPER_or_exit(Arg);
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
 		result = new OPER(L"Error, in coercion in Util.dNElse");
@@ -3153,7 +3177,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 	int i, iM1, j, k, kP1, nrows, ncols;
 	int firsti, lasti, comp1;
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg);
+	require_usual_suspect_LPXLOPER_or_exit(Arg);
 	allow_missings_only_LPXLOPER_or_exit(inputrowlimit);
 	allow_missings_only_LPXLOPER_or_exit(outputrowlimit);
 	allow_missings_only_LPXLOPER_or_exit(bReturnJustIndices);
@@ -3161,7 +3185,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 
 	LPXLOPER12 cmArg = nullptr;
 	bool bWasArgCoerced = false;
-	require_usual_suspect_LPXLOPER(Arg);
+	require_usual_suspect_LPXLOPER_or_exit(Arg);
 	if (lCoerceToMultiIfNecessary(Arg, cmArg, bWasArgCoerced) != xlretSuccess) {
 		lFreeIfNecessary(cmArg, bWasArgCoerced);
 		result = new OPER(L"Error, in coercion in Util.SimpleSort");
@@ -3369,7 +3393,7 @@ WDS_Util_SimpleSort(LPXLOPER12 Arg
 
 
 AddIn XLL_WDS_Util_SimpleConvolve(
-	Function(XLL_LPXLOPER, "WDS_Util_SimpleConvolve", "WDS.Util.SimpleConvolve")
+	Function(XLL_LPOPER, "WDS_Util_SimpleConvolve", "WDS.Util.SimpleConvolve")
 	.Arguments({
 		Arg(XLL_LPXLOPER, "Arg1", "is an vector")
 		,Arg(XLL_LPXLOPER, "Arg2", "is an vector or matrix (set of vectors)")
@@ -3391,8 +3415,16 @@ WDS_Util_SimpleConvolve(LPXLOPER12 Arg1
 	int firsti, lasti, comp1;
 	double tempdouble;
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg1);
-	require_usual_suspect_LPXLOPER(Arg2);
+	if (useless_LPXLOPER(Arg1)) {
+		result = new OPER(L"Error, Arg1 must not be empty");
+		return result;
+	}
+	if (useless_LPXLOPER(Arg2)) {
+		result = new OPER(L"Error, Arg2 must not be empty");
+		return result;
+	}
+	require_usual_suspect_LPXLOPER_or_exit(Arg1);
+	require_usual_suspect_LPXLOPER_or_exit(Arg2);
 	allow_missings_only_LPXLOPER_or_exit(bUsingColumns);
 	bool lbUsingColumns = LPOPER_to_bool(bUsingColumns, 0, 0, true);
 
@@ -3471,8 +3503,8 @@ WDS_Util_FlipSumProduct(LPXLOPER12 Arg1
 	int firsti, lasti, comp1;
 	double tempdouble;
 	LPOPER result = nullptr;
-	require_usual_suspect_LPXLOPER(Arg1);
-	require_usual_suspect_LPXLOPER(Arg2);
+	require_usual_suspect_LPXLOPER_or_exit(Arg1);
+	require_usual_suspect_LPXLOPER_or_exit(Arg2);
 	bool lbUsingColumns = true;
 
 	dMatrix dmResult;

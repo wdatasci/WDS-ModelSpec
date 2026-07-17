@@ -172,8 +172,14 @@ Sub sql_QueryResultsBelow()
     
     rs.Close
     con.Close
-    
+
+GoTo ElseIt:
+
 CatchIt:
+    r.Offset(1, 0) = Err.Description
+
+ElseIt:
+
     Application.Calculation = calcprior
     Application.ScreenUpdating = screenprior
 

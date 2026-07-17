@@ -33,6 +33,8 @@ import datetime
 import dateutil.parser
 
 import math
+import numpy as np
+import pandas as pd
 
 DateFormatRE1=re.compile(  "([12][90][0-9]{2})([-/_.]?)([01]?[0-9])([-/_.]?)([0-3]?[0-9])")  #iso
 DateFormatRE1_2=re.compile("([12][90][0-9]{2})([-/_.]?)([01]?[0-9])")  #iso yyyy-mm
@@ -65,6 +67,8 @@ def CleanDateTime(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True,zap_tz=True
             rv=v.replace(tzinfo=None)
         else:
             return v
+    if tv is np.datetime64:
+        return v
     try:
         if tv in (int,float):
             if isDateEpochExcel:
@@ -263,7 +267,9 @@ def CleanDate(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
     if tv is None: 
         tv=type(v)
     if tv is datetime.date: return v
+    if tv is pd.Timestamp: return v.date()
     if tv is datetime.datetime: return v.date()
+    if tv is np.datetime64: return v.date
     try:
         if tv in (int,float):
             # if value is comming in as YYYYMM or YYYYMMDD
@@ -354,7 +360,7 @@ def CleanDate(v,tv=None,isDateEpochExcel=False,day=1,toWARN=True):
                     prs[0][4]=int(prs[0][4])
                 lv=datetime.date(prs[0][4]+prs[0][5],prs[0][0],int(prs[0][2]))
                 return lv
-        raise Exception('cannot convert '+str(v))
+        raise Exception('cannot convert '+str(v)+str(type(v)))
     except Exception as e:
         raise Exception('Error in CleanDate: '+e.args[0]+'\n'+str(traceback.format_tb(e.__traceback__)))
 
@@ -392,6 +398,10 @@ def MonthID2Date(v,day=1):
                 return datetime.date(y+1,1,1)+datetime.timedelta(day)
     except:
         raise Exception('Cannot convert '+str(v)+' (with day='+str(day)+') in MonthID2Date')
+
+def MonthID2EOMDate(v):
+    dt = MonthID2Date(v+1)-datetime.timedelta(1)
+    return dt
 
 def MonthID2DateTime(v,day=1):
     try:

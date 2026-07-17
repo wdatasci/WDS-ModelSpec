@@ -2,15 +2,16 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
+    <IntelSWTools_ROOT>packages</IntelSWTools_ROOT>
     <IntelSWTools>$(IntelSWTools_ROOT)\2025.3\windows</IntelSWTools>
     <MKLIncludeDir>$(IntelSWTools_ROOT)\mkl\2025.3\include</MKLIncludeDir>
-    <MKLLibDir>$(IntelSWTools_ROOT)\mkl\2025.3\lib</MKLLibDir>
-    <OmpLibDir>$(IntelSWTools_ROOT)\compiler\2025.3\lib</OmpLibDir>
+    <MKLLibDir>packages/intelmkl.static.win-x64.2026.0.0.901/build/native/win-x64</MKLLibDir>
+    <OmpLibDir>packages/intelopenmp.devel.win.2026.0.0.944/build/native/win-x64</OmpLibDir>
     <IPPLibDir>$(IntelSWTools_ROOT)\ipp\2025.3\lib</IPPLibDir>
     <CPPLibDir>$(IntelSWTools_ROOT)\compiler\2025.3\lib</CPPLibDir>
     <DAALibDir>$(IntelSWTools_ROOT)\daal\2025.3\lib</DAALibDir>
     <CPPPath>$(IntelSWTools_ROOT)\redist\intel64_win\compiler</CPPPath>
-    <Armadillo>$(CppLocalExternalPackages)\armadillo\15.2.3</Armadillo>
+    <Armadillo>$(WDataSci)\armadillo</Armadillo>
     <TBBLibDir>$(IntelSWTools_ROOT)\tbb\2025.3\lib\vc_mt</TBBLibDir>
   </PropertyGroup>
   <PropertyGroup>
@@ -24,9 +25,11 @@
     <ClCompile />
     <Link>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalLibraryDirectories>C:\dev\github\WDS-ModelSpec\WDS-Cpp\WDS\Comp\Matrix\packages\intelmkl.static.win-x64.2026.0.0.901\build\native\win-x64;C:\dev\github\WDS-ModelSpec\WDS-Cpp\WDS\Comp\Matrix\packages\intelmkl.static.cluster.win-x64.2026.0.0.901\build\native\win-x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Lib>
-        <AdditionalDependencies>mkl_core.lib;mkl_sequential.lib;mkl_intel_lp64.lib;libiomp5md.lib;</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Lib>
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -34,6 +37,10 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <BuildMacro Include="IntelSWTools_ROOT">
+      <Value>$(IntelSWTools_ROOT)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
     <BuildMacro Include="IntelSWTools">
       <Value>$(IntelSWTools)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>

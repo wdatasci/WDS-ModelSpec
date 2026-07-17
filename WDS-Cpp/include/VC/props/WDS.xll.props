@@ -2,11 +2,12 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
+    <CppLocalExternalPackages>..\..\..\..\..</CppLocalExternalPackages>
     <xll_ROOT>$(CppLocalExternalPackages)\xll24</xll_ROOT>
-    <xll_LIBDIR>$(xll_ROOT)</xll_LIBDIR>
-    <xll_INCLUDE>$(xll_ROOT)\include</xll_INCLUDE>
     <Excel2013XLLSDK_ROOT>$(CppLocalExternalPackages)\Excel2013XLLSDK</Excel2013XLLSDK_ROOT>
+    <xll_LIBDIR>$(xll_ROOT)</xll_LIBDIR>
     <Excel2013XLLSDK_LIBDIR>$(Excel2013XLLSDK_ROOT)\LIB\x64</Excel2013XLLSDK_LIBDIR>
+    <xll_INCLUDE>$(xll_ROOT)\include</xll_INCLUDE>
     <Excel2013XLLSDK_INCLUDE>$(Excel2013XLLSDK_ROOT)\INCLUDE</Excel2013XLLSDK_INCLUDE>
   </PropertyGroup>
   <PropertyGroup>
@@ -26,7 +27,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>XLCALL32.LIB;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\dev\github\xll24\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference>
       <UseLibraryDependencyInputs>
@@ -34,6 +35,10 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <BuildMacro Include="CppLocalExternalPackages">
+      <Value>$(CppLocalExternalPackages)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
     <BuildMacro Include="xll_ROOT">
       <Value>$(xll_ROOT)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>

@@ -20,7 +20,8 @@ from WDS.MonthID import *
 #constant-ish objects for this module
 
 NbrCheckRE1=re.compile("[0-9.]+")
-WrdCheckRE1=re.compile("[^\d\-.,\s]+")
+#WrdCheckRE1=re.compile("[^\d\-.,\s]+")
+WrdCheckRE1=re.compile("[^0-9\-.,\s]+")
 QNameREHelper1=re.compile("[^0-9A-Za-z]")
 QNameREHelper_alt="_"
 QNameREHelper2=re.compile(QNameREHelper_alt+"+")
@@ -70,6 +71,23 @@ class eDTyp(IntEnum):
     Byt = 8
     Bln = 9
     Any = 9
+
+    def __repr__(self):
+        return self.name
+
+    @classmethod
+    def Label(cls,arg):
+        if arg.__class__ is cls:
+            return arg.name
+        raise(Exception(f"{cls} classmethod LabelFor not available for {arg}"))
+
+    @classmethod
+    def mFrom_Int(cls,arg):
+        try:
+            return cls(arg)
+        except:
+            raise(Exception(f"{cls} classmethod mFrom_Int not available for {arg}"))
+
 
 #cleaners for DTypCheck
 def CleanStr(slf,tv,v,isLengthDiscoverable,toReturn=False): 
@@ -336,7 +354,9 @@ class FieldMD(object):
                 if (i>0) or toPrintNameAsAlias: rv+='\n'+indnt+sindnt+","
                 rv+=('"%s"' % v)
             rv+='\n'+indnt+sindnt+']\n'
-        rv+=indnt + ",DTyp="+str(self.DTyp)+'\n'
+        if type(self.DTyp) is not eDTyp:
+            self.DTyp = eDTyp.mFrom_Int(self.DTyp)
+        rv+=indnt + ",DTyp=eDTyp."+self.DTyp.name+'\n'
         rv+=indnt + ",isDTypDiscoverable="+str(self.isDTypDiscoverable)+'\n'
         rv+=indnt + ",isLengthDiscoverable="+str(self.isLengthDiscoverable)+'\n'
         rv+=indnt + ",length="+str(self.length)+'\n'
@@ -705,7 +725,9 @@ class FieldMDs(dict):
     # the following function takes an array of FieldMD and constructs the SQL code for creating a table to read in a flat file
     def mCreateTable(self
             , header=[]
+            , database="test"
             , schema="test"
+            , stagename="test"
             , table="test"
             , fn=None
             , engine="Vertica"
@@ -713,6 +735,9 @@ class FieldMDs(dict):
             , from_word="from"
             , toJustDrop=False
             ):
+        if engine.lower() == 'snowflake':
+            return self.mCreateTableSnowflake(header,database,schema,stagename,table,fn,copy_word,from_word,toJustDrop)
+            
         lTable=table.replace("-","_")
         q="drop table if exists %s.%s cascade;\n" % ( schema, lTable ) 
         if toJustDrop: return q
@@ -799,6 +824,104 @@ class FieldMDs(dict):
             q+="   delimiter ',' enclosed by '"+'"'+"' abort on error record terminator '\\r\\n' "
             q+="   rejected data '%s.rejected' " % fn
             q+="   exceptions '%s.exceptions' " % fn
+            q+="   ;\n\n"
+        return q
+
+
+    def mCreateTableSnowflake(self
+            , header=[]
+            , database="test"
+            , schema="test"
+            , stagename="test"
+            , table="test"
+            , fn=None
+            , copy_word="copy"
+            , from_word="from"
+            , toJustDrop=False
+            ):
+        lTable=table.replace("-","_")
+        q="drop table if exists %s.%s.%s cascade;\n" % ( database, schema, lTable ) 
+        if toJustDrop: return q
+        q+="create table if not exists %s.%s.%s (\n" % ( database, schema, lTable )
+
+        anyCasts=False
+        ddlq=""
+        castq=""
+
+        header_seen={}
+        for fi,fldname in enumerate(header):
+            if fi > 0:
+                ddlq+="\n, "
+                castq+="\n, "
+            lnm=""
+            if fldname in header_seen:
+                header_seen[fldname]+=1
+                lnm="%s%d" % (fldname,header_seen[fldname])
+            else:
+                header_seen[fldname]=1
+                lnm="%s" % fldname
+            lnmi='$'+str(fi+1)
+            fld=self[fldname]
+            ddlq+='"' + lnm + '" '
+            if fld.toCastAtLoad:
+                anyCasts=True
+                if fld.DTyp is eDTyp.Str or fld.DTyp is eDTyp.VLS:
+                    castq+=' NULLIF(RTRIM('+lnmi+'),'+"'"+fld.NULLStr+"') --  as "+lnm
+                elif fld.DTyp is eDTyp.Int or fld.DTyp is eDTyp.Lng:
+                    castq+=' CAST(NULLIF(LTRIM(RTRIM('+lnmi+')),'+"'"+fld.NULLStr+"') AS DECIMAL(32,0))::INTEGER --  as "+lnm
+                elif fld.DTyp is eDTyp.Dte:
+                    castq+=' CAST(NULLIF(LTRIM(RTRIM(REPLACE('+lnmi+',\'/\',\'-\'))),'+"'"+fld.NULLStr+"') AS DATE)::DATE --  as "+lnm
+                elif fld.DTyp is eDTyp.DTm:
+                    castq+=' CAST(NULLIF(LTRIM(RTRIM('+lnmi+')),'+"'"+fld.NULLStr+"') AS DATETIME)::DATETIME --  as "+lnm
+                elif fld.DTyp is eDTyp.Bln:
+                    castq+=' CAST(NULLIF(LTRIM(RTRIM('+lnmi+')),'+"'"+fld.NULLStr+"') AS BOOLEAN)::BOOLEAN --  as "+lnm
+                else:
+                    castq+=' NULLIF(LTRIM(RTRIM('+lnmi+')),'+"'"+fld.NULLStr+"') --  as "+lnm
+            else:
+                castq+=lnmi + ' -- as ' + lnm
+            if fld.DTyp is eDTyp.Dbl:
+                ddlq+="float "
+            elif fld.DTyp is eDTyp.Int:
+                ddlq+="int "
+            elif fld.DTyp is eDTyp.Lng:
+                ddlq+="bigint "
+            elif fld.DTyp is eDTyp.Dte:
+                ddlq+="date "
+            elif fld.DTyp is eDTyp.DTm:
+                ddlq+="datetime "
+            elif fld.DTyp is eDTyp.Str:
+                ddlq+="char(%d) " % max(1,fld.length)
+            elif fld.DTyp is eDTyp.VLS:
+                ddlq+="varchar(%d) " % max(1,fld.length)
+            elif fld.DTyp is eDTyp.Bln:
+                ddlq+="boolean "
+            if (fld.default is None) or (fld.default in('NULL','None')):
+                ddlq+=" default NULL"
+            else:
+                if type(fld.default) is str:
+                    ddlq+=" default '%s' " % fld.default
+                elif type(fld.default) is bytes:
+                    ddlq+=" default '%s' " % fld.default.decode()
+                elif type(fld.default) is datetime.date:
+                    ddlq+=" default '%s' " % fld.default.isoformat()
+                elif type(fld.default) is datetime.datetime:
+                    ddlq+=" default '%s' " % fld.default.isoformat()
+                else:
+                    ddlq+=" default %s " % str(fld.default)
+        q+=ddlq
+        #q+="\n) engine=%s default charset=latin1; \n" % engine
+        q+="\n); \n" 
+        if fn:
+            q+="\n\n" 
+            q+=copy_word + " into %s.%s.%s" % ( database, schema, lTable )
+            q+=" " + from_word + " "
+            if anyCasts:
+                q+='(select \n'
+                q+=castq
+                q+="\n from '%s' fl \n)" % ( stagename, )
+            else:
+                q+=" '%s' \n" % ( stagename )
+            q+="   file_format = (type='CSV' date_format='YYYY-MM-DD' FIELD_OPTIONALLY_ENCLOSED_BY='\"' skip_header=1) "
             q+="   ;\n\n"
         return q
 
