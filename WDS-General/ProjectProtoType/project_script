@@ -1,4 +1,4 @@
-#!/usr/bin/tcsh
+#!/usr/bin/tcsh -X
 
 echo script=$0
 set project_script=$0
@@ -10,9 +10,11 @@ set target_name=${target:t}
 echo target=$target
 echo project_name=$target_name
 
+
 if ( ! -d ${target} ) then
     mkdir ${target}
 endif
+
 
 foreach x (`find ${project_dir}/proto -mindepth 1 -type d -printf "%P\n" `)
     if ( ! -d ${target}/${x} ) then

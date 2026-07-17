@@ -108,7 +108,31 @@
   <ItemGroup>
     <ClInclude Include="src\WDS_Matrix_CLR.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\intelopenmp.redist.win.2026.0.0.944\build\native\intelopenmp.redist.win.targets" Condition="Exists('..\packages\intelopenmp.redist.win.2026.0.0.944\build\native\intelopenmp.redist.win.targets')" />
+    <Import Project="..\packages\inteltbb.redist.win.2023.0.0.716\build\native\inteltbb.redist.win.targets" Condition="Exists('..\packages\inteltbb.redist.win.2023.0.0.716\build\native\inteltbb.redist.win.targets')" />
+    <Import Project="..\packages\intelopenmp.devel.win.2026.0.0.944\build\native\intelopenmp.devel.win.targets" Condition="Exists('..\packages\intelopenmp.devel.win.2026.0.0.944\build\native\intelopenmp.devel.win.targets')" />
+    <Import Project="..\packages\inteltbb.devel.win.2023.0.0.716\build\native\inteltbb.devel.win.targets" Condition="Exists('..\packages\inteltbb.devel.win.2023.0.0.716\build\native\inteltbb.devel.win.targets')" />
+    <Import Project="..\packages\intelmkl.static.win-x64.2026.0.0.901\build\native\intelmkl.static.win-x64.targets" Condition="Exists('..\packages\intelmkl.static.win-x64.2026.0.0.901\build\native\intelmkl.static.win-x64.targets')" />
+    <Import Project="..\packages\intelmpi.redist.win-x64.2021.18.0.740\build\native\IntelMPI.redist.win-x64.targets" Condition="Exists('..\packages\intelmpi.redist.win-x64.2021.18.0.740\build\native\IntelMPI.redist.win-x64.targets')" />
+    <Import Project="..\packages\intelmpi.devel.win-x64.2021.18.0.740\build\native\IntelMPI.devel.win-x64.targets" Condition="Exists('..\packages\intelmpi.devel.win-x64.2021.18.0.740\build\native\IntelMPI.devel.win-x64.targets')" />
+    <Import Project="..\packages\intelmkl.static.cluster.win-x64.2026.0.0.901\build\native\intelmkl.static.cluster.win-x64.targets" Condition="Exists('..\packages\intelmkl.static.cluster.win-x64.2026.0.0.901\build\native\intelmkl.static.cluster.win-x64.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\intelopenmp.redist.win.2026.0.0.944\build\native\intelopenmp.redist.win.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\intelopenmp.redist.win.2026.0.0.944\build\native\intelopenmp.redist.win.targets'))" />
+    <Error Condition="!Exists('..\packages\inteltbb.redist.win.2023.0.0.716\build\native\inteltbb.redist.win.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\inteltbb.redist.win.2023.0.0.716\build\native\inteltbb.redist.win.targets'))" />
+    <Error Condition="!Exists('..\packages\intelopenmp.devel.win.2026.0.0.944\build\native\intelopenmp.devel.win.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\intelopenmp.devel.win.2026.0.0.944\build\native\intelopenmp.devel.win.targets'))" />
+    <Error Condition="!Exists('..\packages\inteltbb.devel.win.2023.0.0.716\build\native\inteltbb.devel.win.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\inteltbb.devel.win.2023.0.0.716\build\native\inteltbb.devel.win.targets'))" />
+    <Error Condition="!Exists('..\packages\intelmkl.static.win-x64.2026.0.0.901\build\native\intelmkl.static.win-x64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\intelmkl.static.win-x64.2026.0.0.901\build\native\intelmkl.static.win-x64.targets'))" />
+    <Error Condition="!Exists('..\packages\intelmpi.redist.win-x64.2021.18.0.740\build\native\IntelMPI.redist.win-x64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\intelmpi.redist.win-x64.2021.18.0.740\build\native\IntelMPI.redist.win-x64.targets'))" />
+    <Error Condition="!Exists('..\packages\intelmpi.devel.win-x64.2021.18.0.740\build\native\IntelMPI.devel.win-x64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\intelmpi.devel.win-x64.2021.18.0.740\build\native\IntelMPI.devel.win-x64.targets'))" />
+    <Error Condition="!Exists('..\packages\intelmkl.static.cluster.win-x64.2026.0.0.901\build\native\intelmkl.static.cluster.win-x64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\intelmkl.static.cluster.win-x64.2026.0.0.901\build\native\intelmkl.static.cluster.win-x64.targets'))" />
+  </Target>
 </Project>

@@ -24,13 +24,16 @@
 		else (void)0;
 
 #define require_usual_suspect_LPXLOPER_or_exit(arg) if ( useless_LPXLOPER(arg) ) \
-		{ result=new OPER("Usual suspect required for " #arg); (*result).xltype = (*result).xltype | xlbitXLFree; return result; }
+		{ result=new OPER("Usual suspect required for " #arg); return result; }
+//		{ result = new OPER("Usual suspect required for " #arg); (*result).xltype = (*result).xltype | xlbitXLFree; return result; }
 
 #define require_string_LPXLOPER_or_exit(arg) if ( useless_LPXLOPER(arg) || arg->xltype!=xltypeStr ) \
-		{ result=new OPER("Usual suspect required for " #arg); (*result).xltype = (*result).xltype | xlbitXLFree; return result; }
+		{ result=new OPER("Usual suspect required for " #arg); return result; }
+//		{ result = new OPER("Usual suspect required for " #arg); (*result).xltype = (*result).xltype | xlbitXLFree; return result; }
 
 #define allow_missings_only_LPXLOPER_or_exit(arg) if ( non_missing_useless_LPXLOPER(arg) ) \
-		{ result=new OPER("Usual suspect required for " #arg); (*result).xltype = (*result).xltype | xlbitXLFree; return result; }
+		{ result=new OPER("Usual suspect required for " #arg); return result; }
+//		{ result = new OPER("Usual suspect required for " #arg); (*result).xltype = (*result).xltype | xlbitXLFree; return result; }
 
 
 inline int lFreeIfNecessary(LPXLOPER12& target, bool& bWasCoercedFlag) {

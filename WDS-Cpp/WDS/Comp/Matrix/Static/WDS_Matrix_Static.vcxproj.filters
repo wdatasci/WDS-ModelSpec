@@ -17,7 +17,7 @@
     <ClCompile Include="..\src\WDSMatrix.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\..\..\armadillo\15.2.3\src\wrapper1.cpp">
+    <ClCompile Include="..\..\..\..\..\..\armadillo\src\wrapper1.cpp">
       <Filter>src_armadillo</Filter>
     </ClCompile>
   </ItemGroup>
@@ -25,5 +25,8 @@
     <ClInclude Include="..\..\..\..\include\WDS\Comp\Matrix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -15,6 +15,7 @@ set lDomicile="US"
 set lAsset="Generic"
 set lProjectName="prototype"
 
+set lDatabase="default"
 set lSchema=${lDomicile}${lAsset}_${lProjectName}
 
 set lData=${lPWD}/data

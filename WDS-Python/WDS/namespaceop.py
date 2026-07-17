@@ -69,7 +69,7 @@ def namespaceop(func):
     __func = inspect.getsource(func)
     __func_lines = inspect.getsourcelines(func)
     __func_name = func.__name__
-    print(__func_lines)
+    #print(__func_lines)
     n = __func.count('\n',0,__func.index(':'))
     __func = compile('if True:#'+__func.replace('\n','',n),func.__name__,'exec')
     def __func_wrapped(arg):
@@ -87,7 +87,7 @@ def namespaceop_using__dict__(func):
     __func = inspect.getsource(func)
     __func_lines = inspect.getsourcelines(func)
     __func_name = func.__name__
-    print(__func_lines)
+    #print(__func_lines)
     n = __func.count('\n',0,__func.index(':'))
     __func = compile('if True:#'+__func.replace('\n','',n),func.__name__,'exec')
     def __func_wrapped(arg):

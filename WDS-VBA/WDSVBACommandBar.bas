@@ -81,7 +81,7 @@ End Sub
 Private Sub ListVBAModules()
     Dim twb As Workbook
     Set twb = ActiveWorkbook
-    WDSVBACommandBar.ActivateOrAddSheet ("VBAModules")
+    WDSVBACommandBar.wgu_ActivateOrAddSheet ("VBAModules")
     Dim tws As Worksheet
     Set tws = ActiveSheet
     tws.Cells.Clear
@@ -105,7 +105,7 @@ End Sub
 Private Sub VBAImportExport()
     Dim twb As Workbook
     Set twb = ActiveWorkbook
-    WDSVBACommandBar.ActivateOrAddSheet ("VBAModules")
+    WDSVBACommandBar.wgu_ActivateOrAddSheet ("VBAModules")
     Dim tws As Worksheet
     Set tws = ActiveSheet
     tws.Cells.Clear
@@ -114,7 +114,7 @@ Private Sub VBAImportExport()
     i = 2
     tws.Cells(i, 1).Value = "VBA External Location"
     tws.Cells(i, 2).Value = "D:\WDS\dev\lib\VBA\WDSCommon"
-    tws.Cells(i, 3).Value = "V:\SystemsModelV1.1\SMProtoType\bas"
+    tws.Cells(i, 3).Value = "some other location"
     
     i = 3
     tws.Cells(i, 1).Value = "Modules In WorkBook"
@@ -225,7 +225,7 @@ Private Sub VBAImportSelected(ByRef twb As Workbook, tws As Worksheet)
     
 End Sub
 
-Public Sub ActivateOrAddSheet(ByVal arg1 As String, Optional indx = 1, Optional BeforeOrAfter = 1)
+Public Sub wgu_ActivateOrAddSheet(ByVal arg1 As String, Optional indx = 1, Optional BeforeOrAfter = 1)
 
 TryIt:
 

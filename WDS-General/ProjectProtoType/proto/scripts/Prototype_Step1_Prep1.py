@@ -4,6 +4,9 @@ import os,sys
 import os.path as osp
 
 import gtmp.lProject_config as lProject
+from typing import Optional
+
+import gtmp.Prototype_config as lProject
 
 from WDS.Wranglers.dir_walk import *
 from WDS.Wranglers.Excel import *
@@ -36,11 +39,14 @@ def ProcessSet11(d, f, dold, dnew, setn=11, lastrow=1000000, BaseFieldMDs=None):
     newheadernames=[]
     newheader=[]
     columnemptyind=[]
+    arglastrow=lastrow
     lastrow=None
     ncols=0
     ii=-1
     for i,row in enumerate(csv_fid):
         if (ii>0) or (row.count('')!=len(row)): ii+=1
+        if i > arglastrow:
+            break
         if (ii==0) and (setn>=10):
             lastrow=row
         elif ( (ii==0) and (setn in(1,2)) ) or ( (ii==1) and (setn in(11,12)) ):
@@ -185,9 +191,12 @@ def ProcessSet11(d, f, dold, dnew, setn=11, lastrow=1000000, BaseFieldMDs=None):
     print("table=",f.replace(".csv",""))
     #pudb.set_trace()
     fid.write(BaseFieldMDs.mCreateTable(header=newheader
+            , database=lProject.lDatabase
             , schema=lProject.lSchema
             , table=fn
             , fn=osp.join(osp.abspath(dnew).replace("/mnt/c/","/").replace("/mnt/d/","/"),f.replace(".csv",".Prep1.csv"))
+            , stagename=None
+            , engine='Vertica'
             #, toJustDrop=True
             ) )
     fid.close()

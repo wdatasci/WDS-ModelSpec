@@ -166,6 +166,8 @@ Private Sub xxx_LoadPivotTableODBCSpecSub()
     Dim con As ADODB.Connection
     Dim rs As ADODB.Recordset
     
+    using_snowflake = False
+        
     If Not bIn(Range(vLPT_SpecPage & "!B1").Text, "Existing", "Range") Then
     
     Set con = New ADODB.Connection
@@ -173,7 +175,11 @@ Private Sub xxx_LoadPivotTableODBCSpecSub()
     
     Call xsql_ProcessODBCConnectionString
     con.Open ConnectionString:=[ODBCConnectionString]
-
+    
+    If InStr(UCase([ODBCConnectionString]), "SNOWFLAKE") > 0 Then
+        using_snowflake = True
+    End If
+    
     End If
 
     calcprior = Application.Calculation
@@ -254,7 +260,11 @@ Private Sub xxx_LoadPivotTableODBCSpecSub()
                         xs = x.Text
                     End If
                     q1 = q1 & x.Text
-                    q2 = q2 & i
+                    If using_snowflake Then
+                        q2 = q2 & xs
+                    Else
+                        q2 = q2 & i
+                    End If
                     q3 = q3 & i
                 End If
             Next x
@@ -269,21 +279,47 @@ BreakNxt0:
                 If Not bIn(x.Text, "Pages", "RowFields", "ColumnFields", "Data", "DataFields") Then
                     If InStr(x.Text, " as ") > 0 Then
                         q4 = q4 & "," & x.Text
+                        i = i + 1
                     End If
                 End If
             Next x
 BreakNxt00:
         Next g
         
-        
+        do_not_move_data = True
+        If i > 1 Then
+            do_not_move_data = False
+        End If
+        i = 0
         
         Dim q As String
-        q = "SELECT column_name from v_catalog.columns where table_schema='" & Range(vLPT_SpecPage & "!B2").Text & "' and table_name='" & Range(vLPT_SpecPage & "!B3").Text & "' order by ordinal_position"
+        Dim v_catalog As String
+        Dim lDB, lSchema, lTable As String
+        
+        
+        v_catalog = "v_catalog"
+        lSchema = Range(vLPT_SpecPage & "!B2").Text
+        lTable = Range(vLPT_SpecPage & "!B3").Text
+        
+        q = "SELECT column_name from " & v_catalog & ".columns where table_schema='" & lSchema & "' and table_name='" & lTable & "' order by ordinal_position"
+        
+        If using_snowflake Then
+            using_snowflake = True
+            lDB = lSchema
+            If InStr(lTable, ".") > 0 Then
+                lSchema = Split(lTable, ".")
+                lTable = lSchema(UBound(lSchema))
+                lSchema = lSchema(LBound(lSchema))
+            End If
+            v_catalog = Range(vLPT_SpecPage & "!B2").Text & ".INFORMATION_SCHEMA"
+            q = "SELECT column_name from " & v_catalog & ".columns where table_schema='" & lSchema & "' and table_name='" & lTable & "' order by ordinal_position"
+        End If
+        
         rs.Open q, ActiveConnection:=con
         n = rs.RecordCount
-        If n < 1 Then
+        If n < 1 And rs.BOF And rs.EOF Then
             rs.Close
-            q = "SELECT column_name from v_catalog.view_columns where table_schema='" & Range(vLPT_SpecPage & "!B2").Text & "' and table_name='" & Range(vLPT_SpecPage & "!B3").Text & "' order by ordinal_position"
+            q = "SELECT column_name from " & v_catalog & ".view_columns where table_schema='" & Range(vLPT_SpecPage & "!B2").Text & "' and table_name='" & Range(vLPT_SpecPage & "!B3").Text & "' order by ordinal_position"
             rs.Open q, ActiveConnection:=con
             n = rs.RecordCount
         End If
@@ -291,7 +327,11 @@ BreakNxt00:
         Do Until rs.EOF
             For Each fld In rs.Fields
                 If Left(fld.Value, 1) = "_" Then
-                    q4 = q4 & ", sum(" & fld.Value & ") as " & fld.Value
+                    If using_snowflake Then
+                        q4 = q4 & ", sum(""" & fld.Value & """) as """ & fld.Value & """"
+                    Else
+                        q4 = q4 & ", sum(" & fld.Value & ") as " & fld.Value
+                    End If
                 End If
             Next fld
             rs.MoveNext
@@ -305,12 +345,28 @@ BreakNxt00:
             wc = ""
         End If
         
-        With ActiveWorkbook.PivotCaches.Add(SourceType:=xlExternal)
-            .Connection = "ODBC;" & [ODBCConnectionString]
-            .CommandType = xlCmdSql
-            .CommandText = "select " & q1 & q4 & " from " & Range(vLPT_SpecPage & "!B2").Text & "." & Range(vLPT_SpecPage & "!B3").Text & wc & " group by " & q2
-            .CreatePivotTable TableDestination:=Range(vLPT_SpecPage & "!B5").Text & "!" & Range(vLPT_SpecPage & "!B6").Text, TableName:=Range(vLPT_SpecPage & "!B4").Text, DefaultVersion:=xlPivotTableVersion10
-        End With
+        If using_snowflake Then
+            q = "select " & q1 & q4 & " from " & lDB & "." & lSchema & "." & lTable & wc & " group by " & q2
+            rWhereClause.Offset(0, 10) = q
+            
+            With ActiveWorkbook.PivotCaches.Add(SourceType:=xlExternal)
+                .Connection = "ODBC;DSN=" & [ODBCConnectionString] & ";"
+                .CommandType = xlCmdSql
+                .CommandText = q
+                .CreatePivotTable TableDestination:=Range(vLPT_SpecPage & "!B5").Text & "!" & Range(vLPT_SpecPage & "!B6").Text, TableName:=Range(vLPT_SpecPage & "!B4").Text, DefaultVersion:=xlPivotTableVersion10
+            End With
+            
+        Else
+            
+            With ActiveWorkbook.PivotCaches.Add(SourceType:=xlExternal)
+                .Connection = "ODBC;" & [ODBCConnectionString]
+                .CommandType = xlCmdSql
+                .CommandText = "select " & q1 & q4 & " from " & lSchema & "." & lTable & wc & " group by " & q2
+                .CreatePivotTable TableDestination:=Range(vLPT_SpecPage & "!B5").Text & "!" & Range(vLPT_SpecPage & "!B6").Text, TableName:=Range(vLPT_SpecPage & "!B4").Text, DefaultVersion:=xlPivotTableVersion10
+            End With
+        
+        End If
+    
     
     ElseIf Range(vLPT_SpecPage & "!B1").Text = "Range" Then
 
@@ -439,8 +495,15 @@ BreakNxt_x:
             xs = x.Text
         End If
                     
+        If InStr(xs, ".") > 0 Then
+            xs1 = Split(xs, ".")
+            xs = xs1(UBound(xs1))
+        End If
+                    
         If Left(xs, 1) = "_" Then
             Set V = ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).AddDataField(ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).PivotFields(xs), Mid(xs, 2), xlSum)
+        ElseIf Left(xs, 2) = """_" Then
+            Set V = ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).AddDataField(ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).PivotFields(Replace(xs, """", "")), Mid(Replace(xs, """", ""), 2), xlSum)
         Else
             Set V = ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).AddDataField(ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).PivotFields(xs), "Sum of " & xs, xlSum)
         End If
@@ -454,6 +517,9 @@ BreakNxt_x:
         End If
         If InStr(xs, "Amt") > 0 Or InStr(xs, "Bal") > 0 Then
             V.NumberFormat = "#,###,"
+        End If
+        If InStr(xs, "Dollar") > 0 Then
+            V.NumberFormat = "#,###,###"
         End If
         If CheckFor(xs, Array("WAM", "WACS", "WALA")) Then
             V.NumberFormat = "0.0"
@@ -473,6 +539,14 @@ BreakNxt1:
         Else
             xs = x.Text
         End If
+                            
+        If InStr(xs, ".") > 0 Then
+            xs1 = Split(xs, ".")
+            xs = xs1(UBound(xs1))
+        End If
+    
+        xs = Replace(xs, """", "")
+        
         With ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).PivotFields(xs)
             .Orientation = xlPageField
             '.ShowAllItems = True
@@ -496,6 +570,14 @@ BreakNxt2:
         Else
             xs = x.Text
         End If
+                            
+        If InStr(xs, ".") > 0 Then
+            xs1 = Split(xs, ".")
+            xs = xs1(UBound(xs1))
+        End If
+
+        xs = Replace(xs, """", "")
+        
         With ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).PivotFields(xs)
             .Orientation = xlColumnField
             .Subtotals = Array(False, False, False, False, False, False, False, False, False, False, False, False)
@@ -506,11 +588,13 @@ BreakNxt2:
     Next
 BreakNxt4:
         
+    If do_not_move_data = False Then
     If dataoncolumn > 0 Then
         With ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).DataPivotField
             .Orientation = xlColumnField
             .Position = dataoncolumn
         End With
+    End If
     End If
     
     k = 0
@@ -528,7 +612,14 @@ BreakNxt4:
         Else
             xs = x.Text
         End If
+                    
+        If InStr(xs, ".") > 0 Then
+            xs1 = Split(xs, ".")
+            xs = xs1(UBound(xs1))
+        End If
 
+        xs = Replace(xs, """", "")
+        
         With ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).PivotFields(xs)
             .Orientation = xlRowField
             .ShowAllItems = False
@@ -540,7 +631,7 @@ BreakNxt4:
     Next
 BreakNxt3:
         
-        
+    If do_not_move_data = False Then
     If dataonrow > 0 Then
         With ActiveSheet.PivotTables(Range(vLPT_SpecPage & "!B4").Text).DataPivotField
             .Orientation = xlRowField
@@ -551,6 +642,7 @@ BreakNxt3:
             .Orientation = xlColumnField
             .Position = dataoncolumn
         End With
+    End If
     End If
     
     
@@ -576,6 +668,7 @@ BreakNxt3:
     Range("A1").Select
     
 CatchIt:
+    rWhereClause.Offset(1, 10) = Err.Description
 
 ElseIt:
     Application.Calculation = calcprior

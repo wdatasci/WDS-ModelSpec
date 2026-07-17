@@ -2,17 +2,17 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <WDataSci>$(WDataSci_ROOT)</WDataSci>
     <WDSProject>WDS-ModelSpec</WDSProject>
     <WDSProjectBranch>master</WDSProjectBranch>
-    <WDSCppLib>$(WDataSci)\$(WDSProject)\$(WDSProjectBranch)\WDS-Cpp</WDSCppLib>
-    <WDSCLib>$(WDataSci)\$(WDSProject)\$(WDSProjectBranch)\WDS-C</WDSCLib>
+    <WDataSci>C:\dev\github</WDataSci>
+    <WDSCppLib>$(WDataSci)\$(WDSProject)\WDS-Cpp</WDSCppLib>
+    <WDSCLib>$(WDataSci)\$(WDSProject)\WDS-C</WDSCLib>
     <IntelSWTools>$(IntelSWTools_ROOT)\2025.3\windows</IntelSWTools>
     <TBBIncludeDir>$(IntelSWTools_ROOT)\tbb\2022.3\include</TBBIncludeDir>
-    <TBBLibDir>$(IntelSWTools_ROOT)\tbb\2022.3\lib\vc_mt</TBBLibDir>
+    <TBBLibDir>packages/inteltbb.devel.win.2023.0.0.716/build/native/win-x64/</TBBLibDir>
     <MKLMajorVersion>2025</MKLMajorVersion>
     <MKLMinorVersion>3</MKLMinorVersion>
-    <MKLProductDir>$(IntelSWTools_ROOT)</MKLProductDir>
+    <MKLProductDir>packages/intelmkl.static.win-x64.2026.0.0.901/build/native/win-x64</MKLProductDir>
     <IPPMajorVersion>2025</IPPMajorVersion>
     <IPPMinorVersion>3</IPPMinorVersion>
     <IPPIncludeDir>$(IntelSWTools_ROOT)\ipp\include</IPPIncludeDir>
@@ -56,6 +56,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <BuildMacro Include="WDataSci">
+      <Value>$(WDataSci)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
     <BuildMacro Include="WDSCppLib">
       <Value>$(WDSCppLib)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>

@@ -61,10 +61,23 @@ Author: Christian Wypasek (CJW)
                 </ComponentModel>
                 <ComponentModel Name="Static">
                     <Variables>
+                        <Variable Name="Intercept" Handle="I">
+                            <Treatment>Constant</Treatment>
+                            <CriticalValueList>1</CriticalValueList>
+                            <CoefficientsSet>
+                                <Coefficients Response="EC1">
+                                    <Coefficient Position="0"> 0 </Coefficient>
+                                </Coefficients>
+                                <Coefficients Response="EC2">
+                                    <Coefficient Position="0"> 0 </Coefficient>
+                                </Coefficients>
+                            </CoefficientsSet>
+                        </Variable>
                         <Variable Name="FICO" Handle="X">
                             <Treatment>Hats</Treatment>
                             <CleanLimitList>150 950</CleanLimitList>
                             <CriticalValueList>600 650 700</CriticalValueList>
+                            <DropList>2</DropList>
                             <CoefficientsSet>
                                 <Coefficients Response="EC2">
                                     <Coefficient Position="0"> 0 </Coefficient>

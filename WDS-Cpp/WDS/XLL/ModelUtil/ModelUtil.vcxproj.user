@@ -4,12 +4,12 @@
     <LocalDebuggerCommand>C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE</LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>/x $(SolutionDir)\Build\$(Platform)\$(Configuration)\$(TargetName).xll $(SolutionDir)WDS-ModelUtil-XLL-Test.xlsm</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArgumentsHistory>/x C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\\Build\x64\Debug\WDS-ModelUtil.xll C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\WDS-ModelUtil-XLL-Test.xlsm|</LocalDebuggerCommandArgumentsHistory>
+    <LocalDebuggerCommandArgumentsHistory>/x C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\\Build\x64\Debug\WDS-ModelUtil.xll C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\WDS-ModelUtil-XLL-Test.xlsm|/x C:\dev\github\WDS-ModelSpec\WDS-Cpp\WDS\XLL\\Build\x64\Debug\WDS-ModelUtil.xll C:\dev\github\WDS-ModelSpec\WDS-Cpp\WDS\XLL\WDS-ModelUtil-XLL-Test.xlsm|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerCommand>C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE</LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>/x $(SolutionDir)\Build\$(Platform)\$(Configuration)\$(TargetName).xll $(SolutionDir)WDS-ModelUtil-XLL-Test.xlsm</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArgumentsHistory>/x C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\\Build\x64\Release\ModelUtil.xll C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\WDS-ModelUtil-XLL-Test.xlsm|/x C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\\Build\x64\Release\WDS-ModelUtil.xll C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\WDS-ModelUtil-XLL-Test.xlsm|</LocalDebuggerCommandArgumentsHistory>
+    <LocalDebuggerCommandArgumentsHistory>/x C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\\Build\x64\Release\ModelUtil.xll C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\WDS-ModelUtil-XLL-Test.xlsm|/x C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\\Build\x64\Release\WDS-ModelUtil.xll C:\WDS\dev\lib\github\WDataSci\WDS-ModelSpec\master\WDS-Cpp\WDS\XLL\WDS-ModelUtil-XLL-Test.xlsm|/x C:\dev\github\WDS-ModelSpec\WDS-Cpp\WDS\XLL\\Build\x64\Release\WDS-ModelUtil.xll C:\dev\github\WDS-ModelSpec\WDS-Cpp\WDS\XLL\WDS-ModelUtil-XLL-Test.xlsm|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>
 </Project>
