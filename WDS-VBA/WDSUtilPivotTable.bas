@@ -259,7 +259,9 @@ Private Sub xxx_LoadPivotTableODBCSpecSub()
                     Else
                         xs = x.Text
                     End If
-                    q1 = q1 & x.Text
+
+                    q1 = q1 & Replace(x.Text, "GroupByOnly:", "")
+
                     If using_snowflake Then
                         q2 = q2 & xs
                     Else
@@ -532,7 +534,7 @@ BreakNxt1:
    
     For Each x In Range(rPages.Offset(0, 1), rPages.Offset(0, 100))
     If IsEmpty(x) Then GoTo BreakNxt2
-    If x.Text <> "Pages" Then
+    If x.Text <> "Pages" And InStr(x.Text, "GroupByOnly:") = 0 Then
         If InStr(x.Text, " as ") > 0 Then
             xs1 = Split(x.Text, " as ")
             xs = xs1(UBound(xs1))
@@ -552,6 +554,7 @@ BreakNxt1:
             '.ShowAllItems = True
             .Subtotals = Array(False, False, False, False, False, False, False, False, False, False, False, False)
         End With
+
     End If
     Next
 BreakNxt2:
@@ -559,11 +562,12 @@ BreakNxt2:
     k = 0
     For Each x In Range(rColumnFields.Offset(0, 1), rColumnFields.Offset(0, 100))
     If IsEmpty(x) Then GoTo BreakNxt4
-    If x.Text <> "ColumnFields" Then
+    If x.Text <> "ColumnFields" And InStr(x.Text, "GroupByOnly:") = 0 Then
     k = k + 1
     If x.Text = "Data" Then
         dataoncolumn = k
     Else
+
         If InStr(x.Text, " as ") > 0 Then
             xs1 = Split(x.Text, " as ")
             xs = xs1(UBound(xs1))
@@ -583,6 +587,7 @@ BreakNxt2:
             .Subtotals = Array(False, False, False, False, False, False, False, False, False, False, False, False)
             '.ShowAllItems = True
         End With
+
     End If
     End If
     Next
@@ -600,7 +605,7 @@ BreakNxt4:
     k = 0
     For Each x In Range(rRowFields.Offset(0, 1), rRowFields.Offset(0, 100))
     If IsEmpty(x) Then GoTo BreakNxt3
-    If x.Text <> "RowFields" Then
+    If x.Text <> "RowFields" And InStr(x.Text, "GroupByOnly:") = 0 Then
     k = k + 1
     If x.Text = "Data" Then
         dataonrow = k
