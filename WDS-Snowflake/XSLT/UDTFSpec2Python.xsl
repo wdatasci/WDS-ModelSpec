@@ -91,6 +91,31 @@ class nmspace(object):
         for k,v in self.__dict__.items():
             print(k, v)
 
+def local_cleanint(arg, transform = None, default = None):
+    if transform is None:
+        return ( int(arg) if ( (arg is not None) and (not pd.isna(arg)) ) else default )
+    else:
+        return ( int(transform(arg)) if ( (arg is not None) and (not pd.isna(arg)) ) else default )
+        
+
+def local_cleanint_vector(arg, transform = None, default = None):
+    argl = arg.to_list()
+    for i,v in enumerate(argl):
+        argl[i] = local_cleanint(v, transform = transform, default = default)
+    return pd.Series(argl)
+
+def local_cleanfloat(arg, transform = None, default = None):
+    if transform is None:
+        return ( float(arg) if ( (arg is not None) and (not pd.isna(arg)) ) else default )
+    else:
+        return ( float(transform(arg)) if ( (arg is not None) and (not pd.isna(arg)) ) else default )
+
+def local_cleanfloat_vector(arg, transform = None, default = None):
+    argl = arg.to_list()
+    for i,v in enumerate(argl):
+        argl[i] = local_cleanfloat(v, transform = transform, default = default)
+    return pd.Series(argl)
+
 
 
 vint_null=-sys.maxsize
@@ -515,39 +540,39 @@ class <xsl:value-of select="$ProjectName"/>(object):
             #local_asset.<xsl:value-of select="@Name"/> = <xsl:choose>
                 <xsl:when test="@Use='IO' or @Use='I'">df['<xsl:value-of 
                 select="translate(@Name,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ')"
-                />']<xsl:if 
-                test="not (count(@Static)=0 and count(@BlockID)=0) and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">[0]</xsl:if></xsl:when>
+                />']<xsl:choose><xsl:when 
+                test="not (count(@Static)=0 and count(@BlockID)=0) and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">[0]</xsl:when><xsl:otherwise>.to_list()</xsl:otherwise></xsl:choose></xsl:when>
                 <xsl:when test="@Use='O' or @Use='T'"><xsl:if
-                test="(count(@Static)=0 and count(@BlockID)=0) or not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">pd.Series([</xsl:if><xsl:choose>
-                        <xsl:when test="count(@Default)=0">None</xsl:when>
+                test="(count(@Static)=0 and count(@BlockID)=0) or not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">[</xsl:if><xsl:choose>
+                        <xsl:when test="count(@Default)=0">pd.NA</xsl:when>
                         <xsl:when test="@DTyp='Int' or @DTyp='Lng' or @DTyp='Dbl' or @DTyp='Bln'"><xsl:value-of select="@Default"/></xsl:when>
                         <xsl:when test="@DTyp='Str' or @DTyp='VLS'">'<xsl:value-of select="@Default"/>'</xsl:when>
                         <xsl:when test="@DTyp='Dte' or @DTyp='DTm'">_isoparser('<xsl:value-of select="@Default"/>')</xsl:when>
                 </xsl:choose><xsl:if
                 test="(count(@Static)=0 and count(@BlockID)=0) or not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">]*nrows<xsl:choose>
-                <xsl:when test="@DTyp='Int' or @DTyp='Lng'">,dtype=np.int64</xsl:when>
-                <xsl:when test="@DTyp='Dbl'">,dtype=np.float64</xsl:when>
-                <xsl:when test="@DTyp='Bln'">,dtype=bool</xsl:when>
-                <xsl:when test="@DTyp='Str' or @DTyp='VLS'">,dtype=str</xsl:when>
+                <xsl:when test="@DTyp='Int' or @DTyp='Lng'">)#,dtype=np.int64</xsl:when>
+                <xsl:when test="@DTyp='Dbl'">)#,dtype=np.float64</xsl:when>
+                <xsl:when test="@DTyp='Bln'">)#,dtype=bool</xsl:when>
+                <xsl:when test="@DTyp='Str' or @DTyp='VLS'">)#,dtype=str</xsl:when>
                 </xsl:choose>)</xsl:if></xsl:when></xsl:choose>
 
             local_asset.<xsl:value-of select="@Name"/> = <xsl:choose>
                 <xsl:when test="@Use='IO' or @Use='I'">df['<xsl:value-of 
                 select="@Name"
-                />']<xsl:if 
-                test="not (count(@Static)=0 and count(@BlockID)=0) and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">[0]</xsl:if></xsl:when>
+                />']<xsl:choose><xsl:when 
+                test="not (count(@Static)=0 and count(@BlockID)=0) and (translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">[0]</xsl:when><xsl:otherwise>.to_list()</xsl:otherwise></xsl:choose></xsl:when>
                 <xsl:when test="@Use='O' or @Use='T'"><xsl:if
-                test="(count(@Static)=0 and count(@BlockID)=0) or not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">pd.Series([</xsl:if><xsl:choose>
-                        <xsl:when test="count(@Default)=0">None</xsl:when>
+                test="(count(@Static)=0 and count(@BlockID)=0) or not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">([</xsl:if><xsl:choose>
+                        <xsl:when test="count(@Default)=0">pd.NA</xsl:when>
                         <xsl:when test="@DTyp='Int' or @DTyp='Lng' or @DTyp='Dbl' or @DTyp='Bln'"><xsl:value-of select="@Default"/></xsl:when>
                         <xsl:when test="@DTyp='Str' or @DTyp='VLS'">'<xsl:value-of select="@Default"/>'</xsl:when>
                         <xsl:when test="@DTyp='Dte' or @DTyp='DTm'">_isoparser('<xsl:value-of select="@Default"/>')</xsl:when>
                 </xsl:choose><xsl:if
                 test="(count(@Static)=0 and count(@BlockID)=0) or not(translate(substring(@Static,1,1),'YySsTt','111111')='1' or translate(substring(@BlockID,1,1),'YySsTt','111111')='1')">]*nrows<xsl:choose>
-                <xsl:when test="@DTyp='Int' or @DTyp='Lng'">,dtype=np.int64</xsl:when>
-                <xsl:when test="@DTyp='Dbl'">,dtype=np.float64</xsl:when>
-                <xsl:when test="@DTyp='Bln'">,dtype=bool</xsl:when>
-                <xsl:when test="@DTyp='Str' or @DTyp='VLS'">,dtype=str</xsl:when>
+                <xsl:when test="@DTyp='Int' or @DTyp='Lng'">)#,dtype=np.int64</xsl:when>
+                <xsl:when test="@DTyp='Dbl'">)#,dtype=np.float64</xsl:when>
+                <xsl:when test="@DTyp='Bln'">)#,dtype=bool</xsl:when>
+                <xsl:when test="@DTyp='Str' or @DTyp='VLS'">)#,dtype=str</xsl:when>
                 </xsl:choose>)</xsl:if></xsl:when></xsl:choose></xsl:for-each>
 
             guts.<xsl:value-of select="$ProjectName"/>_guts(local_asset)
