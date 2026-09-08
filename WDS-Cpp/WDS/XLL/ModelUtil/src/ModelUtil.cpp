@@ -2522,11 +2522,11 @@ WDS_Comp_RollIt(
 				for (mj=0; mj < NStates - NAbsorbing- NTerminal; mj++) {
 					if (bIsRowLastRowForPanel || ( lDelqDelta[0,mj]>=0 && mNDist[row,mj]>0) ) {
 						cnt -= mNDist[row, mj];
-						mNMat(row, 0) += mNDist[row, mj];
+						mNMat[row, 0] += mNDist[row, mj];
 						mNDist[row, mj] = 0.0;
 						prinbal -= mPrinBalDist[row, mj];
-						mPrinBalMat[row, mj] += mPrinBalDist[row, mj];
-						mPrinBalDist[row, mj] = 0.0;;
+						mPrinBalMat[row, 0] += mPrinBalDist[row, mj];
+						mPrinBalDist[row, mj] = 0.0;
 					}
 				}
 			}
