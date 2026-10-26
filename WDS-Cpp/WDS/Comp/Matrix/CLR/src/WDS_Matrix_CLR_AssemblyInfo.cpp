@@ -9,7 +9,7 @@ using namespace System::Security::Permissions;
 [assembly:AssemblyConfigurationAttribute(L"")];
 [assembly:AssemblyCompanyAttribute(L"Wypasek DataScience, Inc.")];
 [assembly:AssemblyProductAttribute(L"WDS_Matrix_CLR")];
-[assembly:AssemblyCopyrightAttribute(L"Copyright (c)  2019")];
+[assembly:AssemblyCopyrightAttribute(L"Copyright (c)  2019-2027")];
 [assembly:AssemblyTrademarkAttribute(L"")];
 [assembly:AssemblyCultureAttribute(L"")];
 

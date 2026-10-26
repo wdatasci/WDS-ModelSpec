@@ -1,6 +1,6 @@
 '''A Pure-Python version of the basic Artificials.[hc] code 
 
-Copyright (c) 2019-2022 Wypasek Data Science, Inc.
+Copyright (c) 2019-2027 Wypasek Data Science, Inc.
 Released under the MIT open source license.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,6 +25,7 @@ from typing import Union, List, Dict, Tuple, Sequence
 from enum import Enum
 import math
 import sys
+import numpy as np
 PYTHON_VERSION=sys.version_info.major+sys.version_info.minor/10
 
 #define compTag0 Constants
@@ -258,7 +259,14 @@ def __fArtificials_temp1(Treatment: eTreatment,
         ) -> List:
 
 
+    if type(CleanLimits) is np.ndarray:
+        CleanLimits = CleanLimits.flatten()
     nCleanLimits=len(CleanLimits)
+    bUsingCleanLimitLeftVal = False
+    CleanLimitLeftVal = 0
+    bUsingCleanLimitRightVal = False
+    CleanLimitRightVal = 0
+
     if (nCleanLimits > 0) :
         bUsingCleanLimitLeftVal = True
         CleanLimitLeftVal = CleanLimits[0]
@@ -266,6 +274,8 @@ def __fArtificials_temp1(Treatment: eTreatment,
         bUsingCleanLimitRightVal = True
         CleanLimitRightVal = CleanLimits[1]
 
+    if type(CriticalValues) is np.ndarray:
+        CriticalValues = CriticalValues.flatten()
     nCritVals = len(CriticalValues)
     nCritValsM1 = nCritVals - 1
 

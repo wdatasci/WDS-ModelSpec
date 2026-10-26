@@ -1,3 +1,25 @@
+'''Copyright (c) 2019-2027 Wypasek Data Science, Inc.
+Released under the MIT open source license.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+'''
+
 import numpy as np
 import numpy.random as rand
 
@@ -25,23 +47,24 @@ except:
     pl.DataFrame.__matmul__ = __monkey__matmul__
     pl.DataFrame.mfilter = pl.DataFrame.filter
     def add_column(df, name, value):
-        return df.with_column(pl.Series(value).alias(name))
+        return df.with_columns(pl.Series(value).alias(name))
 
 def copy_with_column(df, name, value):
-    return df.with_column(pl.Series(value.flatten()).alias(name))
+    return df.with_columns(pl.Series(value.flatten()).alias(name))
     
 import math
 import copy
 from typing import *
 
-import WDS.Comp.ArtificialsCythonWrapped as art_c
+#import WDS.Comp.ArtificialsCythonWrapped as art_c
+import WDS.Comp.Artificials_PurePython as art_c
 
 from WDS.Comp.WDSModelPrep import *
 
 from WDS.history import *
 history_init(globals())
-pl.cfg.Config.set_tbl_cols(20)
-pl.cfg.Config.set_tbl_rows(20)
+pl.config.Config.set_tbl_cols(20)
+pl.config.Config.set_tbl_rows(20)
 
 #build a model spec from scratch
 
@@ -52,8 +75,9 @@ def Bones_explode(df : pl.DataFrame,
         OffsetName : str = 'RowIndex_First',
         ) -> pl.DataFrame:
     rv = df.select([pl.col('*'),pl.concat_list([pl.col(OffsetName),pl.col(RowCountName)]).alias(RowIndexName)])
-    rv = rv.with_column(pl.col(RowIndexName).apply(lambda x:[i+x[0] for i in range(0,x[1]+1)])).explode(RowIndexName)
-    return rv
+    rv2 = rv.with_columns(pl.col(RowIndexName).map_elements(lambda x:[i+x[0] for i in range(0,x[1]+1)],pl.List(pl.Int64)))
+    rv3 = rv2.explode(RowIndexName)
+    return rv3
 
 def Bones(ID_List : List[int],
         N_List   : List[int],
@@ -172,7 +196,7 @@ TV_B_marg = fArtificialsScored(data2.TV_B,vTV_B)
 ModelBuildingMD.add_arts(vTV_B, TV_B_arts.columns)
 system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vTV_B,TV_B_arts, system_matrix_Resp1, system_matrix_Resp2)
 
-ebz = ((Static_A_marg + Static_B_marg + TV_A_marg + TV_B_marg)).with_columns(pl.col('*').apply(np.exp))  #*baseline[:,0]
+ebz = ((Static_A_marg + Static_B_marg + TV_A_marg + TV_B_marg)).with_columns(pl.col('*').map_elements(np.exp))  #*baseline[:,0]
 
 #data2['Haz_A'] = ebz[:,0]*baseline[:,0]
 data2=add_column(data2,'Haz_A', ebz[:,0]*baseline[:,0])
@@ -196,7 +220,7 @@ data2=add_column(data2,'Signal_A',data2.eps_A<data2.Haz_A)
 #data2['Signal_B']=data2.eps_B<data2.Haz_B
 data2=add_column(data2,'Signal_B',data2.eps_B<data2.Haz_B)
 
-data2=data2.with_column(pl.concat_list(['Signal_A','Signal_B']).apply(lambda x: 1 if x[0] else 2 if x[1] else 0).alias('Signal'))
+data2=data2.with_columns(pl.concat_list(['Signal_A','Signal_B']).map_elements(lambda x: 1 if x[0] else 2 if x[1] else 0,int).alias('Signal'))
 
 def f(arg):
     found=False
@@ -206,8 +230,8 @@ def f(arg):
             break
     return i
 
-x=data2.select(['ID','Signal']).groupby('ID').agg_list().select(['ID','Signal',pl.col('Signal').apply(f).alias('EventIndex')])
-x=x.select(['ID','EventIndex',pl.concat_list(['Signal','EventIndex']).apply(lambda x:x[x[-1]]).alias('EventClass')])
+x=data2.select(['ID','Signal']).group_by('ID').agg([pl.col('Signal'),]).with_columns(pl.col('Signal').map_elements(f,int).alias('EventIndex'))
+x=x.select(['ID','EventIndex',pl.concat_list(['Signal','EventIndex']).map_elements(lambda x:x[x[-1]],int).alias('EventClass')])
 
 data2=data2.join(x,on=['ID'])
 #ind = (pl.col('RowIndex') <= pl.col('EventIndex'))
@@ -290,10 +314,13 @@ for i in range(1,3):
 
 x1 = system_matrix_Resp1.select(base_and_Resp_Names[1]).lazy()
 for i,nm in enumerate(Resp_Names[1]):
-    x1=x1.with_columns((pl.col(Resp_Names[1])*pl.col(nm)).suffix('x'+nm))
+    print(i,nm)
+    print(Resp_Names[1])
+    #for nm2 in Resp_Names[1]:
+    x1=x1.with_columns((pl.col(Resp_Names[1])*pl.col(nm)).name.suffix('x'+nm))
 x2 = system_matrix_Resp2.select(base_and_Resp_Names[2]).lazy()
 for i,nm in enumerate(Resp_Names[2]):
-    x2=x2.with_columns((pl.col(Resp_Names[2])*pl.col(nm)).suffix('x'+nm))
+    x2=x2.with_columns((pl.col(Resp_Names[2])*pl.col(nm)).name.suffix('x'+nm))
 
 system_matrix = [ []
     , x1.collect() #system_matrix_Resp1.select(base_and_Resp_Names[1])
@@ -314,12 +341,12 @@ Mn = [ etc_and_base.filter(pl.col('Signal')==0).shape[0]
     ]
 
 #counts any signal by strata and age
-MnSA=etc_and_base.filter(pl.col('Signal')>0).groupby(['StrataID','Age']).agg(pl.col('Signal').count().alias('M')).sort(['StrataID','Age'])
+MnSA=etc_and_base.filter(pl.col('Signal')>0).group_by(['StrataID','Age']).agg(pl.col('Signal').count().alias('M')).sort(['StrataID','Age'])
 
 #counts by signal strata and age
-#MnSA = [ etc_and_base.filter(pl.col('Signal')==0).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
-#    , etc_and_base.filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
-#    , etc_and_base.filter(pl.col('Signal')==2).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+#MnSA = [ etc_and_base.filter(pl.col('Signal')==0).group_by(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+#    , etc_and_base.filter(pl.col('Signal')==1).group_by(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+#    , etc_and_base.filter(pl.col('Signal')==2).group_by(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
 #    ]
 
 #number of betas, {\em survival} state is index 0
@@ -358,21 +385,21 @@ for aaa in range(0,20):
     iter_comp_2 = [ [], [], [] ]
     iter_comp_22 = [ [], [], [] ]
     
-    x = (etcWebz[1].hstack(system_matrix[1].select([*Resp_Names[1],*Resp_NamesX[1]]) * etcWebz[1].ebz)).groupby(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[1], *Resp_NamesX[1]]).sum()).sort(['StrataID','Age'])
+    x = (etcWebz[1].hstack(system_matrix[1].select([*Resp_Names[1],*Resp_NamesX[1]]) * etcWebz[1].ebz)).group_by(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[1], *Resp_NamesX[1]]).sum()).sort(['StrataID','Age'])
     xx = x.join(MnSA, on=['StrataID','Age'], how='inner')
     
     iter_comp_12[1] = (xx.select(Resp_Names[1]) * xx.M / xx.ebzc).sum()
 
     iter_comp_2[1] = (xx.select([*Resp_Names[1],*Resp_NamesX[1]]) * xx.M / xx.ebzc).sum()
-    iter_comp_22[1] = (xx.select(Resp_Names[1]) * xx.M.apply(np.sqrt) / xx.ebzc) #.sum()
+    iter_comp_22[1] = (xx.select(Resp_Names[1]) * xx.M.sqrt() / xx.ebzc) #.sum()
     
-    x = (etcWebz[2].hstack(system_matrix[2].select([*Resp_Names[2],*Resp_NamesX[2]]) * etcWebz[2].ebz)).groupby(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[2], *Resp_NamesX[2]]).sum()).sort(['StrataID','Age'])
+    x = (etcWebz[2].hstack(system_matrix[2].select([*Resp_Names[2],*Resp_NamesX[2]]) * etcWebz[2].ebz)).group_by(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[2], *Resp_NamesX[2]]).sum()).sort(['StrataID','Age'])
     xx = x.join(MnSA, on=['StrataID','Age'], how='inner')
     
     iter_comp_12[2] = (xx.select(Resp_Names[2]) * xx.M / xx.ebzc).sum()
 
     iter_comp_2[2] = (xx.select([*Resp_Names[2],*Resp_NamesX[2]]) * xx.M / xx.ebzc).sum()
-    iter_comp_22[2] = (xx.select(Resp_Names[2]) * xx.M.apply(np.sqrt) / xx.ebzc) #.sum()
+    iter_comp_22[2] = (xx.select(Resp_Names[2]) * xx.M.sqrt() / xx.ebzc) #.sum()
     
     
     
@@ -395,7 +422,7 @@ for aaa in range(0,20):
             x = iter_comp_2[i].lazy()
             x = x.select(Resp_NamesXd[i][nm])
             for l,lnm in enumerate(Resp_NamesXd[i][nm]):
-                x = x.with_column(pl.col(lnm).alias(Resp_NamesPrefxd[i][l]))
+                x = x.with_columns(pl.col(lnm).alias(Resp_NamesPrefxd[i][l]))
             if j==0:
                 bdi[i] = x.select(Resp_NamesPrefxd[i]).collect()
             else:

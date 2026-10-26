@@ -1,4 +1,4 @@
---- Copyright 2018, 2019 Wypasek Data Science, Inc., released under the MIT open source license
+--- Copyright 2018-2027 Wypasek Data Science, Inc., released under the MIT open source license
 
 --- A general testing script for a collection of modules.
 -- Within WDS/zzzExamples.

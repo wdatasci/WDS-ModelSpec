@@ -1,4 +1,25 @@
 '''
+Copyright (c) 2019-2027 Wypasek Data Science, Inc.
+Released under the MIT open source license.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
 WDSModelPrep.py
 
 Uses the generateDS_unsnaked parsers for WDSModel.xsd.
@@ -73,7 +94,8 @@ import copy
 import polars as pl
 import pandas as pd
 
-import WDS.Comp.Artificials_CythonWrapped as art_c
+#import WDS.Comp.Artificials_CythonWrapped as art_c
+import WDS.Comp.Artificials_PurePython as art_c
 
 import pudb
 
@@ -166,7 +188,8 @@ def __CriticalValues_as_list(self):
 setattr(__gWDSModel.CriticalValues,"as_list",__CriticalValues_as_list)
 
 def __CriticalValues_as_numpy(self):
-    return np.array([self.as_list()], dtype=np.float64)
+    #return np.array([self.as_list()], dtype=np.float64)
+    return np.array(self.as_list(), dtype=np.float64)
 setattr(__gWDSModel.CriticalValues,"as_numpy",__CriticalValues_as_numpy)
 setattr(__gWDSModel.CriticalValues,"np",__CriticalValues_as_numpy)
 
@@ -256,7 +279,8 @@ def __CleanLimits_as_list(self):
 setattr(__gWDSModel.CleanLimits,"as_list",__CleanLimits_as_list)
 
 def __CleanLimits_as_numpy(self):
-    return np.array([self.as_list()], dtype=np.float64)
+    #return np.array([self.as_list()], dtype=np.float64)
+    return np.array(self.as_list(), dtype=np.float64)
 setattr(__gWDSModel.CleanLimits,"as_numpy",__CleanLimits_as_numpy)
 setattr(__gWDSModel.CleanLimits,"np",__CleanLimits_as_numpy)
 
@@ -829,7 +853,9 @@ def mPreProcess(self):
         pass
        
 def plDF(arg):
-    return pl.DataFrame(arg.view(dtype=np.float64),columns=arg.dtype.fields)
+    if type(arg) is list:
+        return pl.DataFrame(arg[0],schema=arg[1])
+    return pl.DataFrame(arg.view(dtype=np.float64),schema=arg.dtype.fields)
 
 
 def fArtificials(arg, VariableSpec):
@@ -852,6 +878,8 @@ def ModelBuildingMD_Constructor():
                 for r in self._mdl.ModelDirectives.Responses.as_list():
                     self.Resp_arts_names[r].extend(cols)
                     if vrbl.DropIndexs.DropIndex != []:
+                        print(cols)
+                        print(vrbl.DropIndexs.as_list())
                         self.Resp_arts_droplist[r].extend([cols[i] for i in vrbl.DropIndexs.as_list()])
             else:
                 r = vrbl.VariableModelDirectives.ResponseUse

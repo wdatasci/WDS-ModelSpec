@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Christian Wypasek, WDS")]
 [assembly: AssemblyProduct("WDS-ModelUtil-XLL-Cs")]
-[assembly: AssemblyCopyright("Copyright © Christian Wypasek, WDS, 2018-2026")]
+[assembly: AssemblyCopyright("Copyright © Christian Wypasek, WDS, 2018-2027")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]

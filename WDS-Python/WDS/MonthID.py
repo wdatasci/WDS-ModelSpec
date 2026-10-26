@@ -12,7 +12,7 @@
         2010-1          121
         2020-1          241
 
-    Copyright 2019, Wypasek Data Science, Inc. (WDataSci/WDS)
+    Copyright 2019-2027, Wypasek Data Science, Inc. (WDataSci/WDS)
     Released under the MIT open source license.
 '''
 
