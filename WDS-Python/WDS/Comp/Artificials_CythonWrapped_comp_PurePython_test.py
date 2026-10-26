@@ -31,8 +31,8 @@ import numpy as np
 np.set_printoptions(linewidth=np.inf)
 
 import polars as pl
-pl.cfg.Config.set_tbl_cols(20)
-pl.cfg.Config.set_tbl_rows(100)
+pl.config.Config.set_tbl_cols(20)
+pl.config.Config.set_tbl_rows(100)
 
 
 if __name__=="__main__":
@@ -127,7 +127,7 @@ if __name__=="__main__":
         Y[i]=(65+i)
     Y[2]=np.nan
     Y[10]=np.nan
-    Y=pl.DataFrame({'y':Y})
+    Y=pl.DataFrame({'y':Y},strict=False)
 
 
     print("Y=")

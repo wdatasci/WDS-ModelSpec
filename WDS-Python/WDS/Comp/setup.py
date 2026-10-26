@@ -9,7 +9,7 @@ setup(name='Artificials_CythonWrapped',
                 sources=['Artificials_CythonWrapped.pyx',],
                 requires=['polars','pyarrow',],
                 include_dirs=[np.get_include()]), 
+        compiler_directives={'language_level': "3"},
         ),
-    language_level="3",
     install_requires=['numpy'])
 
