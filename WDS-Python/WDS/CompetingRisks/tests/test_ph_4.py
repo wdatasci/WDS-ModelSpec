@@ -101,7 +101,7 @@ IDs=[x for x in range(1, M+1)]
 
 data_static = pl.DataFrame({'ID':IDs,
             'N':[T for x in IDs],
-            'VintageMonthID':[MonthID_Start+rand.randint(MonthID_Start,MonthID_Stop) for x in IDs],
+            'VintageMonthID':[rand.randint(MonthID_Start,MonthID_Stop) for x in IDs],
             'StrataID':rand.randint(0,2,M)+1,
             'Static_A':rand.rand(M),
             'Static_B':rand.rand(M)*100-30,

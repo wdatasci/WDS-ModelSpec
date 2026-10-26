@@ -358,7 +358,10 @@ def __CoefficientsSet_from(self, Coefficients, Responses_as_list=None):
             #
             # trying ..(Variable)/..(Variables)/..(Model)/ModelDirectives/Responses
                           #x.parent_object_.parent_object_.parent_object_.parent_object_.ModelDirectives.Responses.as_list()
-            Responses_as_list = self.mFindResponses().as_list()
+            if type(Coefficients) is dict:
+                Responses_as_list = list(Coefficients.keys())
+            else:
+                Responses_as_list = self.mFindResponses().as_list()
         except Exception as e:
             raise(Exception('cannot call mFindResponses.as_list() in Coefficents.from, ' + str(e)))
     if type(Responses_as_list) not in (list, tuple):
@@ -383,7 +386,8 @@ def __CoefficientsSet_from(self, Coefficients, Responses_as_list=None):
                 for i, c in enumerate(self.Coefficients):
                     for j, c2 in enumerate(cset.Coefficients):
                         if c.Response == c2.Response:
-                            raise(Exception("Response ",c.Response," has Coefficients at both the Variable and Variable.CoefficientsSet levels"))
+                            raise(Exception("Response ",c.Response
+                                ," has Coefficients at both the Variable and Variable.CoefficientsSet levels"))
                     c.parent_object_ = cset
                     self.CoefficientsSet.add_Coefficients(c)
                 self.Coefficients = []
@@ -397,22 +401,41 @@ def __CoefficientsSet_from(self, Coefficients, Responses_as_list=None):
                 cset.add_Coefficients(c)
             self.Coefficients = []
     
-    for i, r in enumerate(Responses_as_list):
-        found = False
-        if bHasNonEmptyAttr(cset,"Coefficients"):
-            for j, c in enumerate(cset.Coefficients):
-                if c.Response==r:
-                    found = True
-                    break
-        tmp = __gWDSModel.Coefficients(Response=r
-            , gds_collector_=cset.gds_collector_, parent_object_=cset)
-        for k, v in enumerate(Coefficients[i]):
-            tmp.add_Coefficient(__gWDSModel.Coefficient(Position=k, valueOf_=v
-            , gds_collector_=cset.gds_collector_, parent_object_=tmp))
-        if found:
-           cset.replace_Coefficients_at(j,tmp)
-        else:
-            cset.add_Coefficients(tmp)
+    if type(Coefficients) is dict:
+        for i, r in enumerate(Responses_as_list):
+            found = False
+            if bHasNonEmptyAttr(cset,"Coefficients"):
+                for j, c in enumerate(cset.Coefficients):
+                    if c.Response==r:
+                        found = True
+                        break
+            tmp = __gWDSModel.Coefficients(Response=r
+                , gds_collector_=cset.gds_collector_, parent_object_=cset)
+            for k, v in enumerate(Coefficients[r]):
+                tmp.add_Coefficient(__gWDSModel.Coefficient(Position=k, valueOf_=v
+                , gds_collector_=cset.gds_collector_, parent_object_=tmp))
+            if found:
+               cset.replace_Coefficients_at(j,tmp)
+            else:
+                cset.add_Coefficients(tmp)
+    else:
+        for i, r in enumerate(Responses_as_list):
+            found = False
+            if bHasNonEmptyAttr(cset,"Coefficients"):
+                for j, c in enumerate(cset.Coefficients):
+                    if c.Response==r:
+                        found = True
+                        break
+            tmp = __gWDSModel.Coefficients(Response=r
+                , gds_collector_=cset.gds_collector_, parent_object_=cset)
+            for k, v in enumerate(Coefficients[i]):
+                tmp.add_Coefficient(__gWDSModel.Coefficient(Position=k, valueOf_=v
+                , gds_collector_=cset.gds_collector_, parent_object_=tmp))
+            if found:
+               cset.replace_Coefficients_at(j,tmp)
+            else:
+                cset.add_Coefficients(tmp)
+    return Responses_as_list
 
 setattr(__gWDSModel.Variable,"CoefficientsSet_from",__CoefficientsSet_from)
 
@@ -454,12 +477,12 @@ def __Coefficients_as_list(self):
 setattr(__gWDSModel.Coefficients,"as_list",__Coefficients_as_list)
 
 def __CoefficientsSet_as_list(self,Responses=None):
-    if type(self) is __gWDSModel.Variable:
-        return self.CoefficientsSet.as_list(Responses)
     if Responses is None:
         Responses = self.parent_object_.mFindResponses().as_list()
     if type(Responses) is str:
         Responses = [Responses, ]
+    if type(self) is __gWDSModel.Variable:
+        return self.CoefficientsSet.as_list(Responses)
     rv=__OrderedDict()
     for r in Responses:
         rv[r] = []
@@ -474,9 +497,35 @@ setattr(__gWDSModel.CoefficientsSet,"as_list",__CoefficientsSet_as_list)
 setattr(__gWDSModel.Variable,"Coefficients_as_list",__CoefficientsSet_as_list)
 
 def __CoefficientsSet_as_numpy(self, Responses=None):
+    if Responses in (None,'All'):
+        if (Responses != 'All' ) and (type(self) is __gWDSModel.CoefficientsSet):
+            Responses = self.parent_object_.VariableModelDirectives.ResponseUse
+        if Responses in (None, 'All'):
+            Responses = self.parent_object_.mFindResponses().as_list()
+    if type(Responses) is str:
+        Responses = [Responses, ]
     if type(self) is __gWDSModel.Variable:
-        return self.CoefficientsSet.as_numpy(Responses)
-    return np.array(self.as_list(Responses), dtype=np.float64)
+        return np.array(self.CoefficientsSet.as_list(Responses),dtype=np.float64)
+    rv = []
+    ncoef = 0
+    empty_lists = []
+    for i,vi in enumerate(Responses):
+        found = False
+        for j,vj in enumerate(self.Coefficients):
+            if vi==vj.Response:
+                found = True
+                rvj = vj.as_list()
+                rv.append(rvj)
+                ncoef = len(rvj)
+        if not found:
+            empty_lists.append(i)
+            rv.append([])
+    if len(empty_lists)>0:
+        if ncoef == 0:
+            ncoef = art_c.nArtificialCount(len(self.parent_object_.CriticalValues.CriticalValue),self.parent_object_.Treatment)
+        for j in empty_lists:
+            rv[j] = [0.0] * ncoef
+    return np.array(rv, dtype=np.float64)
 setattr(__gWDSModel.CoefficientsSet,"as_numpy",__CoefficientsSet_as_numpy)
 setattr(__gWDSModel.CoefficientsSet,"np",__CoefficientsSet_as_numpy)
 setattr(__gWDSModel.Variable,"Coefficients_as_numpy",__CoefficientsSet_as_numpy)
@@ -568,6 +617,12 @@ del s
 del w
 del sOuter
 
+def WDSProject(Name=None, Handle=None):
+    if Handle is None:
+        Handle = Name
+    rv = __gWDSModel.Project(Name=Name, Handle=Handle)
+    return rv
+
 def WDSModel(Name=None, Responses=None):
     rv = __gWDSModel.Model(Name=Name, Handle=Name)
     rv.set_ModelDirectives(__gWDSModel.ModelDirectives(parent_object_=rv, gds_collector_=rv.gds_collector_))
@@ -606,7 +661,10 @@ def add_Variable(Model=None, Name=None, Treatment=None, CriticalValues=None, Cle
     if CleanLimits:
         rv.CleanLimits_from_list(CleanLimits)
     if Coefficients:
-        rv.CoefficientsSet_from(Coefficients)
+        if ResponseUse is None:
+            ResponseUse = rv.CoefficientsSet_from(Coefficients)
+        else:
+            rv.CoefficientsSet_from(Coefficients,ResponseUse)
     rv.DropIndexs_from_list(DropIndexs)
     if Source and type(Source) is str:
         rv.Source[0].valueOf_ = Source
@@ -862,7 +920,7 @@ def fArtificials(arg, VariableSpec):
     return plDF(art_c.fArtificials(arg,VariableSpec.Treatment,VariableSpec.CriticalValues.as_numpy(),VariableSpec.CleanLimits.as_numpy(),LabelBase=VariableSpec.Name))
 
 def fArtificialsScored(arg, VariableSpec):
-    return plDF(art_c.fArtificialsScored(arg,VariableSpec.Treatment,VariableSpec.CriticalValues.as_numpy(),VariableSpec.CleanLimits.as_numpy(),VariableSpec.CoefficientsSet.as_numpy(),LabelBase=VariableSpec.Name))
+    return plDF(art_c.fArtificialsScored(arg,VariableSpec.Treatment,VariableSpec.CriticalValues.as_numpy(),VariableSpec.CleanLimits.as_numpy(),VariableSpec.CoefficientsSet.as_numpy(Responses='All'),LabelBase=VariableSpec.Name))
 
 def ModelBuildingMD_Constructor():
     class _ModelBuildingMD(object):
@@ -883,9 +941,15 @@ def ModelBuildingMD_Constructor():
                         self.Resp_arts_droplist[r].extend([cols[i] for i in vrbl.DropIndexs.as_list()])
             else:
                 r = vrbl.VariableModelDirectives.ResponseUse
-                self.Resp_arts_names[r].extend(cols)
-                if vrbl.DropIndexs.DropIndex != []:
-                    self.Resp_arts_droplist[r].extend([cols[i] for i in vrbl.DropIndexs.as_list()])
+                if type(r) is str:
+                    self.Resp_arts_names[r].extend(cols)
+                    if vrbl.DropIndexs.DropIndex != []:
+                        self.Resp_arts_droplist[r].extend([cols[i] for i in vrbl.DropIndexs.as_list()])
+                else:
+                    for ru in r:
+                        self.Resp_arts_names[ru].extend(cols)
+                        if vrbl.DropIndexs.DropIndex != []:
+                            self.Resp_arts_droplist[ru].extend([cols[i] for i in vrbl.DropIndexs.as_list()])
         def effective_names(self, r):
             return [x for x in filter(lambda x: not (x in self.Resp_arts_droplist[r]), self.Resp_arts_names[r])]
 
@@ -896,21 +960,22 @@ def fAddToSystem(variable, arg, system_matrix_Resp1, system_matrix_Resp2):
         if system_matrix_Resp1 is not None and not system_matrix_Resp1.is_empty():
             system_matrix_Resp1.hstack(arg, in_place=True)
         else:
-            system_matrix_Resp1 = arg
+            system_matrix_Resp1 = copy.copy(arg)
         if system_matrix_Resp2 is not None and not system_matrix_Resp2.is_empty():
             system_matrix_Resp2.hstack(arg, in_place=True)
         else:
             system_matrix_Resp2 = copy.copy(arg)
-    elif variable.get_VariableModelDirectives().ResponseUse == "Resp1":
-        if system_matrix_Resp1 is not None and not system_matrix_Resp1.is_empty():
-            system_matrix_Resp1.hstack(arg, in_place=True)
-        else:
-            system_matrix_Resp1 = arg
-    elif variable.get_VariableModelDirectives().ResponseUse == "Resp2":
-        if system_matrix_Resp2 is not None and not system_matrix_Resp2.is_empty():
-            system_matrix_Resp2.hstack(arg, in_place=True)
-        else:
-            system_matrix_Resp2 = arg
+    else:
+        if variable.get_VariableModelDirectives().ResponseUse == "Resp1" or "Resp1" in variable.get_VariableModelDirectives().ResponseUse:
+            if system_matrix_Resp1 is not None and not system_matrix_Resp1.is_empty():
+                system_matrix_Resp1.hstack(arg, in_place=True)
+            else:
+                system_matrix_Resp1 = copy.copy(arg)
+        if variable.get_VariableModelDirectives().ResponseUse == "Resp2" or "Resp2" in variable.get_VariableModelDirectives().ResponseUse:
+            if system_matrix_Resp2 is not None and not system_matrix_Resp2.is_empty():
+                system_matrix_Resp2.hstack(arg, in_place=True)
+            else:
+                system_matrix_Resp2 = copy.copy(arg)
     return [system_matrix_Resp1, system_matrix_Resp2]
 
 def fModelPrep(data, modelspec, to_score=False, score_basename='Score' ):

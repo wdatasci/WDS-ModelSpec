@@ -50,23 +50,24 @@ except:
     pl.DataFrame.__matmul__ = __monkey__matmul__
     pl.DataFrame.mfilter = pl.DataFrame.filter
     def add_column(df, name, value):
-        return df.with_column(pl.Series(value).alias(name))
+        return df.with_columns(pl.Series(value).alias(name))
 
 def copy_with_column(df, name, value):
-    return df.with_column(pl.Series(value.flatten()).alias(name))
+    return df.with_columns(pl.Series(value.flatten()).alias(name))
     
 import math
 import copy
 from typing import *
 
-import WDS.Comp.Artificials_CythonWrapped as art_c
+#import WDS.Comp.Artificials_CythonWrapped as art_c
+import WDS.Comp.Artificials_PurePython as art_c
 
 from WDS.Comp.WDSModelPrep import *
 
 from WDS.history import *
 history_init(globals())
-pl.cfg.Config.set_tbl_cols(20)
-pl.cfg.Config.set_tbl_rows(20)
+pl.config.Config.set_tbl_cols(20)
+pl.config.Config.set_tbl_rows(20)
 
 #build a model spec from scratch
 
@@ -77,8 +78,9 @@ def Bones_explode(df : pl.DataFrame,
         OffsetName : str = 'RowIndex_First',
         ) -> pl.DataFrame:
     rv = df.select([pl.col('*'),pl.concat_list([pl.col(OffsetName),pl.col(RowCountName)]).alias(RowIndexName)])
-    rv = rv.with_column(pl.col(RowIndexName).apply(lambda x:[i+x[0] for i in range(0,x[1]+1)])).explode(RowIndexName)
-    return rv
+    rv2 = rv.with_columns(pl.col(RowIndexName).map_elements(lambda x:[i+x[0] for i in range(0,x[1]+1)],pl.List(pl.Int64)))
+    rv3 = rv2.explode(RowIndexName)
+    return rv3
 
 def Bones(ID_List : List[int],
         N_List   : List[int],
@@ -126,40 +128,50 @@ data2=add_column(data2,'RowIndex',data2.MonthID-data2.VintageMonthID)
 data2=add_column(data2,'Age',data2.MonthID-data2.VintageMonthID)
 
 
+prj = WDSProject(Name="test_py_3")
+mdlcr = WDSModel("test_py_3_comprisk",Responses=['Resp1','Resp2'])
+prj.add_Model(mdlcr)
 
-mdl = WDSModel("test_py_3", Responses=['Resp1', 'Resp2'])
+mdl = mdlcr.add_new_ComponentModel("test_py_3_ebz", Responses=['Resp1', 'Resp2'])
 
-vStatic_A = add_Variable(Model=mdl, Name='Static_A', CriticalValues=[.2, .6], CleanLimits=[.05, .95], Treatment='Hats', Coefficients=[[.3, 0, .8],[0.0, 0, 0.0]])
+vStatic_A = add_Variable(Model=mdl, Name='Static_A', CriticalValues=[.2, .6], CleanLimits=[.05, .95]
+                         , Treatment='Hats', Coefficients={'Resp1':[.3, 0, .8]})
 vStatic_A.add_DropIndex(1)
 vStatic_A.VariableModelDirectives.Static = "Yes"
-vStatic_A.VariableModelDirectives.ResponseUse = "Resp1"
 
-vStatic_B= add_Variable(Model=mdl, Name='Static_B', CriticalValues=[-2, 20], CleanLimits=[-10, 40], Treatment='Hats', Coefficients=[[.3, .1, 0.0],[-.3, -.2, 0.0]])
+vStatic_B= add_Variable(Model=mdl, Name='Static_B', CriticalValues=[-2, 20], CleanLimits=[-10, 40]
+                        , Treatment='Hats', Coefficients={'Resp1':[.3, .1, 0.0],'Resp2':[-.3, -.2, 0.0]})
 vStatic_B.add_DropIndex(2)
 vStatic_B.VariableModelDirectives.Static = "Yes"
-vStatic_B.VariableModelDirectives.ResponseUse = "All"
 
 
-vTV_A = add_Variable(Model=mdl, Name='TV_A', CriticalValues=[.2, .6], CleanLimits=[.05, .95], Treatment='Hats', Coefficients=[[.3, 0, .8],[-.3, 0, .17]])
+vTV_A = add_Variable(Model=mdl, Name='TV_A', CriticalValues=[.2, .6], CleanLimits=[.05, .95]
+                     , Treatment='Hats', Coefficients={'Resp1':[.3, 0, .8],'Resp2':[-.3, 0, .17]})
 vTV_A.add_DropIndex(1)
-vTV_A.VariableModelDirectives.ResponseUse = "All"
 
-vTV_B= add_Variable(Model=mdl, Name='TV_B', CriticalValues=[-2, 20], CleanLimits=[-10, 40], Treatment='Hats', Coefficients=[[0.0, 0.0, 0.0],[-.3, -.2, 0]])
+vTV_B= add_Variable(Model=mdl, Name='TV_B', CriticalValues=[-2, 20], CleanLimits=[-10, 40]
+                    , Treatment='Hats', Coefficients={'Resp2':[-.3, -.2, 0]})
 vTV_B.add_DropIndex(2)
-vTV_B.VariableModelDirectives.ResponseUse = "Resp2"
 
-vTV_Age= add_Variable(Model=mdl, Name='TV_Age', CriticalValues=[0, 5, 10, 20, 100], CleanLimits=[-1, 110], Treatment='Hats', Coefficients=[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],[0.0, 0.0, 0.1, 0.2, .1, -.1]])
+vTV_Age= add_Variable(Model=mdl, Name='Age', CriticalValues=[0, 5, 10, 20, 100], CleanLimits=[-1, 110]
+                      , Treatment='Hats', Coefficients={'Resp2':[0.0, 0.0, 0.1, 0.2, .1, -.1]})
 vTV_Age.add_DropIndex(0)
 vTV_Age.add_DropIndex(1)
-vTV_Age.VariableModelDirectives.ResponseUse = "Resp2"
 
 
 
-mdl_baseline = WDSModel("test_py_3_baseline", Responses=['All',])
+mdl_baseline = mdlcr.add_new_ComponentModel("test_py_3_baseline", Responses=['Single',])
+
 vAge = add_Variable(Model=mdl_baseline, Name='Age', CriticalValues=[0.0, 10.0, 15.0, 30.0, 80.0], CleanLimits=[-1.0, 140.0 ], Treatment='BZ2',
-Coefficients=[[0.0, 0.0, 0.1, 0.2, 0.08]])
+                    Coefficients={'Single':[0.0, 0.0, 0.1, 0.2, 0.08]})
 vAge.add_DropIndex(0)
 vAge.add_DropIndex(1)
+
+fid = open(__file__+'.out.xml','w')
+
+prj.export(fid, level=0)
+
+fid.close()
 
 
 
@@ -197,18 +209,18 @@ TV_B_marg = fArtificialsScored(data2.TV_B,vTV_B)
 ModelBuildingMD.add_arts(vTV_B, TV_B_arts.columns)
 system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vTV_B,TV_B_arts, system_matrix_Resp1, system_matrix_Resp2)
 
-ebz = ((Static_A_marg + Static_B_marg + TV_A_marg + TV_B_marg)).with_columns(pl.col('*').apply(np.exp))  #*baseline[:,0]
+TV_Age_arts = fArtificials(data2.Age+0.0,vTV_Age)
+TV_Age_marg = fArtificialsScored(data2.Age+0.0,vTV_Age)
+
+ModelBuildingMD.add_arts(vTV_Age, TV_Age_arts.columns)
+system_matrix_Resp1, system_matrix_Resp2 = fAddToSystem(vTV_Age,TV_Age_arts, system_matrix_Resp1, system_matrix_Resp2)
+
+ebz = ((Static_A_marg + Static_B_marg.Static_B_2 + TV_A_marg + TV_B_marg + TV_Age_marg)).with_columns(pl.col('*').exp())  #*baseline[:,0]
 
 #data2['Haz_A'] = ebz[:,0]*baseline[:,0]
 data2=add_column(data2,'Haz_A', ebz[:,0]*baseline[:,0])
 #data2['Haz_B'] = ebz[:,1]*baseline[:,0]
 data2=add_column(data2,'Haz_B',ebz[:,1]*baseline[:,0])
-
-fid = open(__file__+'.out','w')
-
-mdl.export(fid, level=0)
-
-fid.close()
 
 
 #data2['eps_A'] = rand.rand(data2.shape[0])
@@ -221,7 +233,7 @@ data2=add_column(data2,'Signal_A',data2.eps_A<data2.Haz_A)
 #data2['Signal_B']=data2.eps_B<data2.Haz_B
 data2=add_column(data2,'Signal_B',data2.eps_B<data2.Haz_B)
 
-data2=data2.with_column(pl.concat_list(['Signal_A','Signal_B']).apply(lambda x: 1 if x[0] else 2 if x[1] else 0).alias('Signal'))
+data2=data2.with_columns(pl.concat_list(['Signal_A','Signal_B']).map_elements(lambda x: 1 if x[0] else 2 if x[1] else 0,int).alias('Signal'))
 
 def f(arg):
     found=False
@@ -231,8 +243,8 @@ def f(arg):
             break
     return i
 
-x=data2.sort(['ID','Age']).select(['ID','Signal']).groupby('ID').agg_list().select(['ID','Signal',pl.col('Signal').apply(f).alias('EventIndex')])
-x=x.select(['ID','EventIndex',pl.concat_list(['Signal','EventIndex']).apply(lambda x:x[x[-1]]).alias('EventClass')])
+x=data2.sort(['ID','Age']).select(['ID','Signal']).group_by('ID').agg(pl.col('Signal')).with_columns(pl.col('Signal').map_elements(f,int).alias('EventIndex'))
+x=x.select(['ID','EventIndex',pl.concat_list(['Signal','EventIndex']).map_elements(lambda x:x[x[-1]],int).alias('EventClass')])
 
 data2=data2.join(x,on=['ID'])
 #ind = (pl.col('RowIndex') <= pl.col('EventIndex'))
@@ -315,10 +327,10 @@ for i in range(1,3):
 
 x1 = system_matrix_Resp1.select(base_and_Resp_Names[1]).lazy()
 for i,nm in enumerate(Resp_Names[1]):
-    x1=x1.with_columns((pl.col(Resp_Names[1])*pl.col(nm)).suffix('x'+nm))
+    x1=x1.with_columns((pl.col(Resp_Names[1])*pl.col(nm)).name.suffix('x'+nm))
 x2 = system_matrix_Resp2.select(base_and_Resp_Names[2]).lazy()
 for i,nm in enumerate(Resp_Names[2]):
-    x2=x2.with_columns((pl.col(Resp_Names[2])*pl.col(nm)).suffix('x'+nm))
+    x2=x2.with_columns((pl.col(Resp_Names[2])*pl.col(nm)).name.suffix('x'+nm))
 
 system_matrix = [ []
     , x1.collect() #system_matrix_Resp1.select(base_and_Resp_Names[1])
@@ -339,12 +351,12 @@ Mn = [ etc_and_base.filter(pl.col('Signal')==0).shape[0]
     ]
 
 #counts any signal by strata and age
-MnSA=etc_and_base.filter(pl.col('Signal')>0).groupby(['StrataID','Age']).agg(pl.col('Signal').count().alias('M')).sort(['StrataID','Age'])
+MnSA=etc_and_base.filter(pl.col('Signal')>0).group_by(['StrataID','Age']).agg(pl.col('Signal').count().alias('M')).sort(['StrataID','Age'])
 
 #counts by signal strata and age
-#MnSA = [ etc_and_base.filter(pl.col('Signal')==0).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
-#    , etc_and_base.filter(pl.col('Signal')==1).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
-#    , etc_and_base.filter(pl.col('Signal')==2).groupby(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+#MnSA = [ etc_and_base.filter(pl.col('Signal')==0).group_by(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+#    , etc_and_base.filter(pl.col('Signal')==1).group_by(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
+#    , etc_and_base.filter(pl.col('Signal')==2).group_by(['StrataID','Age']).agg([pl.col('ID').count()]).sort(['StrataID','Age'])
 #    ]
 
 #number of betas, {\em survival} state is index 0
@@ -361,6 +373,7 @@ beta=[ []
     , pl.DataFrame(np.random.rand(nbeta[2],1))
     ]
 
+pudb.set_trace()
 for aaa in range(0,20):
     ebz=[ []
         , np.exp(system_matrix[1].select(Resp_Names[1]) @ beta[1])
@@ -368,7 +381,7 @@ for aaa in range(0,20):
         ]
     ebzc = ebz[1]+ebz[2]
     etcWebzc = copy_with_column(etc_and_base, 'ebzc', ebzc)
-    x=etcWebzc.groupby(['StrataID','Age']).agg(pl.col('ebzc').alias('ebzcdenom').sum())
+    x=etcWebzc.group_by(['StrataID','Age']).agg(pl.col('ebzc').alias('ebzcdenom').sum())
     etcWebzc = etcWebzc.join(x, on=['StrataID','Age'], how='inner')
     
     etcWebz = [ []
@@ -381,21 +394,21 @@ for aaa in range(0,20):
         , system_matrix[2].filter(pl.col('Signal')==2).select(Resp_Names[2]).sum()
         ]
     iter_comp_12 = [ []
-        , etcWebz[1].join(etcWebz[1].hstack(system_matrix[1].select(Resp_Names[1]) * etcWebz[1].ebz / etcWebz[1].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[1])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==1).sum().select(Resp_Names[1])
-        , etcWebz[2].join(etcWebz[2].hstack(system_matrix[2].select(Resp_Names[2]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[2])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==2).sum().select(Resp_Names[2])
+        , etcWebz[1].join(etcWebz[1].hstack(system_matrix[1].select(Resp_Names[1]) * etcWebz[1].ebz / etcWebz[1].ebzcdenom).group_by(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[1])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==1).sum().select(Resp_Names[1])
+        , etcWebz[2].join(etcWebz[2].hstack(system_matrix[2].select(Resp_Names[2]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom).group_by(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[2])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==2).sum().select(Resp_Names[2])
         ]
     db=iter_comp_11[1].transpose().vstack(iter_comp_11[2].transpose())- iter_comp_12[1].transpose().vstack(iter_comp_12[2].transpose())
 
     iter_comp_21 = [ []
-        , etcWebz[1].join(etcWebz[1].hstack(system_matrix[1].select(Resp_NamesX[1]) * etcWebz[1].ebz / etcWebz[1].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_NamesX[1])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==1).sum().select(Resp_NamesX[1])
-        , etcWebz[2].join(etcWebz[2].hstack(system_matrix[2].select(Resp_NamesX[2]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_NamesX[2])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==2).sum().select(Resp_NamesX[2])
+        , etcWebz[1].join(etcWebz[1].hstack(system_matrix[1].select(Resp_NamesX[1]) * etcWebz[1].ebz / etcWebz[1].ebzcdenom).group_by(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_NamesX[1])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==1).sum().select(Resp_NamesX[1])
+        , etcWebz[2].join(etcWebz[2].hstack(system_matrix[2].select(Resp_NamesX[2]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom).group_by(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_NamesX[2])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==2).sum().select(Resp_NamesX[2])
         ]
 
 
     iter_comp_22 = [ [], [], [] ]
-    x=etcWebz[1].hstack(system_matrix[1].select(pl.col(Resp_Names[1])) * etcWebz[1].ebz / etcWebz[1].ebzcdenom).groupby(['StrataID','Age']).sum().sort(['StrataID','Age'])
+    x=etcWebz[1].hstack(system_matrix[1].select(pl.col(Resp_Names[1])) * etcWebz[1].ebz / etcWebz[1].ebzcdenom).group_by(['StrataID','Age']).sum().sort(['StrataID','Age'])
     iter_comp_22[1] = x
-    x=etcWebz[2].hstack(system_matrix[2].select(pl.col(Resp_Names[2])) * etcWebz[2].ebz / etcWebz[1].ebzcdenom).groupby(['StrataID','Age']).sum().sort(['StrataID','Age'])
+    x=etcWebz[2].hstack(system_matrix[2].select(pl.col(Resp_Names[2])) * etcWebz[2].ebz / etcWebz[1].ebzcdenom).group_by(['StrataID','Age']).sum().sort(['StrataID','Age'])
     iter_comp_22[2] = x
 
     db20agg = None
@@ -414,7 +427,7 @@ for aaa in range(0,20):
             x = iter_comp_21[i].lazy()
             x = x.select(Resp_NamesXd[i][nm])
             for l,lnm in enumerate(Resp_NamesXd[i][nm]):
-                x = x.with_column(pl.col(lnm).alias(Resp_NamesPrefxd[i][l]))
+                x = x.with_columns(pl.col(lnm).alias(Resp_NamesPrefxd[i][l]))
             if j==0:
                 bdi[i] = x.select(Resp_NamesPrefxd[i]).collect()
             else:
@@ -422,25 +435,27 @@ for aaa in range(0,20):
             #db2[k, (sc):(sc+nnm)] -= x.to_numpy().reshape((1,nnm))
         sc+=nnm
     
-    db2=bdi[1].hstack(bdi[2]*0).vstack((bdi[1]*0).hstack(bdi[2]))*(-1)+pl.DataFrame(db20agg)
+    nbdi1_nrows = bdi[1].shape[0]
+    nbdi2_nrows = bdi[2].shape[0]
+    db2=(bdi[1].hstack(pl.DataFrame({nm:[0.0]*nbdi1_nrows for nm in bdi[2].columns}))).vstack(pl.DataFrame({nm:[0.0]*nbdi2_nrows for nm in bdi[1].columns}).hstack(bdi[2]))
     #break
-    #x=etcWebz[1].join(x.groupby(['StrataID','Age']).sum(), on=['StrataID','Age'], how='inner')
+    #x=etcWebz[1].join(x.group_by(['StrataID','Age']).sum(), on=['StrataID','Age'], how='inner')
     #iter_comp_22[1] = x.filter(pl.col('Signal')==1).select(Resp_Names[1]).sum()
 
-    ##/ etcWebz[1].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[1])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==1).sum().select(Resp_Names[1])
-#   # , etcWebz[2].join(etcWebz[2].hstack(system_matrix[2].select(Resp_Names[2]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom).groupby(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[2])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==2).sum().select(Resp_Names[2])
+    ##/ etcWebz[1].ebzcdenom).group_by(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[1])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==1).sum().select(Resp_Names[1])
+#   # , etcWebz[2].join(etcWebz[2].hstack(system_matrix[2].select(Resp_Names[2]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom).group_by(['StrataID','Age']).sum().select(['StrataID','Age',pl.col(Resp_Names[2])]), on=['StrataID','Age'], how='inner').filter(pl.col('Signal')==2).sum().select(Resp_Names[2])
 #   # ]
     #db=iter_comp_11[1].transpose().vstack(iter_comp_11[2].transpose())- iter_comp_12[1].transpose().vstack(iter_comp_12[2].transpose())
     #iter_comp_22 = [ [], [], [] ]
     #
-    #x = (etcWebz[1].hstack(system_matrix[1].select([*Resp_Names[1],*Resp_NamesX[1]]) * etcWebz[1].ebz / etcWebz[1].ebzcdenom)).groupby(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[1], *Resp_NamesX[1]]).sum()).sort(['StrataID','Age'])
+    #x = (etcWebz[1].hstack(system_matrix[1].select([*Resp_Names[1],*Resp_NamesX[1]]) * etcWebz[1].ebz / etcWebz[1].ebzcdenom)).group_by(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[1], *Resp_NamesX[1]]).sum()).sort(['StrataID','Age'])
     #xx = x.join(MnSA, on=['StrataID','Age'], how='inner')
     #
     ##iter_comp_12[1] = (xx.select(Resp_Names[1]) * xx.M / xx.ebzc).sum()
 
     #iter_comp_22[1] = (xx.select(Resp_Names[1]) * xx.M.apply(np.sqrt) / xx.ebzc) #.sum()
     #
-    #x = (etcWebz[2].hstack(system_matrix[2].select([*Resp_Names[2],*Resp_NamesX[2]]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom)).groupby(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[2], *Resp_NamesX[2]]).sum()).sort(['StrataID','Age'])
+    #x = (etcWebz[2].hstack(system_matrix[2].select([*Resp_Names[2],*Resp_NamesX[2]]) * etcWebz[2].ebz / etcWebz[2].ebzcdenom)).group_by(['StrataID','Age']).agg(pl.col(['ebz', 'ebzc', *Resp_Names[2], *Resp_NamesX[2]]).sum()).sort(['StrataID','Age'])
     #xx = x.join(MnSA, on=['StrataID','Age'], how='inner')
     #
     ##iter_comp_12[2] = (xx.select(Resp_Names[2]) * xx.M / xx.ebzc).sum()
@@ -469,7 +484,7 @@ for aaa in range(0,20):
     #        x = iter_comp_2[i].lazy()
     #        x = x.select(Resp_NamesXd[i][nm])
     #        for l,lnm in enumerate(Resp_NamesXd[i][nm]):
-    #            x = x.with_column(pl.col(lnm).alias(Resp_NamesPrefxd[i][l]))
+    #            x = x.with_columns(pl.col(lnm).alias(Resp_NamesPrefxd[i][l]))
     #        if j==0:
     #            bdi[i] = x.select(Resp_NamesPrefxd[i]).collect()
     #        else:
@@ -480,7 +495,7 @@ for aaa in range(0,20):
     #
     #db2=bdi[1].hstack(bdi[2]*0).vstack((bdi[1]*0).hstack(bdi[2]))*(-1)+pl.DataFrame(db20agg)
     
-    print(-np.linalg.inv(db2.to_numpy()))
+    #print(-np.linalg.inv(db2.to_numpy()))
     delta_betas= -np.linalg.inv(db2.to_numpy()) @ db.to_numpy()
     betas=betas+pl.DataFrame(delta_betas)
     sc=0
@@ -489,7 +504,8 @@ for aaa in range(0,20):
         beta[i]=betas[nnm:(nnm+len(Resp_Names[i]))]
         sc+=nnm
 
-    print(betas)
+    #print(betas)
+print(betas)
     
 
 #import tensorflow as tf
@@ -518,7 +534,7 @@ for aaa in range(0,20):
 #        ]
 #    ebzc = ebz[1]+ebz[2]
 #    etcWebzc = copy_with_column(etc_and_base, 'ebzc', ebzc)
-#    x=etcWebzc.groupby(['StrataID','Age']).agg(pl.col('ebzc').alias('ebzcdenom').sum())
+#    x=etcWebzc.group_by(['StrataID','Age']).agg(pl.col('ebzc').alias('ebzcdenom').sum())
 #    etcWebzc = etcWebzc.join(x, on=['StrataID','Age'], how='inner')
     
 
@@ -536,10 +552,12 @@ def LL(betas):
         ]
     ebzc = ebz[1]+ebz[2]
     etcWebzc = copy_with_column(etc_and_base, 'ebzc', ebzc)
-    x=etcWebzc.groupby(['StrataID','Age']).agg(pl.col('ebzc').alias('ebzcdenom').sum())
-    etcWebzc = etcWebzc.join(x, on=['StrataID','Age'], how='inner').with_column(pl.Series((bz[1]*ebz[1]).flatten()).alias('bz1'))
-    etcWebzc = etcWebzc.with_column(pl.Series((bz[2]*ebz[2]).flatten()).alias('bz2'))
-    return etcWebzc.filter(pl.col('Signal')==1).bz1.sum()+etcWebzc.filter(pl.col('Signal')==2).bz2.sum()-(etcWebzc.filter(pl.col('Signal')>0).ebzcdenom.apply(np.log)).sum()
+    x=etcWebzc.group_by(['StrataID','Age']).agg(pl.col('ebzc').alias('ebzcdenom').sum())
+    etcWebzc = etcWebzc.join(x, on=['StrataID','Age'], how='inner').with_columns(pl.Series((bz[1]*ebz[1]).flatten()).alias('bz1'))
+    etcWebzc = etcWebzc.with_columns(pl.Series((bz[2]*ebz[2]).flatten()).alias('bz2'))
+    return - (
+            etcWebzc.filter(pl.col('Signal')==1).bz1.sum()+etcWebzc.filter(pl.col('Signal')==2).bz2.sum()-(etcWebzc.filter(pl.col('Signal')>0).ebzcdenom.log()).sum()
+            )
     return etcWebzc
     rv=etcWebzc.filter(pl.col('Signal')==1).select([pl.col('bz1')/pl.col('ebzcdenom')]).filter(pl.col('bz1')>0).apply(np.log).sum()
     rv+=etcWebzc.filter(pl.col('Signal')==2).select([pl.col('bz2')/pl.col('ebzcdenom')]).filter(pl.col('bz2')>0).apply(np.log).sum()
@@ -548,9 +566,11 @@ def LL(betas):
     rv = bz[1].filter(pl.col('Signal')==1).ebz1.sum()
    
 
-betas=[.3,.8,.3, .1, .3, .8, -.3, -.2, -.3, .17, -.3, -.2]
+betas=[.3,.8,.3, .1, .3, .8, -.3, -.2, -.3, .17, -.3, -.2, -.1, -.1, -.1, -1]
 from scipy.optimize import minimize
-minimize(LL,betas)
+result = minimize(LL,betas)
+print(betas)
+print(result)
 
 import matplotlib
 import matplotlib.pyplot as plt
